@@ -1,0 +1,336 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Sora', sans-serif;
+  background: #ced4df;
+}
+
+/* Page layout */
+.page-wrapper {
+  width: 100vw;
+  height: 100vh;
+  background: #ced4df;
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Logo */
+.logo {
+position: absolute;
+top: 24px;
+left: 36px;
+display: flex;
+align-items: center;
+gap: 10px;
+z-index: 10;
+text-decoration: none;
+}
+
+.logo img {
+width: 52px;
+height: 52px;
+border-radius: 50%;
+object-fit: cover;
+}
+
+.logo-name {
+font-family: 'Sora', sans-serif;
+font-size: 15px;
+font-weight: 600;
+color: #101d89;
+}
+
+/* Left illustration */
+.left-panel {
+  width: 50%;
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px 0px 100px;
+}
+
+.left-panel img {
+width: 120%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+}
+
+/* Right panel */
+.right-panel {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 110px 20px 10px;
+}
+
+/* Card */
+.card {
+  background: #061685;
+  border-radius: 22px;
+  padding: 36px 34px;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Step panels */
+.step-panel {
+  display: none;
+}
+
+.step-panel.active {
+  display: block;
+}
+
+/* Stepper */
+.stepper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.step-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.step-dot.active {
+  background: #061685;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+}
+
+.step-dot.inactive {
+  background: #061685;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.step-dot.done {
+  background: #1E5ABC;
+  border: 2px solid #1E5ABC;
+  color: #ffffff;
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.step-line.done {
+  background: #ffffff;
+}
+
+/* Headings & text */
+.card h2 {
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.card .subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(11px, 1vw, 13px);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* Input */
+.input-group {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.input-group input {
+  width: 100%;
+  height: 54px;
+  border-radius: 20px;
+  border: none;
+  outline: none;
+  padding: 0 22px;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(13px, 1.1vw, 16px);
+  font-weight: 400;
+  color: rgba(6, 22, 133, 0.6);
+  background: #ffffff;
+  transition: box-shadow 0.2s;
+}
+
+.input-group input:focus {
+  box-shadow: 0 0 0 3px rgba(139, 178, 253, 0.5);
+}
+
+.input-group input.input-error {
+  box-shadow: 0 0 0 3px rgba(220, 53, 53, 0.65);
+}
+
+.input-group input::placeholder {
+  color: rgba(6, 22, 133, 0.45);
+}
+
+/* Error line */
+.error-line {
+  display: none;
+  align-items: flex-start;
+  gap: 7px;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(11px, 0.9vw, 13px);
+  color: #ffffff;
+  margin: -4px 0 12px 4px;
+  line-height: 1.4;
+}
+
+.error-line.visible {
+  display: flex;
+}
+
+.err-icon {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #e74c3c;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* OTP row */
+.otp-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.otp-box {
+  flex: 1;
+  height: 58px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  text-align: center;
+  font-family: 'Sora', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.otp-box:focus {
+  border-color: #ffffff;
+}
+
+/* Timer */
+.timer-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 14px;
+}
+
+/* Buttons */
+.btn-primary {
+  width: 100%;
+  height: 52px;
+  border-radius: 20px;
+  border: none;
+  background: #1E5ABC;
+  color: #F2EEE9;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(16px, 1.4vw, 20px);
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 14px;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.btn-white {
+  width: 100%;
+  height: 52px;
+  border-radius: 20px;
+  border: 2px solid #ffffff;
+  background: #ffffff;
+  color: #061685;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(16px, 1.4vw, 20px);
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.btn-white:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Bottom link */
+.bottom-link {
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.bottom-link a {
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.bottom-link a:hover {
+  opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 820px) {
+  .left-panel {
+    display: none;
+  }
+  .right-panel {
+    width: 100%;
+    padding: 80px 24px 32px;
+  }
+}

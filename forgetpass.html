@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Forgot Password</title>
+  <link rel="icon" type="image/png" href="/pics/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/CSS/forgetpass.css">
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <a class="logo" href="landpage.html">
+      <img src="/pics/logo.png" alt="SmartEdu Logo"/>
+      <span class="logo-name">SmartEdu</span>
+    </a>
+
+    <div class="left-panel">
+      <img src="/pics/fpass.png" alt="Forgot password illustration"/>
+    </div>
+
+    <div class="right-panel">
+      <div class="card">
+
+        <!-- STEP 1: Email -->
+        <div class="step-panel active" id="step1">
+          <div class="stepper">
+            <div class="step-dot active">1</div>
+            <div class="step-line" id="line1"></div>
+            <div class="step-dot inactive" id="dot2">2</div>
+            <div class="step-line" id="line2"></div>
+            <div class="step-dot inactive" id="dot3">3</div>
+          </div>
+          <h2>Forgot Your Password?</h2>
+          <p class="subtitle">Enter your email to receive a verification code.</p>
+          <div class="input-group">
+            <input type="email" placeholder="Email" id="emailInput"/>
+          </div>
+          <div class="error-line" id="emailErr">
+            <div class="err-icon">!</div>
+            <span>We couldn't find that email. Please check and re-enter.</span>
+          </div>
+          <button class="btn-primary" onclick="goStep2()">Get Otp</button>
+          <p class="bottom-link"><i>Back to <a href="login.html">Log In</a></i></p>
+        </div>
+
+        <!-- STEP 2: OTP -->
+        <div class="step-panel" id="step2">
+          <div class="stepper">
+            <div class="step-dot done">&#10003;</div>
+            <div class="step-line done"></div>
+            <div class="step-dot active">2</div>
+            <div class="step-line"></div>
+            <div class="step-dot inactive">3</div>
+          </div>
+          <h2>Check your Email</h2>
+          <p class="subtitle">Please enter the 6-digit verification code sent to your email. The code expires in 5 minutes.</p>
+          <div class="otp-row">
+            <input type="text" maxlength="1" class="otp-box" oninput="otpMove(this, 0)" onkeydown="otpBack(event, 0)"/>
+            <input type="text" maxlength="1" class="otp-box" oninput="otpMove(this, 1)" onkeydown="otpBack(event, 1)"/>
+            <input type="text" maxlength="1" class="otp-box" oninput="otpMove(this, 2)" onkeydown="otpBack(event, 2)"/>
+            <input type="text" maxlength="1" class="otp-box" oninput="otpMove(this, 3)" onkeydown="otpBack(event, 3)"/>
+            <input type="text" maxlength="1" class="otp-box" oninput="otpMove(this, 4)" onkeydown="otpBack(event, 4)"/>
+            <input type="text" maxlength="1" class="otp-box" oninput="otpMove(this, 5)" onkeydown="otpBack(event, 5)"/>
+          </div>
+          <p class="timer-text">Code expires in: <span id="countdown">2:31</span></p>
+          <button class="btn-white" onclick="goStep3()">Verify</button>
+          <p class="bottom-link"><i>didn't get the code? <a href="#" onclick="resendOtp(); return false;">resend</a></i></p>
+        </div>
+
+        <!-- STEP 3: Reset Password -->
+        <div class="step-panel" id="step3">
+          <div class="stepper">
+            <div class="step-dot done">&#10003;</div>
+            <div class="step-line done"></div>
+            <div class="step-dot done">&#10003;</div>
+            <div class="step-line done"></div>
+            <div class="step-dot active">3</div>
+          </div>
+          <h2>Reset your Password</h2>
+          <p class="subtitle">You're almost done! Create your new password.</p>
+          <div class="input-group">
+            <input type="password" placeholder="New Password *:" id="np1" oninput="clearResetErr()"/>
+          </div>
+          <div class="input-group">
+            <input type="password" placeholder="Confirm Password *" id="np2" oninput="clearResetErr()"/>
+          </div>
+          <div class="error-line" id="resetErr">
+            <span>Both passwords must match. Kindly re-enter.</span>
+          </div>
+          <button class="btn-white" onclick="handleDone()">Done</button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+  <script src="/JS/forgot-password.js"></script>
+</body>
+</html>
