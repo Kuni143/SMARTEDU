@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="icon" type="image/png" href="/pics/logo.png">
+  <link rel="stylesheet" href="/CSS/dashb_admin.css">
+</head>
+
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <a class="logo" href="dashb_admin.html">
+      <img src="/pics/logo.png" alt="SmartEdu Logo" />
+      <span class="logo-text">SmartEdu</span>
+    </a>
+  </div>
+
+  <!-- Welcome -->
+  <div class="welcome">
+    <h1>Admin Dashboard</h1>
+    <p>This dashboard displays the tally of answers for each question  to monitor and analyze student responses from the questionnaire.</p>
+  </div>
+
+  <!-- Chart card -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">Student Insights</span>
+
+      <div class="filter-group">
+        <select class="filter-sentiment" id="sentimentBtn" onchange="changeSentiment(this.value)">
+          <option value="Strongly Agree">Strongly Agree</option>
+          <option value="Agree">Agree</option>
+          <option value="Neutral">Neutral</option>
+          <option value="Disagree">Disagree</option>
+          <option value="Strongly Disagree">Strongly Disagree</option>
+        </select>
+        <div class="range-group">
+          <button class="range-btn" onclick="setRange('1-20', this)">1-20</button>
+          <button class="range-btn" onclick="setRange('21-40', this)">21-40</button>
+          <button class="range-btn active" onclick="setRange('41-60', this)">41-60</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <canvas id="insightsChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script src="/JS/dashb_admin.js"></script>
+
+</script>
+</body>
+</html>

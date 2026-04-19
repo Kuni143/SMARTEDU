@@ -42,7 +42,7 @@
       errorRow.classList.remove('visible');
       showToast();
       setTimeout(function() {
-        window.location.href = 'studform.html';
+        window.location.href = 'dashb_admin.html'; // Redirect to admin dashboard
       }, 3000);
       return;
     }

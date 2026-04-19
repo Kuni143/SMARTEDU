@@ -1,0 +1,155 @@
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; min-height: 100vh;
+      font-family: 'Sora', sans-serif;
+      background: #ced4df;
+      color: #0f1f56;
+    }
+
+    /* ── Page wrapper ── */
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 36px 48px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .logo {
+      position: absolute;
+      top: 24px;
+      left: 36px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 10;
+      text-decoration: none;
+    }
+
+    .logo img {
+      width: 52px; height: 52px;
+      border-radius: 50%; object-fit: cover;
+    }
+
+    .logo-text {
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #101d89;
+    }
+
+    /* ── Welcome block ── */
+    .welcome {
+      margin-bottom: 28px;
+      margin-left: 30px;
+    }
+
+    .welcome h1 {
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 800;
+      color: #061685;
+      margin-bottom: 5px;
+
+    }
+
+    .welcome p {
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      font-weight: 400;
+      color: #3a4a7a;
+      line-height: 1.4;
+    }
+
+    /* ── Chart card ── */
+    .chart-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 26px 32px 30px;
+      box-shadow: 0 4px 24px rgba(6, 22, 133, 0.07);
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .chart-title {
+      font-size: clamp(18px, 2.5vw, 24px);
+      font-weight: 700;
+      color: #061685;
+    }
+
+    /* Filter pill group */
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-sentiment {
+      background: #8b9fd4;
+      color: #ffffff;
+      border: none;
+      border-radius: 999px;
+      padding: 8px 34px 8px 18px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-color: #061685;
+    }
+
+    .filter-sentiment:hover { background-color: #7088c0; }
+    .filter-sentiment option { background: #061685; color: #fff; }
+
+    .range-group {
+      display: flex;
+      background: #e8ecf5;
+      border-radius: 999px;
+      padding: 4px;
+      gap: 2px;
+    }
+
+    .range-btn {
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #5a6a9a;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .range-btn.active {
+      background: #061685;
+      color: #ffffff;
+    }
+
+    .range-btn:hover:not(.active) { background: #d0d8ee; }
+
+    /* Chart canvas wrapper */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 400px;
+    }
