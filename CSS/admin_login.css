@@ -1,0 +1,299 @@
+    *, *::before, *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: 'Sora', sans-serif;
+    }
+
+    body {
+        background: #ced4df;
+    }
+
+    .page-wrapper {
+        width: 100vw;
+        height: 100vh;
+        background: #ced4df;
+        position: relative;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    /* Logo */
+    .logo {
+        position: absolute;
+        top: 24px;
+        left: 36px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 10;
+        text-decoration: none;
+    }
+
+    .logo img {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .logo-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #101d89;
+    }
+
+    /* Left illustration */
+    .illustration {
+        width: 55%;
+        height: 100%;
+        flex-shrink: 0;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 0 3px 36px;
+    }
+
+    .illustration img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center;
+    }
+
+    /* Right panel */
+    .right-panel {
+        flex: 1;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 110px 32px 16px;
+    }
+
+    /* Card */
+    .card {
+        background: #061685;
+        border-radius: 25px;
+        padding: 36px 32px;
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card h1 {
+        font-size: clamp(22px, 2.2vw, 30px);
+        font-weight: 700;
+        color: #FBFCFF;
+        line-height: 1.2;
+        margin-bottom: 40px;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .card .subtitle {
+        font-size: clamp(12px, 1vw, 15px);
+        font-weight: 400;
+        color: #FBFCFF;
+        margin-bottom: 22px;
+    }
+
+    /* Inputs */
+    .input-group {
+        position: relative;
+        margin-bottom: 15px;
+    }
+
+    .input-group input {
+        width: 100%;
+        height: 52px;
+        border-radius: 25px;
+        border: none;
+        outline: none;
+        padding: 0 52px 0 22px;
+        font-family: 'Inter', sans-serif;
+        font-size: clamp(14px, 1.1vw, 17px);
+        color: rgba(6, 22, 133, 0.6);
+        background: #ffffff;
+        transition: box-shadow 0.2s;
+    }
+
+    .input-group input:focus {
+        box-shadow: 0 0 0 3px rgba(139, 178, 253, 0.5);
+    }
+
+    .input-group input::placeholder {
+        color: rgba(6, 22, 133, 0.5);
+    }
+
+    .toggle-btn {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .toggle-btn svg {
+        width: 22px;
+        height: 22px;
+        stroke: rgba(6, 22, 133, 0.6);
+    }
+
+    /* Error row */
+    .error-row {
+        display: none;
+        align-items: flex-start;
+        gap: 7px;
+        margin: -2px 0 10px 4px;
+    }
+
+    .error-row.visible {
+        display: flex;
+    }
+
+    .error-row svg {
+        flex-shrink: 0;
+        margin-top: 2px;
+        width: 16px;
+        height: 16px;
+        stroke: #ff6b6b;
+    }
+
+    .error-row p {
+        font-family: 'Inter', sans-serif;
+        font-size: clamp(11px, 0.9vw, 13px);
+        color: #ffffff;
+        line-height: 1.4;
+    }
+
+    /* Forgot */
+    .forgot {
+        font-size: clamp(12px, 1vw, 14px);
+        font-weight: 700;
+        color: #FBFCFF;
+        text-decoration: none;
+        margin-bottom: 28px;
+        display: inline-block;
+    }
+
+    .forgot:hover {
+        text-decoration: underline;
+    }
+
+    /* Log In button */
+    .btn-login {
+        display: block;
+        width: 100%;
+        height: 50px;
+        background: #8B9FD4;
+        border: none;
+        border-radius: 25px;
+        font-family: 'Sora', sans-serif;
+        font-size: clamp(15px, 1.3vw, 19px);
+        font-weight: 600;
+        color: #061685;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-login:hover {
+        opacity: 0.88;
+        transform: translateY(-1px);
+    }
+
+    /* ── Toast ── */
+    .toast {
+        position: fixed;
+        top: 28px;
+        right: 28px;
+        transform: translateY(-120px);
+        background: #ffffff;
+        border: 2px solid #4a7c4e;
+        border-radius: 999px;
+        padding: 14px 22px 14px 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-width: 240px;
+        max-width: 340px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10);
+        z-index: 9999;
+        transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+        opacity: 0;
+    }
+
+    .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    .toast-icon {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        background: #4a7c4e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1px;
+    }
+
+    .toast-icon svg {
+        width: 13px;
+        height: 13px;
+        stroke: #fff;
+        stroke-width: 2.5;
+    }
+
+    .toast-body {
+        flex: 1;
+    }
+
+    .toast-body p {
+        font-family: 'Sora', sans-serif;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #2d4a30;
+        line-height: 1.45;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        color: #6b8a6e;
+        line-height: 1;
+        padding: 0;
+        margin-top: 1px;
+        flex-shrink: 0;
+    }
+
+    .toast-close:hover {
+        color: #2d4a30;
+    }
+
+    /* Responsive */
+    @media (max-width: 820px) {
+      .illustration {
+          display: none;
+      }
+      .right-panel {
+          width: 100%;
+          padding: 80px 24px 32px;
+      }
+    }
