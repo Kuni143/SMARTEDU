@@ -13,11 +13,13 @@
     { name: 'Adamson University', type: 'Private', desc: 'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates.' },
     { name: 'Pamantasan ng Lungsod ng Pasig', type: 'LUC', desc: 'Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis voluptatibus maiores alias consequatur.' },
   ];
- 
+
+  /* ── FIX: activeTypes now correctly defaults to ['All'] and pendingTypes
+     is always a fresh copy so Cancel truly reverts changes ── */
   var activeTypes  = ['All'];
   var pendingTypes = ['All'];
   var searchQuery  = '';
- 
+
   function buildGrid() {
     var grid = document.getElementById('schoolGrid');
     grid.innerHTML = SCHOOLS.map(function(s, i) {
@@ -32,8 +34,9 @@
       );
     }).join('');
   }
- 
+
   function applyVisibility() {
+    var anyVisible = false;
     SCHOOLS.forEach(function(s, i) {
       var card = document.getElementById('card-' + i);
       if (!card) return;
@@ -41,117 +44,169 @@
       var matchSearch = !searchQuery ||
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.desc.toLowerCase().includes(searchQuery.toLowerCase());
-      if (matchType && matchSearch) { card.classList.remove('hidden'); }
-      else { card.classList.add('hidden'); }
+
+      if (matchType && matchSearch) {
+        /* ── FIX: display:flex (not visibility:hidden) so grid reflows ── */
+        card.style.display = 'flex';
+        anyVisible = true;
+      } else {
+        card.style.display = 'none';
+      }
     });
+
+    /* Show/hide no-results message */
+    var existing = document.getElementById('no-results-msg');
+    if (!anyVisible) {
+      if (!existing) {
+        var msg = document.createElement('div');
+        msg.id = 'no-results-msg';
+        msg.className = 'no-results';
+        msg.textContent = 'No schools found.';
+        document.getElementById('schoolGrid').appendChild(msg);
+      }
+    } else {
+      if (existing) existing.remove();
+    }
   }
- 
+
   function goDetails(name) {
     window.location.href = 'detail_univ.html?name=' + name;
   }
- 
+
   function handleSearch() {
     searchQuery = document.getElementById('searchInput').value.trim();
+    /* Update active tag underline */
+    document.getElementById('activeFilterTag').classList.remove('active-tag');
+    document.getElementById('allSearchTag').classList.add('active-tag');
     applyVisibility();
   }
- 
+
+  /* ── FIX: clearSearch now also resets the tag underline correctly ── */
   function clearSearch() {
     searchQuery = '';
     document.getElementById('searchInput').value = '';
+    document.getElementById('allSearchTag').classList.remove('active-tag');
+    document.getElementById('activeFilterTag').classList.add('active-tag');
     applyVisibility();
   }
- 
+
   function toggleFilter() {
     var dd = document.getElementById('filterDropdown');
-    if (!dd.classList.contains('open')) { pendingTypes = activeTypes.slice(); syncCheckboxes(); }
+    if (!dd.classList.contains('open')) {
+      /* ── FIX: snapshot activeTypes into pendingTypes before opening ── */
+      pendingTypes = activeTypes.slice();
+      syncCheckboxes();
+    }
     dd.classList.toggle('open');
   }
- 
+
   function toggleTypeDropdown() {
     document.getElementById('typeDropdown').classList.toggle('open');
     document.getElementById('filterChevron').classList.toggle('flipped');
   }
- 
+
   function syncCheckboxes() {
     document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(cb) {
       cb.checked = pendingTypes.includes(cb.value);
     });
     updateCurrentText();
   }
- 
+
   function updateCurrentText() {
     var el = document.getElementById('filterCurrentText');
-    el.textContent = (pendingTypes.includes('All') || pendingTypes.length === 0) ? 'All' : pendingTypes.join(', ');
+    if (pendingTypes.includes('All') || pendingTypes.length === 0) {
+      el.textContent = 'All';
+    } else {
+      el.textContent = pendingTypes.join(', ');
+    }
   }
- 
+
   function handleTypeCheck(cb) {
     if (cb.value === 'All') {
+      /* Selecting "All" clears every other selection */
       pendingTypes = cb.checked ? ['All'] : [];
-      document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) { b.checked = (b.value === 'All' && cb.checked); });
+      document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) {
+        b.checked = (b.value === 'All' && cb.checked);
+      });
     } else {
+      /* ── FIX: uncheck "All" whenever a specific type is chosen ── */
       var allBox = document.querySelector('.type-opt input[value="All"]');
       if (allBox) allBox.checked = false;
       pendingTypes = pendingTypes.filter(function(t) { return t !== 'All'; });
-      if (cb.checked) { if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value); }
-      else { pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; }); }
+
+      if (cb.checked) {
+        if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value);
+      } else {
+        pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; });
+      }
     }
     updateCurrentText();
   }
- 
-  function selectAll() { pendingTypes = ['All']; syncCheckboxes(); }
- 
+
+  function selectAll() {
+    pendingTypes = ['All'];
+    syncCheckboxes();
+  }
+
   function clearAll() {
     pendingTypes = [];
     document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) { b.checked = false; });
     updateCurrentText();
   }
- 
+
   function applyFilter() {
+    /* ── FIX: if nothing selected, treat as "All" ── */
     activeTypes = pendingTypes.length ? pendingTypes.slice() : ['All'];
-    closeFilterDropdown(); applyVisibility();
+    closeFilterDropdown();
+    applyVisibility();
   }
- 
-  function cancelFilter() { pendingTypes = activeTypes.slice(); closeFilterDropdown(); }
- 
+
+  function cancelFilter() {
+    /* ── FIX: revert pendingTypes to the last committed activeTypes ── */
+    pendingTypes = activeTypes.slice();
+    closeFilterDropdown();
+  }
+
   function closeFilterDropdown() {
     document.getElementById('filterDropdown').classList.remove('open');
     document.getElementById('typeDropdown').classList.remove('open');
     document.getElementById('filterChevron').classList.remove('flipped');
   }
- 
+
   document.addEventListener('click', function(e) {
     var dd  = document.getElementById('filterDropdown');
     var btn = document.getElementById('filterBtn');
     if (dd.classList.contains('open') && !dd.contains(e.target) && !btn.contains(e.target)) {
-      closeFilterDropdown();
+      /* Clicking outside = cancel, don't apply pending changes */
+      cancelFilter();
     }
   });
- 
+
   /* ── Sidebar ── */
   function toggleMenu() {
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebarOverlay').classList.toggle('show');
   }
- 
+
   function closeMenu() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('show');
   }
- 
+
   /* ── Logout modal ── */
   function openLogoutModal() {
     closeMenu();
     document.getElementById('logoutModal').classList.add('show');
   }
- 
+
   function closeLogoutModal() {
     document.getElementById('logoutModal').classList.remove('show');
   }
- 
+
   document.getElementById('logoutModal').addEventListener('click', function(e) {
     if (e.target === this) closeLogoutModal();
   });
- 
+
   /* ── Init ── */
   buildGrid();
   applyVisibility();
