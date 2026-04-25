@@ -68,6 +68,11 @@
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="searchInput" placeholder="Search universities…" oninput="handleSearch()"/>
+      <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()" style="display:none;" title="Clear search">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
     <div class="filter-wrap">
       <button class="filter-btn" id="filterBtn" onclick="toggleFilter()">
@@ -102,8 +107,13 @@
 
   <!-- Tag row -->
   <div class="tag-row" id="tagRow">
-    <span class="tag active-tag" id="activeFilterTag">All Universities</span>
-    <span class="tag" id="allSearchTag" onclick="clearSearch()">Clear Search</span>
+    <span class="tag active-tag" id="activeFilterTag">Civil Engineering</span>
+    <span class="tag search-tag" id="allSearchTag" onclick="clearSearch()" style="display:none;">
+      All Search
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </span>
   </div>
 
   <!-- Grid -->
@@ -112,6 +122,32 @@
   </div>
 
 </main>
+
+<!-- ── Top 3 Chathead ── -->
+<div class="chathead" id="chathead" onclick="toggleChatPopup()">
+  <img src="/pics/popup.png" alt="Top Courses" />
+</div>
+
+<!-- Top 3 Popup -->
+<div class="chat-popup" id="chatPopup">
+  <div class="chat-popup-header">
+    <button class="chat-popup-close" onclick="closeChatPopup()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="chat-popup-body">
+    <h3>Top 3 Result of courses</h3>
+    <p>Select a course to see available universities.</p>
+    <ol id="top-courses-list">
+      <li><button onclick="selectCourse('Information Technology')">Information Technology</button></li>
+      <li><button onclick="selectCourse('Computer Science')">Computer Science</button></li>
+      <li><button onclick="selectCourse('Industrial Engineer')">Industrial Engineer</button></li>
+    </ol>
+    <p class="redirecting-text" id="redirecting-text" style="display:none;">Redirecting to available universities...</p>
+  </div>
+</div>
 
 <!-- LOGOUT MODAL -->
 <div class="modal-overlay" id="logoutModal">

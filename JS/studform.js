@@ -163,6 +163,21 @@ function setCareerSection(n) {
   currentCareer = n;
   document.getElementById('career-' + n).style.display = 'flex';
 
+  /* Always go back to compact when switching sections */
+  if (isExpanded) {
+    isExpanded = false;
+    document.body.classList.remove('view-expanded');
+    document.documentElement.classList.remove('view-expanded');
+    var iconCompact  = document.getElementById('view-icon-compact');
+    var iconExpanded = document.getElementById('view-icon-expanded');
+    var label        = document.getElementById('view-toggle-label');
+    var scrollBtn    = document.getElementById('scrollTopBtn');
+    if (iconCompact)  iconCompact.style.display  = 'block';
+    if (iconExpanded) iconExpanded.style.display = 'none';
+    if (label)        label.textContent = 'Expand';
+    if (scrollBtn)    scrollBtn.style.display = 'none';
+  }
+
   for (var i = 0; i < 5; i++) {
     var dot = document.getElementById('cs-dot-' + i);
     var lbl = dot.nextElementSibling;
@@ -211,55 +226,56 @@ function careerPrev() {
 
 function validateSection(si) {
   var sec = SECTIONS[si];
+  var firstMissed = null;
 
   for (var qi = 0; qi < sec.questions.length; qi++) {
     var qNum = sec.startQ + qi;
     var checked = document.querySelector('input[name="q' + qNum + '"]:checked');
-
     if (!checked) {
-      // ❌ Not answered → redirect user to that question
-      showToast('error', 'Please answer all questions before continuing.');
-
-      // Scroll to that specific question
-      var questionEl = document.querySelector('input[name="q' + qNum + '"]').closest('.q-block');
-      if (questionEl) {
-        questionEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-
-      return false;
+      if (!firstMissed) firstMissed = qNum;
     }
   }
 
+  if (firstMissed !== null) {
+    showToast('error', 'Please answer all questions before continuing.');
+
+    /* If compact, expand first so the question is reachable */
+    if (!isExpanded) {
+      /* Scroll the questions-box to the unanswered question */
+      var box = document.getElementById('questions-box-' + si);
+      var questionEl = document.querySelector('input[name="q' + firstMissed + '"]');
+      if (questionEl && box) {
+        var block = questionEl.closest('.q-block');
+        if (block) {
+          /* Delay slightly so toast renders first */
+          setTimeout(function() {
+            block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            /* Highlight the missed question briefly */
+            block.classList.add('q-highlight');
+            setTimeout(function() { block.classList.remove('q-highlight'); }, 1800);
+          }, 150);
+        }
+      }
+    } else {
+      /* Expanded mode — scroll the page */
+      var questionElExp = document.querySelector('input[name="q' + firstMissed + '"]');
+      if (questionElExp) {
+        var blockExp = questionElExp.closest('.q-block');
+        if (blockExp) {
+          setTimeout(function() {
+            blockExp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            blockExp.classList.add('q-highlight');
+            setTimeout(function() { blockExp.classList.remove('q-highlight'); }, 1800);
+          }, 150);
+        }
+      }
+    }
+    return false;
+  }
   return true;
 }
 
 function handleSubmit() {
-  // ✅ Check ALL sections before submitting
-  for (var i = 0; i < SECTIONS.length; i++) {
-    for (var qi = 0; qi < SECTIONS[i].questions.length; qi++) {
-      var qNum = SECTIONS[i].startQ + qi;
-      var checked = document.querySelector('input[name="q' + qNum + '"]:checked');
-
-      if (!checked) {
-        // ❌ Jump to correct section
-        setCareerSection(i);
-
-        showToast('error', 'Please complete all questions before submitting.');
-
-        // Scroll to missing question
-        setTimeout(function() {
-          var el = document.querySelector('input[name="q' + qNum + '"]').closest('.q-block');
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 200);
-
-        return;
-      }
-    }
-  }
-
-  // ✅ If all answered → proceed
   showToast('loading', 'Analyzing your responses, please wait...');
   setTimeout(function() {
     dismissAllToasts();
@@ -269,6 +285,51 @@ function handleSubmit() {
     }, 2000);
   }, 2500);
 }
+
+/* ── View toggle (compact ↔ expanded) ── */
+var isExpanded = false;
+
+function toggleView() {
+  isExpanded = !isExpanded;
+
+  var iconCompact  = document.getElementById('view-icon-compact');
+  var iconExpanded = document.getElementById('view-icon-expanded');
+  var label        = document.getElementById('view-toggle-label');
+  var scrollBtn    = document.getElementById('scrollTopBtn');
+
+  if (isExpanded) {
+    document.body.classList.add('view-expanded');
+    document.documentElement.classList.add('view-expanded');
+    iconCompact.style.display  = 'none';
+    iconExpanded.style.display = 'block';
+    label.textContent = 'Compact';
+    if (scrollBtn) scrollBtn.style.display = 'flex';
+  } else {
+    document.body.classList.remove('view-expanded');
+    document.documentElement.classList.remove('view-expanded');
+    iconCompact.style.display  = 'block';
+    iconExpanded.style.display = 'none';
+    label.textContent = 'Expand';
+    if (scrollBtn) scrollBtn.style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+/* ── Scroll to top ── */
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* Show/hide scroll-to-top button */
+window.addEventListener('scroll', function() {
+  var btn = document.getElementById('scrollTopBtn');
+  if (!btn) return;
+  if (isExpanded || window.scrollY > 200) {
+    btn.style.display = 'flex';
+  } else {
+    btn.style.display = 'none';
+  }
+});
 
 /* ── Toast system ── */
 var ICONS = {
