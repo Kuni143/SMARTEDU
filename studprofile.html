@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile</title>
+  <link rel="icon" type="image/png" href="/pics/logo.png">
+  <link rel="stylesheet" href="/CSS/studprofile.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- Sidebar overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMenu()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <button class="sidebar-close" onclick="closeMenu()" aria-label="Close">&#x2715;</button>
+  <div class="sidebar-top">
+    <img src="/pics/logo.png" alt="SmartEdu Logo" class="sidebar-logo"/>
+    <p class="sidebar-username">User Name here</p>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="dashb_user.html" class="sidebar-link">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="profile.html" class="sidebar-link active">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/></svg>
+      Profile
+    </a>
+    <a href="studform.html" class="sidebar-link">
+      <svg viewBox="0 0 24 24" style="fill:none;stroke:#888;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="13" y2="15"/></svg>
+      Form
+    </a>
+    <a href="results.html" class="sidebar-link">
+      <svg viewBox="0 0 24 24" style="fill:none;stroke:#888;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 9 15"/></svg>
+      Result history
+    </a>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="sidebar-logout" onclick="openLogoutModal()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Log Out
+    </button>
+  </div>
+</aside>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a class="nav-logo" href="studprofile.html">
+    <img src="/pics/logo.png" alt="SmartEdu Logo"/>
+    <span>SmartEdu</span>
+  </a>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Hidden file input for avatar upload -->
+  <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatarChange(event)"/>
+
+  <!-- Profile Card -->
+  <div class="profile-card">
+    <div class="avatar-wrap" onclick="document.getElementById('avatarInput').click()" title="Change photo">
+      <!-- Default avatar silhouette -->
+      <svg class="avatar-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/>
+      </svg>
+      <!-- Uploaded photo -->
+      <img id="avatarImg" alt="Profile photo"/>
+      <!-- Hover overlay -->
+      <div class="avatar-overlay">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>Change</span>
+      </div>
+    </div>
+
+    <div class="profile-info">
+      <div class="profile-field">
+        <span class="profile-label">User name:</span>
+        <span class="profile-value" id="displayName">—</span>
+      </div>
+      <div class="profile-field">
+        <span class="profile-label">Grade Level:</span>
+        <span class="profile-value" id="displayGrade">—</span>
+      </div>
+      <div class="profile-field">
+        <span class="profile-label">Strand:</span>
+        <span class="profile-value" id="displayStrand">—</span>
+      </div>
+    </div>
+
+    <button class="edit-btn" onclick="openEditModal()" aria-label="Edit profile">
+      <svg viewBox="0 0 24 24">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Three columns -->
+  <div class="columns">
+
+    <!-- Interest -->
+    <div class="info-card">
+      <div class="info-card-title">Interest</div>
+      <ul class="info-list">
+        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+        <li>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</li>
+        <li>Ut enim ad minim veniam, quis nostrud exercitation ullamco.</li>
+        <li>Duis aute irure dolor in reprehenderit in voluptate velit esse.</li>
+        <li>Excepteur sint occaecat cupidatat non proident.</li>
+      </ul>
+    </div>
+
+    <!-- Skills -->
+    <div class="info-card">
+      <div class="info-card-title">Skills</div>
+      <ul class="info-list">
+        <li>Sunt in culpa qui officia deserunt mollit anim id est laborum.</li>
+        <li>Sed ut perspiciatis unde omnis iste natus error sit voluptatem.</li>
+        <li>Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis.</li>
+        <li>Nemo enim ipsam voluptatem quia voluptas sit aspernatur.</li>
+        <li>Neque porro quisquam est qui dolorem ipsum quia dolor sit amet.</li>
+      </ul>
+    </div>
+
+    <!-- University -->
+    <div class="info-card">
+      <div class="info-card-title">University</div>
+      <ul class="univ-list">
+        <li><a href="#">University Of the Philippines</a></li>
+        <li><a href="#">Mapua University</a></li>
+        <li><a href="#">De La Salle University</a></li>
+        <li><a href="#">Technological Institute of the Philippines</a></li>
+        <li><a href="#">FEU Institute of Technology</a></li>
+        <li><a href="#">National University</a></li>
+        <li><a href="#">Pamantasan ng Lungsod ng Maynila</a></li>
+        <li><a href="#">Polytechnic University of the Philippines</a></li>
+      </ul>
+    </div>
+
+  </div>
+</main>
+
+<!-- LOGOUT MODAL -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeLogoutModal()">&#x2715;</button>
+    <div class="modal-body">
+      <div class="modal-icon">i</div>
+      <p class="modal-text">Are you sure you want to log out?</p>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+      <button class="btn-confirm" onclick="window.location.href='login.html'">Log Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal" style="width:380px;">
+    <button class="modal-close" onclick="closeEditModal()">&#x2715;</button>
+    <div class="modal-body" style="flex-direction:column;gap:14px;">
+      <p style="font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:#061685;">Edit Profile</p>
+      <!-- Avatar picker inside modal -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div id="modalAvatarWrap"
+          onclick="document.getElementById('avatarInput').click()"
+          style="width:80px;height:80px;border-radius:50%;background:#dde2f0;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;position:relative;">
+          <svg id="modalAvatarIcon" viewBox="0 0 24 24" style="width:54px;height:54px;fill:#b0b8d4;">
+            <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/>
+          </svg>
+          <img id="modalAvatarImg" alt="Preview" style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0;border-radius:50%;"/>
+        </div>
+        <span style="font-family:'Inter',sans-serif;font-size:12px;color:#888;cursor:pointer;"
+          onclick="document.getElementById('avatarInput').click()">Click photo to change</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;width:100%;">
+        <label style="font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:#888;">User name</label>
+        <input id="editName" type="text" placeholder="Enter name"
+          style="height:40px;border-radius:10px;border:1px solid #dde2f0;padding:0 14px;font-family:'Inter',sans-serif;font-size:14px;color:#333;outline:none;"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;width:100%;">
+        <label style="font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:#888;">Grade Level</label>
+        <input id="editGrade" type="text" placeholder="e.g. Grade 12"
+          style="height:40px;border-radius:10px;border:1px solid #dde2f0;padding:0 14px;font-family:'Inter',sans-serif;font-size:14px;color:#333;outline:none;"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;width:100%;">
+        <label style="font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:#888;">Strand</label>
+        <input id="editStrand" type="text" placeholder="e.g. STEM"
+          style="height:40px;border-radius:10px;border:1px solid #dde2f0;padding:0 14px;font-family:'Inter',sans-serif;font-size:14px;color:#333;outline:none;"/>
+      </div>
+    </div>
+    <div class="modal-divider" style="margin-top:6px;"></div>
+    <div class="modal-actions">
+      <button class="td-cancel" onclick="closeEditModal()" style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:#666;background:none;border:none;cursor:pointer;padding:4px 8px;">Cancel</button>
+      <button onclick="saveProfile()"
+        style="background:#061685;color:#fff;border:none;border-radius:20px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;padding:8px 22px;cursor:pointer;transition:opacity 0.2s;">
+        Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="/JS/studprofile.js"></script>
+</body>
+</html>

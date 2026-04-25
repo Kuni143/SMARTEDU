@@ -1,4 +1,4 @@
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       width: 100%; height: 100%;
@@ -85,12 +85,20 @@
     .navbar {
       width: 100%; height: 72px; background: #ced4df;
       display: flex; align-items: center;
-      justify-content: space-between; padding: 0 32px;
+      justify-content: flex-end; padding: 0 32px;
       position: sticky; top: 0; z-index: 100;
     }
-    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+
+    /* Logo: fixed to top-left, out of navbar flow */
+    .nav-logo {
+      position: fixed; top: 24px; left: 36px;
+      display: flex; align-items: center; gap: 10px;
+      z-index: 100; text-decoration: none;
+    }
     .nav-logo img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
     .nav-logo span { font-size: 15px; font-weight: 600; color: #101d89; }
+
+    /* Hamburger: sits on the right inside the sticky navbar */
     .hamburger { display: flex; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; }
     .hamburger span { display: block; width: 28px; height: 3px; background: #101d89; border-radius: 2px; transition: opacity 0.2s; }
     .hamburger:hover span { opacity: 0.7; }
@@ -161,7 +169,6 @@
     .grid-wrapper { height: 692px; overflow-y: auto; flex-shrink: 0; }
     .school-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-content: start; }
 
-    /* ── FIX: use display:none so hidden cards don't occupy grid space ── */
     .school-card {
       background: #fff; border-radius: 18px; padding: 22px 20px 18px;
       display: flex; flex-direction: column; gap: 10px;
@@ -169,7 +176,7 @@
       transition: box-shadow 0.2s, transform 0.15s;
       height: 220px;
     }
-    .school-card.hidden { display: none; } /* was visibility:hidden — fixed */
+    .school-card.hidden { display: none; }
     .school-card:hover { box-shadow: 0 6px 20px rgba(6,22,133,0.12); transform: translateY(-2px); }
 
     .school-name { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; color: #061685; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
