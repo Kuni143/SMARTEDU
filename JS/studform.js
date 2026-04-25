@@ -265,7 +265,7 @@ function handleSubmit() {
     dismissAllToasts();
     showToast('success', 'Analysis complete! Redirecting to your results...');
     setTimeout(function() {
-      window.location.href = 'results.html';
+      window.location.href = 'result_univs.html';
     }, 2000);
   }, 2500);
 }
