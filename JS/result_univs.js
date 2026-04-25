@@ -1,173 +1,157 @@
-/* ── School data ── */
-var SCHOOLS = [
-  { name: 'Universidad ng Pilipinas', type: 'SUC', desc: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' },
-  { name: 'Mapúa University', type: 'Private', desc: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.' },
-  { name: 'De La Salle University', type: 'Private', desc: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.' },
-  { name: 'Technological University of the Philippines', type: 'SUC', desc: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.' },
-  { name: 'FEU Institute of Technology', type: 'Private', desc: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.' },
-  { name: 'National University', type: 'Private', desc: 'Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.' },
-  { name: 'Pamantasan ng Lungsod ng Maynila', type: 'LUC', desc: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.' },
-  { name: 'Polytechnic University of the Philippines', type: 'SUC', desc: 'Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur adipisci velit.' },
-  { name: 'Ateneo de Manila University', type: 'Private', desc: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti.' },
-  { name: 'University of Santo Tomas', type: 'Private', desc: 'Nam libero tempore cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat.' },
-  { name: 'Adamson University', type: 'Private', desc: 'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates.' },
-  { name: 'Pamantasan ng Lungsod ng Pasig', type: 'LUC', desc: 'Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis voluptatibus maiores alias consequatur.' },
-];
-
-/* ── State ── */
-var activeTypes  = ['All'];
-var pendingTypes = ['All'];
-var searchQuery  = '';
-
-/* ══════════════════════════════════════════════
-   RENDER
-   — ALL cards are always in the DOM.
-   — Matching cards are visible; non-matching
-     cards are hidden with visibility:hidden +
-     pointer-events:none so they still occupy
-     space and the grid NEVER changes size.
-══════════════════════════════════════════════ */
-function buildGrid() {
-  var grid = document.getElementById('schoolGrid');
-  grid.innerHTML = SCHOOLS.map(function(s, i) {
-    return (
-      '<div class="school-card" id="card-' + i + '">' +
-        '<div class="school-name">' + s.name + '</div>' +
-        '<div class="school-desc">'  + s.desc + '</div>' +
-        '<div class="school-card-footer">' +
-          '<button class="btn-details" onclick="goDetails(\'' + encodeURIComponent(s.name) + '\')">Details</button>' +
-        '</div>' +
-      '</div>'
-    );
-  }).join('');
-}
-
-function applyVisibility() {
-  SCHOOLS.forEach(function(s, i) {
-    var card = document.getElementById('card-' + i);
-    if (!card) return;
-    var matchType   = activeTypes.includes('All') || activeTypes.includes(s.type);
-    var matchSearch = !searchQuery ||
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.desc.toLowerCase().includes(searchQuery.toLowerCase());
-
-    if (matchType && matchSearch) {
-      card.classList.remove('hidden');
+  /* ── School data ── */
+  var SCHOOLS = [
+    { name: 'Universidad ng Pilipinas', type: 'SUC', desc: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' },
+    { name: 'Mapúa University', type: 'Private', desc: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.' },
+    { name: 'De La Salle University', type: 'Private', desc: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.' },
+    { name: 'Technological University of the Philippines', type: 'SUC', desc: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.' },
+    { name: 'FEU Institute of Technology', type: 'Private', desc: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.' },
+    { name: 'National University', type: 'Private', desc: 'Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.' },
+    { name: 'Pamantasan ng Lungsod ng Maynila', type: 'LUC', desc: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.' },
+    { name: 'Polytechnic University of the Philippines', type: 'SUC', desc: 'Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur adipisci velit.' },
+    { name: 'Ateneo de Manila University', type: 'Private', desc: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti.' },
+    { name: 'University of Santo Tomas', type: 'Private', desc: 'Nam libero tempore cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat.' },
+    { name: 'Adamson University', type: 'Private', desc: 'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates.' },
+    { name: 'Pamantasan ng Lungsod ng Pasig', type: 'LUC', desc: 'Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis voluptatibus maiores alias consequatur.' },
+  ];
+ 
+  var activeTypes  = ['All'];
+  var pendingTypes = ['All'];
+  var searchQuery  = '';
+ 
+  function buildGrid() {
+    var grid = document.getElementById('schoolGrid');
+    grid.innerHTML = SCHOOLS.map(function(s, i) {
+      return (
+        '<div class="school-card" id="card-' + i + '">' +
+          '<div class="school-name">' + s.name + '</div>' +
+          '<div class="school-desc">'  + s.desc + '</div>' +
+          '<div class="school-card-footer">' +
+            '<button class="btn-details" onclick="goDetails(\'' + encodeURIComponent(s.name) + '\')">Details</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+ 
+  function applyVisibility() {
+    SCHOOLS.forEach(function(s, i) {
+      var card = document.getElementById('card-' + i);
+      if (!card) return;
+      var matchType   = activeTypes.includes('All') || activeTypes.includes(s.type);
+      var matchSearch = !searchQuery ||
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.desc.toLowerCase().includes(searchQuery.toLowerCase());
+      if (matchType && matchSearch) { card.classList.remove('hidden'); }
+      else { card.classList.add('hidden'); }
+    });
+  }
+ 
+  function goDetails(name) {
+    window.location.href = 'detail_univ.html?name=' + name;
+  }
+ 
+  function handleSearch() {
+    searchQuery = document.getElementById('searchInput').value.trim();
+    applyVisibility();
+  }
+ 
+  function clearSearch() {
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    applyVisibility();
+  }
+ 
+  function toggleFilter() {
+    var dd = document.getElementById('filterDropdown');
+    if (!dd.classList.contains('open')) { pendingTypes = activeTypes.slice(); syncCheckboxes(); }
+    dd.classList.toggle('open');
+  }
+ 
+  function toggleTypeDropdown() {
+    document.getElementById('typeDropdown').classList.toggle('open');
+    document.getElementById('filterChevron').classList.toggle('flipped');
+  }
+ 
+  function syncCheckboxes() {
+    document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(cb) {
+      cb.checked = pendingTypes.includes(cb.value);
+    });
+    updateCurrentText();
+  }
+ 
+  function updateCurrentText() {
+    var el = document.getElementById('filterCurrentText');
+    el.textContent = (pendingTypes.includes('All') || pendingTypes.length === 0) ? 'All' : pendingTypes.join(', ');
+  }
+ 
+  function handleTypeCheck(cb) {
+    if (cb.value === 'All') {
+      pendingTypes = cb.checked ? ['All'] : [];
+      document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) { b.checked = (b.value === 'All' && cb.checked); });
     } else {
-      card.classList.add('hidden');
+      var allBox = document.querySelector('.type-opt input[value="All"]');
+      if (allBox) allBox.checked = false;
+      pendingTypes = pendingTypes.filter(function(t) { return t !== 'All'; });
+      if (cb.checked) { if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value); }
+      else { pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; }); }
+    }
+    updateCurrentText();
+  }
+ 
+  function selectAll() { pendingTypes = ['All']; syncCheckboxes(); }
+ 
+  function clearAll() {
+    pendingTypes = [];
+    document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) { b.checked = false; });
+    updateCurrentText();
+  }
+ 
+  function applyFilter() {
+    activeTypes = pendingTypes.length ? pendingTypes.slice() : ['All'];
+    closeFilterDropdown(); applyVisibility();
+  }
+ 
+  function cancelFilter() { pendingTypes = activeTypes.slice(); closeFilterDropdown(); }
+ 
+  function closeFilterDropdown() {
+    document.getElementById('filterDropdown').classList.remove('open');
+    document.getElementById('typeDropdown').classList.remove('open');
+    document.getElementById('filterChevron').classList.remove('flipped');
+  }
+ 
+  document.addEventListener('click', function(e) {
+    var dd  = document.getElementById('filterDropdown');
+    var btn = document.getElementById('filterBtn');
+    if (dd.classList.contains('open') && !dd.contains(e.target) && !btn.contains(e.target)) {
+      closeFilterDropdown();
     }
   });
-}
-
-function goDetails(name) {
-  window.location.href = 'detail_univ.html?name=' + name;
-}
-
-/* ── Search ── */
-function handleSearch() {
-  searchQuery = document.getElementById('searchInput').value.trim();
-  applyVisibility();
-}
-
-function clearSearch() {
-  searchQuery = '';
-  document.getElementById('searchInput').value = '';
-  applyVisibility();
-}
-
-/* ══════════════════════════
-   FILTER DROPDOWN
-══════════════════════════ */
-function toggleFilter() {
-  var dd = document.getElementById('filterDropdown');
-  var isOpen = dd.classList.contains('open');
-  if (!isOpen) {
-    pendingTypes = activeTypes.slice();
-    syncCheckboxes();
+ 
+  /* ── Sidebar ── */
+  function toggleMenu() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('show');
   }
-  dd.classList.toggle('open');
-}
-
-function toggleTypeDropdown() {
-  document.getElementById('typeDropdown').classList.toggle('open');
-  document.getElementById('filterChevron').classList.toggle('flipped');
-}
-
-function syncCheckboxes() {
-  document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(cb) {
-    cb.checked = pendingTypes.includes(cb.value);
+ 
+  function closeMenu() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  }
+ 
+  /* ── Logout modal ── */
+  function openLogoutModal() {
+    closeMenu();
+    document.getElementById('logoutModal').classList.add('show');
+  }
+ 
+  function closeLogoutModal() {
+    document.getElementById('logoutModal').classList.remove('show');
+  }
+ 
+  document.getElementById('logoutModal').addEventListener('click', function(e) {
+    if (e.target === this) closeLogoutModal();
   });
-  updateCurrentText();
-}
-
-function updateCurrentText() {
-  var el = document.getElementById('filterCurrentText');
-  el.textContent = (pendingTypes.includes('All') || pendingTypes.length === 0) ? 'All' : pendingTypes.join(', ');
-}
-
-function handleTypeCheck(cb) {
-  if (cb.value === 'All') {
-    pendingTypes = cb.checked ? ['All'] : [];
-    document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) {
-      b.checked = (b.value === 'All' && cb.checked);
-    });
-  } else {
-    var allBox = document.querySelector('.type-opt input[value="All"]');
-    if (allBox) allBox.checked = false;
-    pendingTypes = pendingTypes.filter(function(t) { return t !== 'All'; });
-    if (cb.checked) { if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value); }
-    else            { pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; }); }
-  }
-  updateCurrentText();
-}
-
-function selectAll() { pendingTypes = ['All']; syncCheckboxes(); }
-
-function clearAll() {
-  pendingTypes = [];
-  document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) { b.checked = false; });
-  updateCurrentText();
-}
-
-function applyFilter() {
-  activeTypes = pendingTypes.length ? pendingTypes.slice() : ['All'];
-  closeFilterDropdown();
+ 
+  /* ── Init ── */
+  buildGrid();
   applyVisibility();
-}
-
-function cancelFilter() {
-  pendingTypes = activeTypes.slice();
-  closeFilterDropdown();
-}
-
-function closeFilterDropdown() {
-  document.getElementById('filterDropdown').classList.remove('open');
-  document.getElementById('typeDropdown').classList.remove('open');
-  document.getElementById('filterChevron').classList.remove('flipped');
-}
-
-/* ── Outside click closes filter dropdown ── */
-document.addEventListener('click', function(e) {
-  var dd  = document.getElementById('filterDropdown');
-  var btn = document.getElementById('filterBtn');
-  if (dd.classList.contains('open') && !dd.contains(e.target) && !btn.contains(e.target)) {
-    closeFilterDropdown();
-  }
-});
-
-/* ══════════════════════════
-   SIDEBAR
-══════════════════════════ */
-function toggleMenu() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('show');
-}
-
-function closeMenu() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('show');
-}
-
-/* ── Init ── */
-buildGrid();       // render all cards once
-applyVisibility(); // show all (default state)
