@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>University Result</title>
   <link rel="icon" type="image/png" href="/pics/logo.png">
-  <link rel="stylesheet" href="CSS/result_univs.css"/>
+  <link rel="stylesheet" href="/CSS/result_univs.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -67,7 +67,7 @@
   <div class="search-row">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="searchInput" placeholder="Search" oninput="handleSearch()"/>
+      <input type="text" id="searchInput" placeholder="Search universities…" oninput="handleSearch()"/>
     </div>
     <div class="filter-wrap">
       <button class="filter-btn" id="filterBtn" onclick="toggleFilter()">
@@ -86,7 +86,7 @@
             <button onclick="selectAll()">Select all</button>
             <button onclick="clearAll()">Clear</button>
           </div>
-          <label class="type-opt"><input type="checkbox" value="All" onchange="handleTypeCheck(this)"> All</label>
+          <label class="type-opt"><input type="checkbox" value="All" onchange="handleTypeCheck(this)" checked> All</label>
           <label class="type-opt"><input type="checkbox" value="LUC" onchange="handleTypeCheck(this)"> LUC</label>
           <label class="type-opt"><input type="checkbox" value="OGS" onchange="handleTypeCheck(this)"> OGS</label>
           <label class="type-opt"><input type="checkbox" value="SUC" onchange="handleTypeCheck(this)"> SUC</label>
@@ -102,7 +102,8 @@
 
   <!-- Tag row -->
   <div class="tag-row" id="tagRow">
-    <span class="tag active-tag" id="activeFilterTag">Civil Engineering</span>
+    <span class="tag active-tag" id="activeFilterTag">All Universities</span>
+    <span class="tag" id="allSearchTag" onclick="clearSearch()">Clear Search</span>
   </div>
 
   <!-- Grid -->
@@ -128,6 +129,6 @@
   </div>
 </div>
 
-<script src="JS/result_univs.js"></script>
+<script src="/JS/result_univs.js"></script>
 </body>
 </html>

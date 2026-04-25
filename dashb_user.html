@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
   <link rel="icon" type="image/png" href="/pics/logo.png">
-  <link rel="stylesheet" href="/CSS/dashb_user.css">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/dashb_user.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
@@ -103,35 +103,20 @@
     <!-- Strand label -->
     <div class="strand-label">Strand Alignment: STEM</div>
 
-    <!-- Courses card with Top 3 popup -->
+    <!-- Courses card -->
     <div class="courses-card">
-      <div class="course-item" onclick="showTop3()">Engineering</div>
-      <div class="course-item" onclick="showTop3()">Information Technology</div>
-      <div class="course-item" onclick="showTop3()">Nursing</div>
-      <div class="course-item" onclick="showTop3()">Business Ad</div>
-      <div class="course-item" onclick="showTop3()">Architecture</div>
-
-      <!-- Top 3 popup -->
-      <div class="top3-popup" id="top3Popup">
-        <div class="top3-header">
-          <span class="top3-title">Top 3 Result of courses</span>
-          <button class="top3-close" onclick="closeTop3()">&#x2715;</button>
-        </div>
-        <p class="top3-sub">Select a course to see available universities.</p>
-        <ol class="top3-list">
-          <li><a onclick="goToUnivs('Information Technology')">Information Technology</a></li>
-          <li><a onclick="goToUnivs('Computer Science')">Computer Science</a></li>
-          <li><a onclick="goToUnivs('Industrial Engineer')">Industrial Engineer</a></li>
-        </ol>
-        <div class="top3-divider"></div>
-        <p class="top3-redirect">Redirecting to available universities…</p>
-      </div>
+      <div class="top5-label">Top 5 Result of Courses</div>
+      <a href="result_univs.html?course=Engineering" class="course-item">Engineering</a>
+      <a href="result_univs.html?course=Information+Technology" class="course-item">Information Technology</a>
+      <a href="result_univs.html?course=Nursing" class="course-item">Nursing</a>
+      <a href="result_univs.html?course=Business+Administration" class="course-item">Business Ad</a>
+      <a href="result_univs.html?course=Architecture" class="course-item">Architecture</a>
     </div>
 
   </div>
 </main>
 
-<!-- ══ LOGOUT MODAL ══ -->
+<!-- LOGOUT MODAL -->
 <div class="modal-overlay" id="logoutModal">
   <div class="modal">
     <button class="modal-close" onclick="closeLogoutModal()">&#x2715;</button>
@@ -147,7 +132,7 @@
   </div>
 </div>
 
-<!-- ══ RETAKE MODAL ══ -->
+<!-- RETAKE MODAL -->
 <div class="modal-overlay" id="retakeModal">
   <div class="modal">
     <button class="modal-close" onclick="closeRetakeModal()">&#x2715;</button>

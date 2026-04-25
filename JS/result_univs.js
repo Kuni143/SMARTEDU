@@ -1,4 +1,3 @@
-  /* ── School data ── */
   var SCHOOLS = [
     { name: 'Universidad ng Pilipinas', type: 'SUC', desc: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' },
     { name: 'Mapúa University', type: 'Private', desc: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.' },
@@ -14,19 +13,18 @@
     { name: 'Pamantasan ng Lungsod ng Pasig', type: 'LUC', desc: 'Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis voluptatibus maiores alias consequatur.' },
   ];
 
-  /* ── FIX: activeTypes now correctly defaults to ['All'] and pendingTypes
-     is always a fresh copy so Cancel truly reverts changes ── */
   var activeTypes  = ['All'];
   var pendingTypes = ['All'];
   var searchQuery  = '';
 
+  /* ── Build grid once ── */
   function buildGrid() {
     var grid = document.getElementById('schoolGrid');
     grid.innerHTML = SCHOOLS.map(function(s, i) {
       return (
         '<div class="school-card" id="card-' + i + '">' +
           '<div class="school-name">' + s.name + '</div>' +
-          '<div class="school-desc">'  + s.desc + '</div>' +
+          '<div class="school-desc">' + s.desc + '</div>' +
           '<div class="school-card-footer">' +
             '<button class="btn-details" onclick="goDetails(\'' + encodeURIComponent(s.name) + '\')">Details</button>' +
           '</div>' +
@@ -35,6 +33,7 @@
     }).join('');
   }
 
+  /* ── Apply search + filter visibility ── */
   function applyVisibility() {
     var anyVisible = false;
     SCHOOLS.forEach(function(s, i) {
@@ -43,10 +42,10 @@
       var matchType   = activeTypes.includes('All') || activeTypes.includes(s.type);
       var matchSearch = !searchQuery ||
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.desc.toLowerCase().includes(searchQuery.toLowerCase());
 
       if (matchType && matchSearch) {
-        /* ── FIX: display:flex (not visibility:hidden) so grid reflows ── */
         card.style.display = 'flex';
         anyVisible = true;
       } else {
@@ -54,14 +53,14 @@
       }
     });
 
-    /* Show/hide no-results message */
+    /* No-results message */
     var existing = document.getElementById('no-results-msg');
     if (!anyVisible) {
       if (!existing) {
         var msg = document.createElement('div');
         msg.id = 'no-results-msg';
         msg.className = 'no-results';
-        msg.textContent = 'No schools found.';
+        msg.textContent = 'No universities found.';
         document.getElementById('schoolGrid').appendChild(msg);
       }
     } else {
@@ -73,27 +72,32 @@
     window.location.href = 'detail_univ.html?name=' + name;
   }
 
+  /* ── Search ── */
   function handleSearch() {
     searchQuery = document.getElementById('searchInput').value.trim();
-    /* Update active tag underline */
-    document.getElementById('activeFilterTag').classList.remove('active-tag');
-    document.getElementById('allSearchTag').classList.add('active-tag');
+    /* Update tag underline */
+    if (searchQuery) {
+      document.getElementById('activeFilterTag').classList.remove('active-tag');
+      document.getElementById('allSearchTag').classList.add('active-tag');
+    } else {
+      document.getElementById('activeFilterTag').classList.add('active-tag');
+      document.getElementById('allSearchTag').classList.remove('active-tag');
+    }
     applyVisibility();
   }
 
-  /* ── FIX: clearSearch now also resets the tag underline correctly ── */
   function clearSearch() {
     searchQuery = '';
     document.getElementById('searchInput').value = '';
-    document.getElementById('allSearchTag').classList.remove('active-tag');
     document.getElementById('activeFilterTag').classList.add('active-tag');
+    document.getElementById('allSearchTag').classList.remove('active-tag');
     applyVisibility();
   }
 
+  /* ── Filter ── */
   function toggleFilter() {
     var dd = document.getElementById('filterDropdown');
     if (!dd.classList.contains('open')) {
-      /* ── FIX: snapshot activeTypes into pendingTypes before opening ── */
       pendingTypes = activeTypes.slice();
       syncCheckboxes();
     }
@@ -114,39 +118,26 @@
 
   function updateCurrentText() {
     var el = document.getElementById('filterCurrentText');
-    if (pendingTypes.includes('All') || pendingTypes.length === 0) {
-      el.textContent = 'All';
-    } else {
-      el.textContent = pendingTypes.join(', ');
-    }
+    el.textContent = (pendingTypes.includes('All') || pendingTypes.length === 0) ? 'All' : pendingTypes.join(', ');
   }
 
   function handleTypeCheck(cb) {
     if (cb.value === 'All') {
-      /* Selecting "All" clears every other selection */
       pendingTypes = cb.checked ? ['All'] : [];
       document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) {
         b.checked = (b.value === 'All' && cb.checked);
       });
     } else {
-      /* ── FIX: uncheck "All" whenever a specific type is chosen ── */
       var allBox = document.querySelector('.type-opt input[value="All"]');
       if (allBox) allBox.checked = false;
       pendingTypes = pendingTypes.filter(function(t) { return t !== 'All'; });
-
-      if (cb.checked) {
-        if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value);
-      } else {
-        pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; });
-      }
+      if (cb.checked) { if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value); }
+      else { pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; }); }
     }
     updateCurrentText();
   }
 
-  function selectAll() {
-    pendingTypes = ['All'];
-    syncCheckboxes();
-  }
+  function selectAll() { pendingTypes = ['All']; syncCheckboxes(); }
 
   function clearAll() {
     pendingTypes = [];
@@ -155,14 +146,17 @@
   }
 
   function applyFilter() {
-    /* ── FIX: if nothing selected, treat as "All" ── */
     activeTypes = pendingTypes.length ? pendingTypes.slice() : ['All'];
+    /* Update tag text to reflect filter */
+    var tag = document.getElementById('activeFilterTag');
+    tag.textContent = activeTypes.includes('All') ? 'All Universities' : activeTypes.join(', ');
+    tag.classList.add('active-tag');
+    document.getElementById('allSearchTag').classList.remove('active-tag');
     closeFilterDropdown();
     applyVisibility();
   }
 
   function cancelFilter() {
-    /* ── FIX: revert pendingTypes to the last committed activeTypes ── */
     pendingTypes = activeTypes.slice();
     closeFilterDropdown();
   }
@@ -173,11 +167,11 @@
     document.getElementById('filterChevron').classList.remove('flipped');
   }
 
+  /* Close filter on outside click */
   document.addEventListener('click', function(e) {
     var dd  = document.getElementById('filterDropdown');
     var btn = document.getElementById('filterBtn');
     if (dd.classList.contains('open') && !dd.contains(e.target) && !btn.contains(e.target)) {
-      /* Clicking outside = cancel, don't apply pending changes */
       cancelFilter();
     }
   });
@@ -187,7 +181,6 @@
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebarOverlay').classList.toggle('show');
   }
-
   function closeMenu() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('show');
@@ -198,11 +191,9 @@
     closeMenu();
     document.getElementById('logoutModal').classList.add('show');
   }
-
   function closeLogoutModal() {
     document.getElementById('logoutModal').classList.remove('show');
   }
-
   document.getElementById('logoutModal').addEventListener('click', function(e) {
     if (e.target === this) closeLogoutModal();
   });
