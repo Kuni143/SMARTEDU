@@ -9,15 +9,28 @@
   <link rel="stylesheet" href="/CSS/admin_univs.css">
 </head>
 <body>
-<div class="page">
 
-  <!-- Header -->
-  <div class="header">
-    <a class="logo" href="admin_univs.html">
+  <!-- ── Top Navbar ── -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="dashb_admin.html">
       <img src="/pics/logo.png" alt="SmartEdu Logo" />
-      <span class="logo-text">SmartEdu</span>
+      <span>SmartEdu</span>
     </a>
-  </div>
+    <div class="topnav-links">
+      <a href="dashb_admin.html" class="topnav-link">Dashboard</a>
+      <a href="admin_univs.html" class="topnav-link active">University</a>
+    </div>
+    <button class="topnav-logout" onclick="window.location.href='admin_login.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Log out
+    </button>
+  </nav>
+
+<div class="page">
 
   <!-- Welcome -->
   <div class="welcome">
@@ -97,13 +110,19 @@
             <option>Quezon City</option>
             <option>Manila</option>
             <option>Makati</option>
-            <option>Pasig</option>
+            <option>Pateros</option>
             <option>Taguig</option>
+            <option>Las Piñas</option>
             <option>Caloocan</option>
-            <option>Cebu City</option>
-            <option>Davao City</option>
-            <option>Baguio City</option>
-            <option>Iloilo City</option>
+            <option>Muntinlupa</option>
+            <option>Pasig</option>
+            <option>Mandaluyong</option>
+            <option>San Juan</option>
+            <option>Pasay</option>
+            <option>Marikina</option>
+            <option>Parañaque</option>
+            <option>Valenzuela</option>
+            <option>Malabon</option>
           </select>
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
@@ -174,16 +193,22 @@
       <div class="select-wrapper">
         <select id="m-location">
           <option value="" disabled selected></option>
-          <option>Quezon City</option>
-          <option>Manila</option>
-          <option>Makati</option>
-          <option>Pasig</option>
-          <option>Taguig</option>
-          <option>Caloocan</option>
-          <option>Cebu City</option>
-          <option>Davao City</option>
-          <option>Baguio City</option>
-          <option>Iloilo City</option>
+            <option>Quezon City</option>
+            <option>Manila</option>
+            <option>Makati</option>
+            <option>Pateros</option>
+            <option>Taguig</option>
+            <option>Las Piñas</option>
+            <option>Caloocan</option>
+            <option>Muntinlupa</option>
+            <option>Pasig</option>
+            <option>Mandaluyong</option>
+            <option>San Juan</option>
+            <option>Pasay</option>
+            <option>Marikina</option>
+            <option>Parañaque</option>
+            <option>Valenzuela</option>
+            <option>Malabon</option>
         </select>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
