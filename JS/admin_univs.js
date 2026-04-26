@@ -257,9 +257,12 @@ function buildDetail(u) {
   var card = document.createElement('div');
   card.className = 'detail-card';
   card.innerHTML = `
+    <!-- ── Section 1: Basic Info ── -->
     <div class="detail-section">
+      <div class="detail-section-title">Basic Information</div>
+
       <div class="detail-row">
-        <span class="detail-label">University name</span>
+        <span class="detail-label">University Name</span>
         <span class="detail-value bold">${escHtml(u.name)}</span>
       </div>
       <div class="detail-row">
@@ -276,16 +279,24 @@ function buildDetail(u) {
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Edit Description</span>
-        <textarea id="d-description" rows="3" oninput="markDirty()">${escHtml(u.description||'')}</textarea>
+      <div class="detail-row align-top">
+        <span class="detail-label">Description</span>
+        <textarea id="d-description" rows="3" oninput="markDirty()" placeholder="Short description of the university...">${escHtml(u.description||'')}</textarea>
+      </div>
+      <div class="detail-row align-top">
+        <span class="detail-label">Campus Branches</span>
+        <textarea id="d-campus-branches" rows="3" oninput="markDirty()" placeholder="List campus branches or satellite offices...">${escHtml(u.campus_branches||'')}</textarea>
       </div>
     </div>
+
+    <!-- ── Section 2: Courses ── -->
     <div class="detail-section">
+      <div class="detail-section-title">Programs Offered</div>
+
       <div class="detail-row align-top">
-        <span class="detail-label">Course Offered</span>
+        <span class="detail-label">Courses Offered</span>
         <div class="courses-area">
-          <div class="courses-tags" id="d-courses">${courseTags}</div>
+          <div class="courses-tags" id="d-courses">${courseTags || '<span class="courses-empty">No courses added yet.</span>'}</div>
           <button class="btn-icon" onclick="openCoursesModal()" title="Edit courses">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -295,14 +306,39 @@ function buildDetail(u) {
         </div>
       </div>
       <div class="detail-row align-top">
-        <span class="detail-label">Entrance Exam</span>
-        <textarea id="d-exam" rows="5" oninput="markDirty()">${escHtml(u.exam||'')}</textarea>
-      </div>
-      <div class="detail-row align-top">
-        <span class="detail-label">Requirements</span>
-        <textarea id="d-requirements" rows="4" oninput="markDirty()">${escHtml(u.requirements||'')}</textarea>
+        <span class="detail-label">Tuition &amp; Fees Info</span>
+        <textarea id="d-tuition-fees" rows="3" oninput="markDirty()" placeholder="Estimated tuition ranges, payment schemes, scholarships...">${escHtml(u.tuition_fees||'')}</textarea>
       </div>
     </div>
+
+    <!-- ── Section 3: Admissions ── -->
+    <div class="detail-section">
+      <div class="detail-section-title">Admissions</div>
+
+      <div class="detail-row align-top">
+        <span class="detail-label">Entrance Exam</span>
+        <textarea id="d-exam" rows="4" oninput="markDirty()" placeholder="Exam schedule, registration steps, coverage...">${escHtml(u.exam||'')}</textarea>
+      </div>
+      <div class="detail-row align-top">
+        <span class="detail-label">Admission Requirements</span>
+        <textarea id="d-requirements" rows="4" oninput="markDirty()" placeholder="Documents required to apply and qualify...">${escHtml(u.requirements||'')}</textarea>
+      </div>
+      <div class="detail-row align-top">
+        <span class="detail-label">Enrollment Requirements</span>
+        <textarea id="d-enrollment-requirements" rows="4" oninput="markDirty()" placeholder="Documents and steps required upon enrollment...">${escHtml(u.enrollment_requirements||'')}</textarea>
+      </div>
+    </div>
+
+    <!-- ── Section 4: Contact ── -->
+    <div class="detail-section">
+      <div class="detail-section-title">Contact &amp; Links</div>
+
+      <div class="detail-row align-top">
+        <span class="detail-label">Official Links</span>
+        <textarea id="d-contact-links" rows="3" oninput="markDirty()" placeholder="Website, admissions portal, Facebook page, email...">${escHtml(u.contact_links||'')}</textarea>
+      </div>
+    </div>
+
     <div class="detail-actions">
       <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
       <button class="btn-save" id="btn-save" onclick="saveUniversity()" disabled>Save Changes</button>
@@ -323,13 +359,17 @@ function saveUniversity() {
   var u = universities.find(function(x){ return x.id==activeId; });
   if (!u) return;
   var payload = {
-    id:           u.id,
-    type:         document.getElementById('d-type').value,
-    location:     document.getElementById('d-location').value,
-    description:  document.getElementById('d-description').value,
-    exam:         document.getElementById('d-exam').value,
-    requirements: document.getElementById('d-requirements').value,
-    courses:      u.courses || [],
+    id:                      u.id,
+    type:                    document.getElementById('d-type').value,
+    location:                document.getElementById('d-location').value,
+    description:             document.getElementById('d-description').value,
+    campus_branches:         document.getElementById('d-campus-branches').value,
+    tuition_fees:            document.getElementById('d-tuition-fees').value,
+    exam:                    document.getElementById('d-exam').value,
+    requirements:            document.getElementById('d-requirements').value,
+    enrollment_requirements: document.getElementById('d-enrollment-requirements').value,
+    contact_links:           document.getElementById('d-contact-links').value,
+    courses:                 u.courses || [],
   };
   fetch('admin_univs.php?action=save', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -338,10 +378,17 @@ function saveUniversity() {
   .then(function(r){ return r.json(); })
   .then(function(json) {
     if (!json.success) throw new Error(json.error);
-    u.type=payload.type; u.location=payload.location;
-    u.description=payload.description; u.exam=payload.exam;
-    u.requirements=payload.requirements;
-    isDirty=false;
+    // Update local state
+    u.type                    = payload.type;
+    u.location                = payload.location;
+    u.description             = payload.description;
+    u.campus_branches         = payload.campus_branches;
+    u.tuition_fees            = payload.tuition_fees;
+    u.exam                    = payload.exam;
+    u.requirements            = payload.requirements;
+    u.enrollment_requirements = payload.enrollment_requirements;
+    u.contact_links           = payload.contact_links;
+    isDirty = false;
     showToast('success','University saved successfully.');
     renderList();
   })
@@ -399,7 +446,12 @@ function addUniversity() {
   .then(function(r){ return r.json(); })
   .then(function(json) {
     if (!json.success) throw new Error(json.error);
-    universities.push({id:json.id, name, type, location:loc, description:desc, courses:[], exam:'', requirements:''});
+    universities.push({
+      id:json.id, name, type, location:loc, description:desc,
+      campus_branches:'', tuition_fees:'',
+      courses:[], exam:'', requirements:'',
+      enrollment_requirements:'', contact_links:''
+    });
     activeId=json.id;
     closeAddModal();
     showToast('success','University added successfully.');
@@ -446,9 +498,9 @@ function saveCoursesModal() {
   markDirty();
   var container=document.getElementById('d-courses');
   if (container) {
-    container.innerHTML=tempCourses.map(function(c){
-      return '<span class="course-tag">'+escHtml(c)+'</span>';
-    }).join('');
+    container.innerHTML = tempCourses.length
+      ? tempCourses.map(function(c){ return '<span class="course-tag">'+escHtml(c)+'</span>'; }).join('')
+      : '<span class="courses-empty">No courses added yet.</span>';
   }
 }
 

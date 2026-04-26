@@ -17,7 +17,10 @@ if (isset($_GET['action'])) {
     // ── GET all universities ──────────────────────────
     if ($action === 'list') {
       $rows = $pdo->query("
-        SELECT u.id, u.name, u.type, u.location, u.description, u.exam, u.requirements,
+        SELECT u.id, u.name, u.type, u.location, u.description,
+               u.campus_branches, u.tuition_fees,
+               u.exam, u.requirements,
+               u.enrollment_requirements, u.contact_links,
                GROUP_CONCAT(c.course_name ORDER BY c.course_name SEPARATOR '||') AS courses
         FROM universities u
         LEFT JOIN university_courses c ON c.university_id = u.id
@@ -66,15 +69,23 @@ if (isset($_GET['action'])) {
       $pdo->prepare("
         UPDATE universities
         SET type=:type, location=:location, description=:description,
-            exam=:exam, requirements=:requirements
+            campus_branches=:campus_branches,
+            tuition_fees=:tuition_fees,
+            exam=:exam, requirements=:requirements,
+            enrollment_requirements=:enrollment_requirements,
+            contact_links=:contact_links
         WHERE id=:id
       ")->execute([
-        ':type'         => $body['type']         ?? null,
-        ':location'     => $body['location']      ?? null,
-        ':description'  => $body['description']   ?? null,
-        ':exam'         => $body['exam']          ?? null,
-        ':requirements' => $body['requirements']  ?? null,
-        ':id'           => $id,
+        ':type'                    => $body['type']                    ?? null,
+        ':location'                => $body['location']                ?? null,
+        ':description'             => $body['description']             ?? null,
+        ':campus_branches'         => $body['campus_branches']         ?? null,
+        ':tuition_fees'            => $body['tuition_fees']            ?? null,
+        ':exam'                    => $body['exam']                    ?? null,
+        ':requirements'            => $body['requirements']            ?? null,
+        ':enrollment_requirements' => $body['enrollment_requirements'] ?? null,
+        ':contact_links'           => $body['contact_links']           ?? null,
+        ':id'                      => $id,
       ]);
 
       // Replace courses

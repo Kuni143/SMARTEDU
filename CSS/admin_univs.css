@@ -1,4 +1,4 @@
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; background: #ced4df; color: #0f1f56; scrollbar-gutter: stable; }
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -69,26 +69,41 @@
 
     /* ── Detail card ── */
     .detail-card { background:#fff; border-radius:20px; padding:28px 32px 24px; margin-bottom:12px; display:flex; flex-direction:column; }
-    .detail-section { border-bottom:1px solid #e8ecf5; padding-bottom:20px; margin-bottom:20px; display:flex; flex-direction:column; gap:18px; }
-    .detail-section:last-of-type { border-bottom:none; margin-bottom:0; }
-    .detail-row { display:grid; grid-template-columns:160px 1fr; align-items:center; gap:16px; }
+
+    /* Section grouping */
+    .detail-section { border-bottom:1px solid #e8ecf5; padding-bottom:24px; margin-bottom:24px; display:flex; flex-direction:column; gap:18px; }
+    .detail-section:last-of-type { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+
+    /* Section title label */
+    .detail-section-title { font-family:'Sora',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#8b9fd4; padding-bottom:4px; border-bottom:1.5px solid #e8ecf5; margin-bottom:4px; }
+
+    .detail-row { display:grid; grid-template-columns:200px 1fr; align-items:center; gap:16px; }
     .detail-row.align-top { align-items:flex-start; }
     .detail-label { font-family:'Inter',sans-serif; font-size:14px; color:#3a4a7a; font-weight:400; padding-top:2px; }
     .detail-value { font-family:'Sora',sans-serif; font-size:15px; color:#061685; }
     .detail-value.bold { font-weight:700; }
+
     .select-wrapper { position:relative; display:inline-flex; align-items:center; }
     .select-wrapper select { height:40px; border-radius:20px; border:1.5px solid #8b9fd4; outline:none; padding:0 40px 0 16px; font-family:'Inter',sans-serif; font-size:14px; color:#061685; background:#fff; appearance:none; cursor:pointer; transition:border-color 0.2s; min-width:180px; }
     .select-wrapper select:focus { border-color:#061685; }
     .select-wrapper svg { position:absolute; right:12px; width:16px; height:16px; stroke:#061685; pointer-events:none; fill:none; stroke-width:2.5; stroke-linecap:round; }
+
     .detail-card textarea { width:100%; border-radius:14px; border:1.5px solid #d0d8ee; outline:none; padding:10px 14px; font-family:'Inter',sans-serif; font-size:13.5px; color:#061685; resize:vertical; line-height:1.6; transition:border-color 0.2s; background:#fff; }
     .detail-card textarea:focus { border-color:#061685; }
+    .detail-card textarea::placeholder { color:rgba(6,22,133,0.30); }
+
+    /* Courses */
     .courses-area { display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap; }
     .courses-tags { display:flex; flex-wrap:wrap; gap:8px; flex:1; }
     .course-tag { background:#e8ecf5; color:#061685; font-family:'Sora',sans-serif; font-size:12px; font-weight:600; padding:5px 14px; border-radius:20px; }
+    .courses-empty { font-family:'Inter',sans-serif; font-size:13px; color:#aab4d4; font-style:italic; padding-top:4px; }
+
     .btn-icon { background:none; border:none; cursor:pointer; padding:6px; border-radius:8px; display:flex; align-items:center; transition:background 0.15s; flex-shrink:0; }
     .btn-icon:hover { background:#e8ecf5; }
     .btn-icon svg { width:20px; height:20px; stroke:#061685; fill:none; stroke-width:2; stroke-linecap:round; }
-    .detail-actions { display:flex; gap:12px; padding-top:16px; border-top:1px solid #e8ecf5; align-items:center; }
+
+    /* Actions bar */
+    .detail-actions { display:flex; gap:12px; padding-top:20px; border-top:1px solid #e8ecf5; align-items:center; margin-top:8px; }
     .btn-save { height:42px; padding:0 28px; border-radius:20px; border:none; background:#061685; color:#fff; font-family:'Sora',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:opacity 0.2s; }
     .btn-save:disabled { opacity:0.4; cursor:default; }
     .btn-save:not(:disabled):hover { opacity:0.88; }
@@ -146,3 +161,6 @@
 
     /* Loading indicator */
     .list-loading { text-align:center; padding:48px 0; color:#8b9fd4; font-family:'Inter',sans-serif; font-size:14px; }
+
+    /* Scrollable location filter */
+    .filter-options-scroll { max-height:220px; overflow-y:auto; }
