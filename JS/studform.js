@@ -1,3 +1,11 @@
+/* ── studform.js ─────────────────────────────────────
+   Drop-in replacement for the handleSubmit() function.
+   Paste this file as /JS/studform.js — it contains the
+   full original code plus the updated handleSubmit().
+   ─────────────────────────────────────────────────── */
+
+const SUBMIT_URL = '/api/submit_response.php'; // adjust path if needed
+
 /* ── Question data ── */
 const SECTIONS = [
   {
@@ -239,25 +247,20 @@ function validateSection(si) {
   if (firstMissed !== null) {
     showToast('error', 'Please answer all questions before continuing.');
 
-    /* If compact, expand first so the question is reachable */
     if (!isExpanded) {
-      /* Scroll the questions-box to the unanswered question */
       var box = document.getElementById('questions-box-' + si);
       var questionEl = document.querySelector('input[name="q' + firstMissed + '"]');
       if (questionEl && box) {
         var block = questionEl.closest('.q-block');
         if (block) {
-          /* Delay slightly so toast renders first */
           setTimeout(function() {
             block.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            /* Highlight the missed question briefly */
             block.classList.add('q-highlight');
             setTimeout(function() { block.classList.remove('q-highlight'); }, 1800);
           }, 150);
         }
       }
     } else {
-      /* Expanded mode — scroll the page */
       var questionElExp = document.querySelector('input[name="q' + firstMissed + '"]');
       if (questionElExp) {
         var blockExp = questionElExp.closest('.q-block');
@@ -275,15 +278,70 @@ function validateSection(si) {
   return true;
 }
 
+/* ── Updated handleSubmit — POSTs real data to PHP ── */
 function handleSubmit() {
-  showToast('loading', 'Analyzing your responses, please wait...');
-  setTimeout(function() {
-    dismissAllToasts();
-    showToast('success', 'Analysis complete! Redirecting to your results...');
-    setTimeout(function() {
-      window.location.href = 'result_univs.html';
-    }, 2000);
-  }, 2500);
+  // Collect student info from Step 0
+  var grade  = document.getElementById('grade').value;
+  var strand = document.getElementById('strand').value;
+  var gpaRaw = document.getElementById('gpa').value;
+  var gpa    = gpaRaw !== '' ? parseFloat(gpaRaw) : null;
+
+  // Collect all 60 answers { "1": 5, "2": 4, ... }
+  var answers = {};
+  var totalQuestions = 0;
+  SECTIONS.forEach(function(sec) {
+    totalQuestions += sec.questions.length;
+    sec.questions.forEach(function(q, qi) {
+      var qNum    = sec.startQ + qi;
+      var checked = document.querySelector('input[name="q' + qNum + '"]:checked');
+      if (checked) answers[qNum] = parseInt(checked.value, 10);
+    });
+  });
+
+  // Safety check (validateSection should have caught this already)
+  if (Object.keys(answers).length < totalQuestions) {
+    showToast('error', 'Some questions are unanswered. Please review all sections.');
+    return;
+  }
+
+  // Disable the submit button to prevent double-submit
+  var nextBtn = document.getElementById('btn-career-next');
+  if (nextBtn) nextBtn.disabled = true;
+
+  var loadingToast = showToast('loading', 'Saving your responses, please wait…');
+
+  fetch(SUBMIT_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ grade: grade, strand: strand, gpa: gpa, answers: answers })
+  })
+  .then(function(res) {
+    return res.json().then(function(data) {
+      // Attach HTTP status so we can check it below
+      data._status = res.status;
+      return data;
+    });
+  })
+  .then(function(data) {
+    closeToast(loadingToast);
+
+    if (data.success) {
+      showToast('success', 'Responses saved! Redirecting to your results…');
+      setTimeout(function() {
+        window.location.href = 'result_univs.html';
+      }, 2000);
+    } else {
+      // Server returned a validation / DB error
+      showToast('error', data.error || 'Submission failed. Please try again.');
+      if (nextBtn) nextBtn.disabled = false;
+    }
+  })
+  .catch(function(err) {
+    closeToast(loadingToast);
+    console.error('Submit error:', err);
+    showToast('error', 'Network error. Please check your connection and try again.');
+    if (nextBtn) nextBtn.disabled = false;
+  });
 }
 
 /* ── View toggle (compact ↔ expanded) ── */
@@ -320,7 +378,6 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* Show/hide scroll-to-top button */
 window.addEventListener('scroll', function() {
   var btn = document.getElementById('scrollTopBtn');
   if (!btn) return;

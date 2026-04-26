@@ -9,16 +9,12 @@
     svg.innerHTML = isHidden ? eyeClosed : eyeOpen;
   }
 
-  var attempts = 0;
-  var maxAttempts = 3;
   var toastTimer = null;
 
   function showToast() {
     var toast = document.getElementById('toast');
     toast.classList.add('show');
-    toastTimer = setTimeout(function() {
-      toast.classList.remove('show');
-    }, 3500);
+    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3500);
   }
 
   function closeToast() {
@@ -26,34 +22,31 @@
     document.getElementById('toast').classList.remove('show');
   }
 
-  function handleLogin() {
+  /* Client-side empty field check before form submits */
+  function handleSubmit(e) {
     var username  = document.getElementById('username').value.trim();
     var password  = document.getElementById('password').value;
     var errorRow  = document.getElementById('error-row');
     var errorText = document.getElementById('error-text');
 
     if (!username || !password) {
+      e.preventDefault();
       errorText.textContent = 'Please enter your username and password.';
       errorRow.classList.add('visible');
-      return;
+      return false;
     }
 
-    if (username === 'admin' && password === 'admin123') {
-      errorRow.classList.remove('visible');
-      showToast();
-      setTimeout(function() {
-        window.location.href = 'dashb_admin.html'; // Redirect to admin dashboard
-      }, 3000);
-      return;
-    }
-
-    attempts++;
-    var remaining = maxAttempts - attempts;
-
-    if (attempts >= maxAttempts) {
-      errorText.textContent = attempts + ' attempts used. Please try again later or Reset password.';
-    } else {
-      errorText.textContent = 'Incorrect username or password. ' + remaining + ' attempt(s) remaining.';
-    }
-    errorRow.classList.add('visible');
+    /* Show loading state while form submits */
+    var btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+    return true;
   }
+
+  /* Allow Enter key to trigger submit */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      var form = document.querySelector('form');
+      if (form) form.requestSubmit();
+    }
+  });
