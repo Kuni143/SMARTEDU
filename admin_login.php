@@ -165,8 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <p id="error-text"><?= htmlspecialchars($loginError) ?></p>
         </div>
 
-        <a href="forgetpass.html" class="forgot">Forgot Password?</a>
-
         <button
           type="submit"
           class="btn-login"

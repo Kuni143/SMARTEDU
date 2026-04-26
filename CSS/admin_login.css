@@ -181,20 +181,6 @@
         line-height: 1.4;
     }
 
-    /* Forgot */
-    .forgot {
-        font-size: clamp(12px, 1vw, 14px);
-        font-weight: 700;
-        color: #FBFCFF;
-        text-decoration: none;
-        margin-bottom: 28px;
-        display: inline-block;
-    }
-
-    .forgot:hover {
-        text-decoration: underline;
-    }
-
     /* Log In button */
     .btn-login {
         display: block;

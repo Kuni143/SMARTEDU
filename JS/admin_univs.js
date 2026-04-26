@@ -1,129 +1,207 @@
-/* ── Data store ── */
-var universities = [
-  {
-    id: 1,
-    name: 'Universidad ng Pilipinas',
-    location: 'Quezon City',
-    type: 'SUC',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    courses: ['BS Biology', 'BA Comm', 'BS CS', 'BS Nursing'],
-    exam: 'Date or period when entrance exam is conducted\nExam requirements (ID, application form, etc.)\nOnline or in-person format\nSample:\n  • UPCAT held annually in August\n  • Online application submission required by June',
-    requirements: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.'
-  },
-  {
-    id: 2,
-    name: 'De La Salle University',
-    location: 'Manila',
-    type: 'Private',
-    description: 'A private Catholic research university in Manila offering a wide range of undergraduate and graduate programs.',
-    courses: ['BS Accountancy', 'BS Civil Engineering', 'BS Computer Science', 'BS Management'],
-    exam: 'DLSUCET held from October to January\nRequires birth certificate and high school report card\nOnline registration via admissions.dlsu.edu.ph',
-    requirements: 'High school diploma or its equivalent. Must pass DLSUCET. Submission of complete application documents.'
-  }
-];
+// ── State ─────────────────────────────────────────────
+var universities = [];
+var activeId     = null;
+var isDirty      = false;
+var tempCourses  = [];
 
-var nextId = 3;
-var activeId = null;
-var isDirty = false;
-var tempCourses = [];
+// Institution Type filter state
+var selectedTypes  = ['All'];
+var pendingTypes   = ['All'];
+var typeFilterOpen = false;
 
-/* ── Filter state ── */
-var TYPES = ['All', 'LUC', 'OGS', 'SUC', 'Private'];
-var selectedTypes = ['All'];
-var pendingTypes  = ['All'];
-var filterOpen    = false;
+// Location filter state
+var selectedLocs  = ['All'];
+var pendingLocs   = ['All'];
+var locFilterOpen = false;
 
-/* ── Build filter options ── */
-function buildFilterOptions() {
-  var container = document.getElementById('filter-options');
-  container.innerHTML = '';
-  TYPES.forEach(function(type) {
-    var div = document.createElement('div');
-    div.className = 'filter-option' + (pendingTypes.includes(type) ? ' checked' : '');
-    div.dataset.type = type;
-    div.innerHTML =
-      '<svg class="filter-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' +
-      type;
-    div.onclick = function() { toggleType(type); };
-    container.appendChild(div);
-  });
+// ── Load from PHP API ─────────────────────────────────
+function loadUniversities() {
+  fetch('admin_univs.php?action=list')
+    .then(function(r){ return r.json(); })
+    .then(function(json) {
+      if (!json.success) throw new Error(json.error);
+      universities = json.data;
+      renderList();
+    })
+    .catch(function(err) {
+      document.getElementById('uni-list').innerHTML =
+        '<div class="empty-state">Failed to load universities. ' + err.message + '</div>';
+    });
 }
 
-function toggleType(type) {
-  if (type === 'All') {
-    pendingTypes = ['All'];
+// ── Institution Type Filter ───────────────────────────
+function toggleTypeFilterDropdown() {
+  if (locFilterOpen) cancelLocFilter();
+  typeFilterOpen = !typeFilterOpen;
+  var dd = document.getElementById('type-filter-dropdown');
+  var ch = document.getElementById('type-filter-chevron');
+  if (typeFilterOpen) {
+    pendingTypes = selectedTypes.slice();
+    syncTypeCheckboxes();
+    dd.style.display = 'block';
+    ch.classList.add('open');
   } else {
+    dd.style.display = 'none';
+    ch.classList.remove('open');
+  }
+}
+
+function syncTypeCheckboxes() {
+  document.querySelectorAll('#type-filter-options input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = pendingTypes.includes(cb.value);
+  });
+  updateTypeFilterLabel();
+}
+
+function handleTypeCheck(cb) {
+  if (cb.value === 'All') {
+    pendingTypes = cb.checked ? ['All'] : [];
+    document.querySelectorAll('#type-filter-options input[type="checkbox"]').forEach(function(b) {
+      b.checked = (b.value === 'All' && cb.checked);
+    });
+  } else {
+    var allBox = document.querySelector('#type-filter-options input[value="All"]');
+    if (allBox) allBox.checked = false;
     pendingTypes = pendingTypes.filter(function(t) { return t !== 'All'; });
-    if (pendingTypes.includes(type)) {
-      pendingTypes = pendingTypes.filter(function(t) { return t !== type; });
-      if (pendingTypes.length === 0) pendingTypes = ['All'];
+    if (cb.checked) {
+      if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value);
     } else {
-      pendingTypes.push(type);
+      pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; });
     }
   }
-  buildFilterOptions();
+  updateTypeFilterLabel();
 }
 
 function selectAllTypes() {
   pendingTypes = ['All'];
-  buildFilterOptions();
+  syncTypeCheckboxes();
 }
 
 function clearTypes() {
   pendingTypes = [];
-  buildFilterOptions();
+  document.querySelectorAll('#type-filter-options input[type="checkbox"]').forEach(function(b) { b.checked = false; });
+  updateTypeFilterLabel();
 }
 
-function toggleFilterDropdown() {
-  filterOpen = !filterOpen;
-  var dropdown = document.getElementById('filter-dropdown');
-  var chevron  = document.getElementById('filter-chevron');
-  if (filterOpen) {
-    pendingTypes = selectedTypes.slice();
-    buildFilterOptions();
-    dropdown.style.display = 'block';
-    chevron.classList.add('open');
-  } else {
-    dropdown.style.display = 'none';
-    chevron.classList.remove('open');
-  }
-}
-
-function applyFilter() {
+function applyTypeFilter() {
   selectedTypes = pendingTypes.length ? pendingTypes.slice() : ['All'];
-  filterOpen = false;
-  document.getElementById('filter-dropdown').style.display = 'none';
-  document.getElementById('filter-chevron').classList.remove('open');
-  updateFilterLabel(selectedTypes);
+  typeFilterOpen = false;
+  document.getElementById('type-filter-dropdown').style.display = 'none';
+  document.getElementById('type-filter-chevron').classList.remove('open');
+  updateTypeFilterLabel();
   renderList();
 }
 
-function cancelFilter() {
-  filterOpen = false;
-  document.getElementById('filter-dropdown').style.display = 'none';
-  document.getElementById('filter-chevron').classList.remove('open');
+function cancelTypeFilter() {
+  pendingTypes = selectedTypes.slice();
+  typeFilterOpen = false;
+  document.getElementById('type-filter-dropdown').style.display = 'none';
+  document.getElementById('type-filter-chevron').classList.remove('open');
 }
 
-function updateFilterLabel(types) {
-  var t = types || selectedTypes;
-  var lbl = document.getElementById('filter-label');
-  if (!t || t.includes('All') || t.length === 0) {
+function updateTypeFilterLabel() {
+  var lbl = document.getElementById('type-filter-label');
+  if (!pendingTypes.length || pendingTypes.includes('All')) {
     lbl.textContent = 'All';
-  } else if (t.length === 1) {
-    lbl.textContent = t[0];
+  } else if (pendingTypes.length === 1) {
+    lbl.textContent = pendingTypes[0];
   } else {
-    lbl.textContent = t.join(', ');
+    lbl.textContent = pendingTypes.join(', ');
   }
 }
 
-/* Close dropdown on outside click */
+// ── Location Filter ───────────────────────────────────
+function toggleLocFilterDropdown() {
+  if (typeFilterOpen) cancelTypeFilter();
+  locFilterOpen = !locFilterOpen;
+  var dd = document.getElementById('loc-filter-dropdown');
+  var ch = document.getElementById('loc-filter-chevron');
+  if (locFilterOpen) {
+    pendingLocs = selectedLocs.slice();
+    syncLocCheckboxes();
+    dd.style.display = 'block';
+    ch.classList.add('open');
+  } else {
+    dd.style.display = 'none';
+    ch.classList.remove('open');
+  }
+}
+
+function syncLocCheckboxes() {
+  document.querySelectorAll('#loc-filter-options input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = pendingLocs.includes(cb.value);
+  });
+  updateLocFilterLabel();
+}
+
+function handleLocCheck(cb) {
+  if (cb.value === 'All') {
+    pendingLocs = cb.checked ? ['All'] : [];
+    document.querySelectorAll('#loc-filter-options input[type="checkbox"]').forEach(function(b) {
+      b.checked = (b.value === 'All' && cb.checked);
+    });
+  } else {
+    var allBox = document.querySelector('#loc-filter-options input[value="All"]');
+    if (allBox) allBox.checked = false;
+    pendingLocs = pendingLocs.filter(function(l) { return l !== 'All'; });
+    if (cb.checked) {
+      if (!pendingLocs.includes(cb.value)) pendingLocs.push(cb.value);
+    } else {
+      pendingLocs = pendingLocs.filter(function(l) { return l !== cb.value; });
+    }
+  }
+  updateLocFilterLabel();
+}
+
+function selectAllLocs() {
+  pendingLocs = ['All'];
+  syncLocCheckboxes();
+}
+
+function clearLocs() {
+  pendingLocs = [];
+  document.querySelectorAll('#loc-filter-options input[type="checkbox"]').forEach(function(b) { b.checked = false; });
+  updateLocFilterLabel();
+}
+
+function applyLocFilter() {
+  selectedLocs = pendingLocs.length ? pendingLocs.slice() : ['All'];
+  locFilterOpen = false;
+  document.getElementById('loc-filter-dropdown').style.display = 'none';
+  document.getElementById('loc-filter-chevron').classList.remove('open');
+  updateLocFilterLabel();
+  renderList();
+}
+
+function cancelLocFilter() {
+  pendingLocs = selectedLocs.slice();
+  locFilterOpen = false;
+  document.getElementById('loc-filter-dropdown').style.display = 'none';
+  document.getElementById('loc-filter-chevron').classList.remove('open');
+}
+
+function updateLocFilterLabel() {
+  var lbl = document.getElementById('loc-filter-label');
+  if (!pendingLocs.length || pendingLocs.includes('All')) {
+    lbl.textContent = 'All';
+  } else if (pendingLocs.length === 1) {
+    lbl.textContent = pendingLocs[0];
+  } else {
+    lbl.textContent = pendingLocs.length + ' selected';
+  }
+}
+
+// Close both dropdowns when clicking outside
 document.addEventListener('click', function(e) {
-  if (filterOpen && !document.getElementById('filter-wrapper').contains(e.target)) {
-    cancelFilter();
+  if (typeFilterOpen && !document.getElementById('type-filter-wrapper').contains(e.target)) {
+    cancelTypeFilter();
+  }
+  if (locFilterOpen && !document.getElementById('loc-filter-wrapper').contains(e.target)) {
+    cancelLocFilter();
   }
 });
 
-/* ── Render list ── */
+// ── Render list ───────────────────────────────────────
 function renderList() {
   var list   = document.getElementById('uni-list');
   var search = document.getElementById('searchInput').value.toLowerCase();
@@ -131,249 +209,279 @@ function renderList() {
 
   var filtered = universities.filter(function(u) {
     var matchSearch = !search || u.name.toLowerCase().includes(search);
-    var matchType   = selectedTypes.includes('All') || selectedTypes.length === 0 || selectedTypes.includes(u.type || '');
-    return matchSearch && matchType;
+    var matchType   = selectedTypes.includes('All') || selectedTypes.some(function(s) { return s === u.type; });
+    var matchLoc    = selectedLocs.includes('All')  || selectedLocs.some(function(l) { return l === u.location; });
+    return matchSearch && matchType && matchLoc;
   });
 
-  if (filtered.length === 0) {
+  if (!filtered.length) {
     list.innerHTML = '<div class="empty-state">No universities found.</div>';
     return;
   }
 
   filtered.forEach(function(u) {
     var row = document.createElement('div');
-    row.className = 'uni-row' + (u.id === activeId ? ' active' : '');
-    row.dataset.id = u.id;
-    row.onclick = function() { toggleDetail(u.id); };
-
-    var left = document.createElement('div');
-    left.className = 'uni-row-left';
-    left.innerHTML = '<span>' + u.name + '</span>';
-
-    if (u.type) {
-      var badge = document.createElement('span');
-      badge.className = 'type-badge';
-      badge.textContent = u.type;
-      left.appendChild(badge);
-    }
-
-    row.appendChild(left);
+    row.className = 'uni-row' + (u.id == activeId ? ' active' : '');
+    row.onclick   = function(){ toggleDetail(u.id); };
+    var left = '<div class="uni-row-left"><span>' + escHtml(u.name) + '</span>'
+      + (u.type ? '<span class="type-badge">' + escHtml(u.type) + '</span>' : '') + '</div>';
+    row.innerHTML = left;
     list.appendChild(row);
-
-    if (u.id === activeId) {
-      var detail = buildDetail(u);
-      list.appendChild(detail);
-    }
+    if (u.id == activeId) list.appendChild(buildDetail(u));
   });
 }
 
-/* ── Toggle detail ── */
+// ── Toggle detail ─────────────────────────────────────
 function toggleDetail(id) {
-  activeId = (activeId === id) ? null : id;
-  isDirty = false;
+  activeId = (activeId == id) ? null : id;
+  isDirty  = false;
   renderList();
 }
 
-/* ── Build detail card ── */
+// ── Build detail card ─────────────────────────────────
 function buildDetail(u) {
-  var tmpl  = document.getElementById('detail-template');
-  var clone = tmpl.content.cloneNode(true);
-  var card  = clone.querySelector('.detail-card');
+  var LOCATIONS = ['Quezon City','Manila','Makati','Pateros','Taguig','Las Pi\u00f1as',
+    'Caloocan','Muntinlupa','Pasig','Mandaluyong','San Juan','Pasay',
+    'Marikina','Para\u00f1aque','Valenzuela','Malabon'];
 
-  card.querySelector('#d-name').textContent = u.name;
+  var typeOpts = ['LUC','OGS','SUC','Private'].map(function(t) {
+    return '<option' + (t===u.type?' selected':'') + '>' + t + '</option>';
+  }).join('');
+  var locOpts = LOCATIONS.map(function(l) {
+    return '<option' + (l===u.location?' selected':'') + '>' + escHtml(l) + '</option>';
+  }).join('');
+  var courseTags = (u.courses||[]).map(function(c) {
+    return '<span class="course-tag">' + escHtml(c) + '</span>';
+  }).join('');
 
-  var typeSel = card.querySelector('#d-type');
-  for (var i = 0; i < typeSel.options.length; i++) {
-    if (typeSel.options[i].value === u.type) { typeSel.selectedIndex = i; break; }
-  }
-
-  var locSel = card.querySelector('#d-location');
-  for (var j = 0; j < locSel.options.length; j++) {
-    if (locSel.options[j].text === u.location) { locSel.selectedIndex = j; break; }
-  }
-
-  card.querySelector('#d-description').value  = u.description  || '';
-  card.querySelector('#d-exam').value          = u.exam         || '';
-  card.querySelector('#d-requirements').value  = u.requirements || '';
-
-  renderCourseTags(card.querySelector('#d-courses'), u.courses);
+  var card = document.createElement('div');
+  card.className = 'detail-card';
+  card.innerHTML = `
+    <div class="detail-section">
+      <div class="detail-row">
+        <span class="detail-label">University name</span>
+        <span class="detail-value bold">${escHtml(u.name)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Institution Type</span>
+        <div class="select-wrapper">
+          <select id="d-type" onchange="markDirty()"><option value="">— Select —</option>${typeOpts}</select>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Location</span>
+        <div class="select-wrapper">
+          <select id="d-location" onchange="markDirty()"><option value="">— Select —</option>${locOpts}</select>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Edit Description</span>
+        <textarea id="d-description" rows="3" oninput="markDirty()">${escHtml(u.description||'')}</textarea>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-row align-top">
+        <span class="detail-label">Course Offered</span>
+        <div class="courses-area">
+          <div class="courses-tags" id="d-courses">${courseTags}</div>
+          <button class="btn-icon" onclick="openCoursesModal()" title="Edit courses">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="detail-row align-top">
+        <span class="detail-label">Entrance Exam</span>
+        <textarea id="d-exam" rows="5" oninput="markDirty()">${escHtml(u.exam||'')}</textarea>
+      </div>
+      <div class="detail-row align-top">
+        <span class="detail-label">Requirements</span>
+        <textarea id="d-requirements" rows="4" oninput="markDirty()">${escHtml(u.requirements||'')}</textarea>
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+      <button class="btn-save" id="btn-save" onclick="saveUniversity()" disabled>Save Changes</button>
+      <button class="btn-delete" onclick="deleteUniversity()">Delete University</button>
+    </div>`;
   return card;
 }
 
-function renderCourseTags(container, courses) {
-  container.innerHTML = '';
-  (courses || []).forEach(function(c) {
-    var tag = document.createElement('span');
-    tag.className = 'course-tag';
-    tag.textContent = c;
-    container.appendChild(tag);
-  });
-}
-
-/* ── Mark dirty ── */
 function markDirty() {
   isDirty = true;
   var btn = document.getElementById('btn-save');
   if (btn) btn.disabled = false;
 }
+function cancelEdit() { activeId=null; isDirty=false; renderList(); }
 
-/* ── Save ── */
+// ── Save ──────────────────────────────────────────────
 function saveUniversity() {
-  var u = universities.find(function(x) { return x.id === activeId; });
+  var u = universities.find(function(x){ return x.id==activeId; });
   if (!u) return;
-
-  u.type         = document.getElementById('d-type').value;
-  u.location     = document.getElementById('d-location').value;
-  u.description  = document.getElementById('d-description').value;
-  u.exam         = document.getElementById('d-exam').value;
-  u.requirements = document.getElementById('d-requirements').value;
-
-  isDirty = false;
-  showToast('success', 'University saved successfully.');
-  renderList();
+  var payload = {
+    id:           u.id,
+    type:         document.getElementById('d-type').value,
+    location:     document.getElementById('d-location').value,
+    description:  document.getElementById('d-description').value,
+    exam:         document.getElementById('d-exam').value,
+    requirements: document.getElementById('d-requirements').value,
+    courses:      u.courses || [],
+  };
+  fetch('admin_univs.php?action=save', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(json) {
+    if (!json.success) throw new Error(json.error);
+    u.type=payload.type; u.location=payload.location;
+    u.description=payload.description; u.exam=payload.exam;
+    u.requirements=payload.requirements;
+    isDirty=false;
+    showToast('success','University saved successfully.');
+    renderList();
+  })
+  .catch(function(err){ showToast('error','Save failed: '+err.message); });
 }
 
-/* ── Cancel edit ── */
-function cancelEdit() {
-  activeId = null;
-  isDirty = false;
-  renderList();
-}
-
-/* ── Delete ── */
+// ── Delete ────────────────────────────────────────────
 function deleteUniversity() {
   if (!confirm('Are you sure you want to delete this university?')) return;
-  universities = universities.filter(function(u) { return u.id !== activeId; });
-  activeId = null;
-  showToast('success', 'University deleted.');
-  renderList();
+  fetch('admin_univs.php?action=delete', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id: activeId})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(json) {
+    if (!json.success) throw new Error(json.error);
+    universities = universities.filter(function(u){ return u.id!=activeId; });
+    activeId=null;
+    showToast('success','University deleted.');
+    renderList();
+  })
+  .catch(function(err){ showToast('error','Delete failed: '+err.message); });
 }
 
-/* ── Add modal ── */
+// ── Add modal ─────────────────────────────────────────
 function openAddModal() {
-  document.getElementById('m-name').value = '';
-  document.getElementById('m-type').selectedIndex = 0;
-  document.getElementById('m-location').selectedIndex = 0;
-  document.getElementById('m-description').value = '';
-  ['m-name-err', 'm-type-err', 'm-loc-err'].forEach(function(id) {
+  document.getElementById('m-name').value='';
+  document.getElementById('m-type').selectedIndex=0;
+  document.getElementById('m-location').selectedIndex=0;
+  document.getElementById('m-description').value='';
+  ['m-name-err','m-type-err','m-loc-err'].forEach(function(id){
     document.getElementById(id).classList.remove('visible');
   });
-  document.getElementById('add-modal').style.display = 'flex';
+  document.getElementById('add-modal').style.display='flex';
 }
-
-function closeAddModal() {
-  document.getElementById('add-modal').style.display = 'none';
-}
-
+function closeAddModal() { document.getElementById('add-modal').style.display='none'; }
 function addUniversity() {
   var name = document.getElementById('m-name').value.trim();
   var type = document.getElementById('m-type').value;
   var loc  = document.getElementById('m-location').value;
   var desc = document.getElementById('m-description').value.trim();
-  var valid = true;
-
-  ['m-name-err', 'm-type-err', 'm-loc-err'].forEach(function(id) {
+  var valid=true;
+  ['m-name-err','m-type-err','m-loc-err'].forEach(function(id){
     document.getElementById(id).classList.remove('visible');
   });
-
-  if (!name) { document.getElementById('m-name-err').classList.add('visible'); valid = false; }
-  if (!type) { document.getElementById('m-type-err').classList.add('visible'); valid = false; }
-  if (!loc)  { document.getElementById('m-loc-err').classList.add('visible');  valid = false; }
+  if (!name){ document.getElementById('m-name-err').classList.add('visible'); valid=false; }
+  if (!type){ document.getElementById('m-type-err').classList.add('visible'); valid=false; }
+  if (!loc) { document.getElementById('m-loc-err').classList.add('visible');  valid=false; }
   if (!valid) return;
 
-  var newU = { id: nextId++, name: name, type: type, location: loc, description: desc, courses: [], exam: '', requirements: '' };
-  universities.push(newU);
-  activeId = newU.id;
-  closeAddModal();
-  showToast('success', 'University added successfully.');
-  renderList();
+  fetch('admin_univs.php?action=add', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name,type,location:loc,description:desc})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(json) {
+    if (!json.success) throw new Error(json.error);
+    universities.push({id:json.id, name, type, location:loc, description:desc, courses:[], exam:'', requirements:''});
+    activeId=json.id;
+    closeAddModal();
+    showToast('success','University added successfully.');
+    renderList();
+  })
+  .catch(function(err){ showToast('error','Add failed: '+err.message); });
 }
 
-/* ── Courses modal ── */
+// ── Courses modal ─────────────────────────────────────
 function openCoursesModal() {
-  var u = universities.find(function(x) { return x.id === activeId; });
+  var u = universities.find(function(x){ return x.id==activeId; });
   if (!u) return;
-  tempCourses = (u.courses || []).slice();
+  tempCourses = (u.courses||[]).slice();
   renderCourseTagsEdit();
-  document.getElementById('course-input').value = '';
-  document.getElementById('courses-modal').style.display = 'flex';
+  document.getElementById('course-input').value='';
+  document.getElementById('courses-modal').style.display='flex';
 }
-
-function closeCoursesModal() {
-  document.getElementById('courses-modal').style.display = 'none';
-}
-
+function closeCoursesModal() { document.getElementById('courses-modal').style.display='none'; }
 function renderCourseTagsEdit() {
   var area = document.getElementById('courses-tags-edit');
-  area.innerHTML = '';
-  tempCourses.forEach(function(c, i) {
+  area.innerHTML='';
+  tempCourses.forEach(function(c,i) {
     var tag = document.createElement('div');
-    tag.className = 'course-tag-edit';
-    tag.innerHTML = c + '<button onclick="removeTempCourse(' + i + ')" title="Remove">×</button>';
+    tag.className='course-tag-edit';
+    tag.innerHTML=escHtml(c)+'<button onclick="removeTempCourse('+i+')" title="Remove">×</button>';
     area.appendChild(tag);
   });
 }
-
-function removeTempCourse(i) {
-  tempCourses.splice(i, 1);
-  renderCourseTagsEdit();
-}
-
+function removeTempCourse(i) { tempCourses.splice(i,1); renderCourseTagsEdit(); }
 function handleCourseInput(e) {
-  if (e.key === 'Enter' || e.key === ',') {
+  if (e.key==='Enter'||e.key===',') {
     e.preventDefault();
-    var val = document.getElementById('course-input').value.replace(',', '').trim();
-    if (val && !tempCourses.includes(val)) {
-      tempCourses.push(val);
-      renderCourseTagsEdit();
-    }
-    document.getElementById('course-input').value = '';
+    var val = document.getElementById('course-input').value.replace(',','').trim();
+    if (val && !tempCourses.includes(val)) { tempCourses.push(val); renderCourseTagsEdit(); }
+    document.getElementById('course-input').value='';
+  }
+}
+function saveCoursesModal() {
+  var val = document.getElementById('course-input').value.replace(',','').trim();
+  if (val && !tempCourses.includes(val)) tempCourses.push(val);
+  var u = universities.find(function(x){ return x.id==activeId; });
+  if (u) u.courses=tempCourses.slice();
+  closeCoursesModal();
+  markDirty();
+  var container=document.getElementById('d-courses');
+  if (container) {
+    container.innerHTML=tempCourses.map(function(c){
+      return '<span class="course-tag">'+escHtml(c)+'</span>';
+    }).join('');
   }
 }
 
-function saveCoursesModal() {
-  var val = document.getElementById('course-input').value.replace(',', '').trim();
-  if (val && !tempCourses.includes(val)) tempCourses.push(val);
-  var u = universities.find(function(x) { return x.id === activeId; });
-  if (u) { u.courses = tempCourses.slice(); }
-  closeCoursesModal();
-  markDirty();
-  var container = document.getElementById('d-courses');
-  if (container) renderCourseTags(container, u.courses);
+// ── Helpers ───────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ── Toast ── */
+// ── Toast ─────────────────────────────────────────────
 var TOAST_ICONS = {
-  success: '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
-  error:   '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+  success:'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+  error:  '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
 };
-
 function showToast(type, message) {
-  var c = document.getElementById('toast-container');
-  var t = document.createElement('div');
-  t.className = 'toast toast-' + type;
-  t.innerHTML =
-    '<div class="toast-icon">' + TOAST_ICONS[type] + '</div>' +
-    '<span class="toast-msg">' + message + '</span>' +
-    '<button class="toast-close" onclick="closeToast(this.parentElement)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  var c=document.getElementById('toast-container');
+  var t=document.createElement('div');
+  t.className='toast toast-'+type;
+  t.innerHTML='<div class="toast-icon">'+TOAST_ICONS[type]+'</div><span class="toast-msg">'+message+'</span>'
+    +'<button class="toast-close" onclick="closeToast(this.parentElement)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
   c.appendChild(t);
-  setTimeout(function() { closeToast(t); }, 3500);
+  setTimeout(function(){ closeToast(t); },3500);
 }
-
 function closeToast(el) {
-  if (!el || el.classList.contains('fade-out')) return;
+  if (!el||el.classList.contains('fade-out')) return;
   el.classList.add('fade-out');
-  setTimeout(function() { el.remove(); }, 350);
+  setTimeout(function(){ el.remove(); },350);
 }
 
-/* Close modals on overlay click */
-document.getElementById('add-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeAddModal();
-});
-document.getElementById('courses-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeCoursesModal();
-});
+// Close modals on overlay click
+document.getElementById('add-modal').addEventListener('click',function(e){ if(e.target===this) closeAddModal(); });
+document.getElementById('courses-modal').addEventListener('click',function(e){ if(e.target===this) closeCoursesModal(); });
 
-/* ── Init ── */
-updateFilterLabel(selectedTypes);
-renderList();
+// ── Init ──────────────────────────────────────────────
+updateTypeFilterLabel();
+updateLocFilterLabel();
+loadUniversities();
