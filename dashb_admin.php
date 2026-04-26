@@ -1,7 +1,11 @@
 <?php
+// ── dashb_admin.php ───────────────────────────────────
+// Compatible with MariaDB 10.4+ (XAMPP default).
+// Uses a numbers table approach instead of WITH RECURSIVE
+// to avoid MariaDB named-parameter bugs inside CTEs.
+
 require_once __DIR__ . '/config/db.php';
 
-// ── Allowed filter values ─────────────────────────────
 $allowedSentiments = [
   'Strongly Agree', 'Agree', 'Neutral',
   'Disagree', 'Strongly Disagree'
@@ -12,12 +16,38 @@ $allowedRanges = [
   '41-60' => [41, 60],
 ];
 
-// ── AJAX mode — return JSON and exit ─────────────────
+// ── Helper: fetch tally data (MariaDB-safe) ───────────
+function fetchTally(PDO $pdo, int $start, int $end, string $sentiment): array {
+  // Build the question-number rows inline using UNION ALL
+  // so we never rely on CTE named parameters in MariaDB.
+  $unions = [];
+  for ($i = $start; $i <= $end; $i++) {
+    $unions[] = "SELECT $i AS n";
+  }
+  $numbersSql = implode(' UNION ALL ', $unions);
+
+  $sql = "
+    SELECT
+      nums.n                        AS question_no,
+      COALESCE(COUNT(r.id), 0)     AS tally
+    FROM ($numbersSql) AS nums
+    LEFT JOIN responses r
+      ON  r.question_no = nums.n
+      AND r.sentiment   = :sentiment
+    GROUP BY nums.n
+    ORDER BY nums.n
+  ";
+  $stmt = $pdo->prepare($sql);
+  $stmt->execute([':sentiment' => $sentiment]);
+  return $stmt->fetchAll();
+}
+
+// ── AJAX mode ─────────────────────────────────────────
 if (isset($_GET['ajax'])) {
   header('Content-Type: application/json');
 
   $sentiment = $_GET['sentiment'] ?? 'Strongly Agree';
-  $range     = $_GET['range']     ?? '41-60';
+  $range     = $_GET['range']     ?? '1-20';
 
   if (!in_array($sentiment, $allowedSentiments, true)) {
     echo json_encode(['error' => 'Invalid sentiment.']); exit;
@@ -29,36 +59,16 @@ if (isset($_GET['ajax'])) {
   [$qStart, $qEnd] = $allowedRanges[$range];
 
   try {
-    $pdo = getDB();
-    $sql = "
-      WITH RECURSIVE q (n) AS (
-        SELECT :start
-        UNION ALL
-        SELECT n + 1 FROM q WHERE n < :end
-      )
-      SELECT
-        q.n                       AS question_no,
-        COALESCE(COUNT(r.id), 0) AS tally
-      FROM q
-      LEFT JOIN responses r
-        ON  r.question_no = q.n
-        AND r.sentiment   = :sentiment
-      GROUP BY q.n
-      ORDER BY q.n
-    ";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':start' => $qStart, ':end' => $qEnd, ':sentiment' => $sentiment]);
-    $rows = $stmt->fetchAll();
+    $pdo  = getDB();
+    $rows = fetchTally($pdo, $qStart, $qEnd, $sentiment);
 
     $labels = []; $data = [];
     foreach ($rows as $row) {
       $labels[] = (string) $row['question_no'];
       $data[]   = (int)    $row['tally'];
     }
-    echo json_encode([
-      'labels' => $labels, 'data' => $data,
-      'total'  => array_sum($data),
-    ]);
+    echo json_encode(['labels' => $labels, 'data' => $data, 'total' => array_sum($data)]);
+
   } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['error' => $e->getMessage()]);
@@ -66,53 +76,40 @@ if (isset($_GET['ajax'])) {
   exit;
 }
 
-// ── Page-load: fetch initial data (41-60, Strongly Agree)
+// ── Page-load: initial data for range 1-20 ───────────
+// (matches the first active range button in the HTML)
 $initSentiment = 'Strongly Agree';
-$initRange     = '41-60';
+$initRange     = '1-20';
 [$initStart, $initEnd] = $allowedRanges[$initRange];
 
-$initLabels = [];
-$initData   = [];
-$initTotal  = 0;
-
-// Also fetch overall counts for the stat cards
-$totalStudents    = 0;
-$totalResponses   = 0;
-$mostCommon       = '—';
+$initLabels     = [];
+$initData       = [];
+$totalStudents  = 0;
+$totalResponses = 0;
+$mostCommon     = '—';
 
 try {
-  $pdo = getDB();
-
-  // Initial chart data
-  $sql = "
-    WITH RECURSIVE q (n) AS (
-      SELECT :start UNION ALL SELECT n+1 FROM q WHERE n < :end
-    )
-    SELECT q.n AS question_no, COALESCE(COUNT(r.id),0) AS tally
-    FROM q
-    LEFT JOIN responses r ON r.question_no = q.n AND r.sentiment = :sentiment
-    GROUP BY q.n ORDER BY q.n
-  ";
-  $stmt = $pdo->prepare($sql);
-  $stmt->execute([':start' => $initStart, ':end' => $initEnd, ':sentiment' => $initSentiment]);
-  foreach ($stmt->fetchAll() as $row) {
+  $pdo  = getDB();
+  $rows = fetchTally($pdo, $initStart, $initEnd, $initSentiment);
+  foreach ($rows as $row) {
     $initLabels[] = (string) $row['question_no'];
     $initData[]   = (int)    $row['tally'];
   }
-  $initTotal = array_sum($initData);
 
-  // Stat cards
   $totalStudents  = (int) $pdo->query("SELECT COUNT(*) FROM students")->fetchColumn();
   $totalResponses = (int) $pdo->query("SELECT COUNT(*) FROM responses")->fetchColumn();
 
-  $row = $pdo->query("
-    SELECT sentiment, COUNT(*) AS cnt FROM responses
-    GROUP BY sentiment ORDER BY cnt DESC LIMIT 1
+  $topRow = $pdo->query("
+    SELECT sentiment, COUNT(*) AS cnt
+    FROM responses
+    GROUP BY sentiment
+    ORDER BY cnt DESC
+    LIMIT 1
   ")->fetch();
-  if ($row) $mostCommon = $row['sentiment'];
+  if ($topRow) $mostCommon = $topRow['sentiment'];
 
 } catch (PDOException $e) {
-  // Dashboard still renders; chart shows empty state
+  // Page still renders with empty/zero state
 }
 
 $initLabelsJson = json_encode($initLabels);
@@ -139,9 +136,9 @@ $initDataJson   = json_encode($initData);
   </a>
   <div class="topnav-links">
     <a href="dashb_admin.php" class="topnav-link active">Dashboard</a>
-    <a href="admin_univs.html" class="topnav-link">University</a>
+    <a href="admin_univs.php" class="topnav-link">University</a>
   </div>
-  <button class="topnav-logout" onclick="window.location.href='admin_login.html'">
+  <button class="topnav-logout" onclick="window.location.href='admin_login.php'">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
       <polyline points="16 17 21 12 16 7"/>
@@ -158,7 +155,7 @@ $initDataJson   = json_encode($initData);
     <h1>Welcome Back, Admin!</h1>
   </div>
 
-  <!-- Stat cards — populated from PHP -->
+  <!-- Stat cards -->
   <div class="stats-row">
     <div class="stat-card">
       <div class="stat-icon blue">
@@ -193,14 +190,12 @@ $initDataJson   = json_encode($initData);
     <div class="stat-card">
       <div class="stat-icon orange">
         <svg viewBox="0 0 24 24">
-          <path d="M18 20V10"/>
-          <path d="M12 20V4"/>
-          <path d="M6 20v-6"/>
+          <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
         </svg>
       </div>
       <div>
         <div class="stat-label">Most Common Answer</div>
-        <div class="stat-value" style="font-size:17px;line-height:1.2;"><?= htmlspecialchars($mostCommon) ?></div>
+        <div class="stat-value small"><?= htmlspecialchars($mostCommon) ?></div>
         <div class="stat-sub">Overall top sentiment</div>
       </div>
     </div>
@@ -219,9 +214,10 @@ $initDataJson   = json_encode($initData);
           <?php endforeach; ?>
         </select>
         <div class="range-group">
+          <!-- Active matches $initRange = '1-20' -->
           <button class="range-btn active" onclick="setRange('1-20',this)">1–20</button>
-          <button class="range-btn" onclick="setRange('21-40',this)">21–40</button>
-          <button class="range-btn" onclick="setRange('41-60',this)">41–60</button>
+          <button class="range-btn"        onclick="setRange('21-40',this)">21–40</button>
+          <button class="range-btn"        onclick="setRange('41-60',this)">41–60</button>
         </div>
       </div>
     </div>
@@ -242,15 +238,16 @@ $initDataJson   = json_encode($initData);
     </div>
   </div>
 
-</div><!-- /page -->
+</div>
 
 <script>
-// ── Seeded from PHP (no initial AJAX needed) ──────────
+// ── PHP-seeded initial data ───────────────────────────
 var initLabels    = <?= $initLabelsJson ?>;
 var initData      = <?= $initDataJson ?>;
 var initSentiment = <?= json_encode($initSentiment) ?>;
 
-var currentRange     = '41-60';
+// Must match $initRange in PHP
+var currentRange     = '1-20';
 var currentSentiment = initSentiment;
 var isFetching       = false;
 
@@ -262,7 +259,7 @@ var colors = {
   'Strongly Disagree': { stroke:'#c06030', fill:'rgba(192,96,48,0.12)'   },
 };
 
-// ── Init chart with PHP-seeded data ──────────────────
+// ── Init chart ────────────────────────────────────────
 var ctx   = document.getElementById('insightsChart').getContext('2d');
 var c     = colors[currentSentiment];
 var chart = new Chart(ctx, {
@@ -270,8 +267,8 @@ var chart = new Chart(ctx, {
   data: {
     labels: initLabels,
     datasets: [{
-      label: currentSentiment,
-      data:  initData,
+      label:                currentSentiment,
+      data:                 initData,
       borderColor:          c.stroke,
       backgroundColor:      c.fill,
       borderWidth:          2.5,
@@ -293,34 +290,33 @@ var chart = new Chart(ctx, {
         titleFont: { family:'Sora', size:12 },
         bodyFont:  { family:'Sora', size:12 },
         padding: 10, cornerRadius: 10,
-        callbacks: { label: ctx => ' ' + ctx.parsed.y + ' responses' }
+        callbacks: { label: function(ctx){ return ' ' + ctx.parsed.y + ' responses'; } }
       }
     },
     scales: {
       x: {
         grid:   { color:'rgba(100,120,200,0.10)' },
         ticks:  { font:{ family:'Inter', size:11 }, color:'#7a8ab0' },
-        border: { display:false }
+        border: { display: false }
       },
       y: {
         min: 0,
-        suggestedMax: Math.max(10, Math.max(...initData) * 1.2 || 10),
+        suggestedMax: Math.max(10, (Math.max.apply(null, initData) || 0) * 1.2),
         ticks: {
-          stepSize: Math.max(1, Math.round(Math.max(...initData, 10) / 8)),
+          stepSize: Math.max(1, Math.round((Math.max.apply(null, initData.concat([10]))) / 8)),
           font:  { family:'Inter', size:11 },
           color: '#7a8ab0'
         },
         grid:   { color:'rgba(100,120,200,0.10)' },
-        border: { display:false }
+        border: { display: false }
       }
     }
   }
 });
 
-// Show empty state on load if data is all zeros
 checkEmpty(initData);
 
-// ── Helpers ──────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────
 function checkEmpty(data) {
   var empty = data.every(function(v){ return v === 0; });
   document.getElementById('emptyState').classList.toggle('visible', empty);
@@ -333,7 +329,7 @@ function setLoading(on) {
     .forEach(function(b){ b.disabled = on; });
 }
 
-// ── AJAX fetch on filter change ───────────────────────
+// ── AJAX fetch ────────────────────────────────────────
 function fetchChart() {
   if (isFetching) return;
   isFetching = true;
@@ -352,7 +348,7 @@ function fetchChart() {
 
       var data   = json.data;
       var labels = json.labels;
-      var maxVal = Math.max(...data, 10);
+      var maxVal = Math.max.apply(null, data.concat([10]));
       var c      = colors[currentSentiment];
 
       chart.data.labels                            = labels;
@@ -366,13 +362,8 @@ function fetchChart() {
       chart.update();
       checkEmpty(data);
     })
-    .catch(function(err){
-      console.error('Dashboard error:', err);
-    })
-    .finally(function(){
-      isFetching = false;
-      setLoading(false);
-    });
+    .catch(function(err){ console.error('Dashboard error:', err); })
+    .finally(function(){ isFetching = false; setLoading(false); });
 }
 
 // ── Filter handlers ───────────────────────────────────
