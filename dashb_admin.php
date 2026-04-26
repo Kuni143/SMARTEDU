@@ -219,9 +219,9 @@ $initDataJson   = json_encode($initData);
           <?php endforeach; ?>
         </select>
         <div class="range-group">
-          <button class="range-btn" onclick="setRange('1-20',this)">1–20</button>
+          <button class="range-btn active" onclick="setRange('1-20',this)">1–20</button>
           <button class="range-btn" onclick="setRange('21-40',this)">21–40</button>
-          <button class="range-btn active" onclick="setRange('41-60',this)">41–60</button>
+          <button class="range-btn" onclick="setRange('41-60',this)">41–60</button>
         </div>
       </div>
     </div>
