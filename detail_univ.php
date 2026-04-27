@@ -78,7 +78,7 @@ function renderLines(string $text): string {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title><?= $university ? htmlspecialchars($university['name']) : 'University Details' ?></title>
+  <title>University Details</title>
   <link rel="icon" type="image/png" href="pics/logo.png">
   <link rel="stylesheet" href="CSS/detail_univ.css">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
