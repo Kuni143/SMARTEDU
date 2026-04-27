@@ -51,10 +51,13 @@ $topCoursesJson = json_encode(array_map(fn($r) => [
     'course_name' => $r['course_name'],
     'field_name'  => $r['field_name'],
     'score'       => round((float)$r['score'] * 100, 1),
-], $topCourses));
+], $topCourses), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
 
 $activeCourse     = $topCourses[0]['course_name'] ?? '';
-$activeCourseJson = json_encode($activeCourse);
+$activeCourseJson = json_encode($activeCourse, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+
+if ($topCoursesJson === false)  $topCoursesJson  = '[]';
+if ($activeCourseJson === false) $activeCourseJson = '""';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -277,12 +280,12 @@ $activeCourseJson = json_encode($activeCourse);
 var TOP_COURSES   = <?= $topCoursesJson ?>;
 var ACTIVE_COURSE = <?= $activeCourseJson ?>;
 
-var SCHOOLS       = [];
-var activeTypes   = ['All'];
-var pendingTypes  = ['All'];
-var activeLocs    = ['All'];
-var pendingLocs   = ['All'];
-var searchQuery   = '';
+var SCHOOLS      = [];
+var activeTypes  = ['All'];
+var pendingTypes = ['All'];
+var activeLocs   = ['All'];
+var pendingLocs  = ['All'];
+var searchQuery  = '';
 
 // ── Fetch universities ─────────────────────────────────────────────────────
 function fetchUniversitiesForCourse(courseName) {
@@ -359,13 +362,14 @@ function applyVisibility() {
       + (s.type ? '<span class="school-type-badge">' + escHtml(s.type) + ' · ' + escHtml(s.location || '') + '</span>' : '')
       + '<div class="school-desc">' + escHtml(s.description || 'No description available.') + '</div>'
       + '<div class="school-card-footer">'
-      + '<button class="btn-details" onclick="goDetails(' + JSON.stringify(s.name) + ')">Details</button>'
+      + '<button class="btn-details" data-name="' + encodeURIComponent(s.name) + '" onclick="goDetailsFromBtn(this)">Details</button>'
       + '</div>';
     grid.appendChild(card);
   });
 }
 
-function goDetails(name) {
+function goDetailsFromBtn(btn) {
+  var name = decodeURIComponent(btn.getAttribute('data-name'));
   window.location.href = 'detail_univ.php?name=' + encodeURIComponent(name);
 }
 
@@ -389,7 +393,6 @@ function clearSearch() {
 
 // ── Type Filter ────────────────────────────────────────────────────────────
 function toggleTypeFilter() {
-  // Close loc filter if open
   document.getElementById('locDropdown').classList.remove('open');
   document.getElementById('locFilterBtn').classList.remove('active-filter');
 
@@ -459,7 +462,6 @@ function closeTypeFilterDropdown() {
 
 // ── Location Filter ────────────────────────────────────────────────────────
 function toggleLocFilter() {
-  // Close type filter if open
   closeTypeFilterDropdown();
 
   var dd = document.getElementById('locDropdown');
@@ -621,10 +623,10 @@ document.getElementById('logoutModal').addEventListener('click', function(e) {
 // ── Helper ─────────────────────────────────────────────────────────────────
 function escHtml(s) {
   return String(s || '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
