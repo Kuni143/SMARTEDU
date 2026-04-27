@@ -1,3 +1,32 @@
+<?php
+session_start();
+
+// ── DB connection ──────────────────────────────────────────────────────────
+$host = 'localhost';
+$db   = 'smartedu';
+$user = 'root';
+$pass = '';
+$charset = 'utf8mb4';
+
+$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+];
+
+$pdo = null;
+$db_error = null;
+
+try {
+    $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (\PDOException $e) {
+    $db_error = $e->getMessage();
+}
+
+// ── Logged-in user (optional) ──────────────────────────────────────────────
+$logged_in_user_id = $_SESSION['user_id'] ?? null;
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +39,7 @@
 </head>
 <body>
 
-  <a class="logo" href="landpage.html">
+  <a class="logo" href="landpage.php">
     <img src="pics/logo.png" alt="SmartEdu Logo" />
     <span class="logo-name">SmartEdu</span>
   </a>
@@ -19,6 +48,12 @@
     <h1>Pathfinder Form</h1>
     <p>Find the right course for you!</p>
   </div>
+
+  <?php if ($db_error): ?>
+  <div style="background:#fdecea;color:#a32d2d;padding:12px 24px;text-align:center;font-family:Inter,sans-serif;font-size:13px;">
+    ⚠️ Database connection error. Submissions will not be saved. (<?= htmlspecialchars($db_error) ?>)
+  </div>
+  <?php endif; ?>
 
   <div class="main-layout">
 
@@ -74,7 +109,7 @@
               <option>HUMSS</option>
               <option>GAS</option>
               <option>TVL</option>
-              <option>Arts and Design</option> 
+              <option>Arts and Design</option>
             </select>
             <div class="chevron">
               <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
@@ -104,13 +139,11 @@
             <p class="subtitle">Please read the instruction carefully and select one answer at a time.</p>
           </div>
           <button class="view-toggle-btn" id="view-toggle-btn" onclick="toggleView()" title="Toggle view">
-            <!-- Compact icon (default shown) -->
             <svg id="view-icon-compact" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="5" rx="1"/>
               <rect x="3" y="10" width="18" height="5" rx="1"/>
               <rect x="3" y="17" width="18" height="4" rx="1"/>
             </svg>
-            <!-- Expanded icon (hidden initially) -->
             <svg id="view-icon-expanded" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
               <line x1="8" y1="6" x2="21" y2="6"/>
               <line x1="8" y1="12" x2="21" y2="12"/>
@@ -185,7 +218,6 @@
 
     </div><!-- /card -->
 
-    <!-- Scroll to top button — beside card, lower right -->
     <button class="scroll-top-btn" id="scrollTopBtn" onclick="scrollToTop()" title="Back to top" style="display:none;">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="18 15 12 9 6 15"/>
@@ -196,6 +228,10 @@
 
   <div id="toast-container"></div>
 
+  <script>
+    // Pass PHP session user_id to JS (null if not logged in)
+    var PHP_USER_ID = <?= json_encode($logged_in_user_id) ?>;
+  </script>
   <script src="JS/studform.js"></script>
 </body>
 </html>

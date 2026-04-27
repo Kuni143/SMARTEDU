@@ -1,10 +1,8 @@
 /* ── studform.js ─────────────────────────────────────
-   Drop-in replacement for the handleSubmit() function.
-   Paste this file as /JS/studform.js — it contains the
-   full original code plus the updated handleSubmit().
+   Full JS for studform.php.
    ─────────────────────────────────────────────────── */
 
-const SUBMIT_URL = '/api/submit_response.php'; // adjust path if needed
+const SUBMIT_URL = 'api/submit_response.php'; // relative path — no leading slash
 
 /* ── Question data ── */
 const SECTIONS = [
@@ -278,15 +276,13 @@ function validateSection(si) {
   return true;
 }
 
-/* ── Updated handleSubmit — POSTs real data to PHP ── */
+/* ── handleSubmit — POSTs to api/submit_response.php ── */
 function handleSubmit() {
-  // Collect student info from Step 0
   var grade  = document.getElementById('grade').value;
   var strand = document.getElementById('strand').value;
   var gpaRaw = document.getElementById('gpa').value;
   var gpa    = gpaRaw !== '' ? parseFloat(gpaRaw) : null;
 
-  // Collect all 60 answers { "1": 5, "2": 4, ... }
   var answers = {};
   var totalQuestions = 0;
   SECTIONS.forEach(function(sec) {
@@ -298,13 +294,11 @@ function handleSubmit() {
     });
   });
 
-  // Safety check (validateSection should have caught this already)
   if (Object.keys(answers).length < totalQuestions) {
     showToast('error', 'Some questions are unanswered. Please review all sections.');
     return;
   }
 
-  // Disable the submit button to prevent double-submit
   var nextBtn = document.getElementById('btn-career-next');
   if (nextBtn) nextBtn.disabled = true;
 
@@ -317,7 +311,6 @@ function handleSubmit() {
   })
   .then(function(res) {
     return res.json().then(function(data) {
-      // Attach HTTP status so we can check it below
       data._status = res.status;
       return data;
     });
@@ -328,10 +321,9 @@ function handleSubmit() {
     if (data.success) {
       showToast('success', 'Responses saved! Redirecting to your results…');
       setTimeout(function() {
-        window.location.href = 'result_univs.html';
+        window.location.href = 'result_univs.php'; // ← updated to .php
       }, 2000);
     } else {
-      // Server returned a validation / DB error
       showToast('error', data.error || 'Submission failed. Please try again.');
       if (nextBtn) nextBtn.disabled = false;
     }
