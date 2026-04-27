@@ -1,5 +1,4 @@
 <?php
-// ── result_univs.php ──────────────────────────────────────────────────────
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -129,7 +128,9 @@ $activeCourseJson = json_encode($activeCourse);
   </div>
   <?php else: ?>
 
+  <!-- Search + Filter row -->
   <div class="search-row">
+    <!-- Search -->
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="searchInput" placeholder="Search universities…" oninput="handleSearch()"/>
@@ -137,8 +138,10 @@ $activeCourseJson = json_encode($activeCourse);
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="filter-wrap">
-      <button class="filter-btn" id="filterBtn" onclick="toggleFilter()">
+
+    <!-- Type Filter -->
+    <div class="filter-wrap" id="typeFilterWrap">
+      <button class="filter-btn" id="typeFilterBtn" onclick="toggleTypeFilter()" title="Filter by type">
         <svg viewBox="0 0 24 24" class="funnel-icon"><polygon points="3 5 10 14 10 21 14 19 14 14 21 5 3 5"/></svg>
       </button>
       <div class="filter-dropdown" id="filterDropdown">
@@ -151,8 +154,8 @@ $activeCourseJson = json_encode($activeCourse);
         </div>
         <div class="type-dropdown" id="typeDropdown">
           <div class="type-dropdown-top">
-            <button onclick="selectAll()">Select all</button>
-            <button onclick="clearAll()">Clear</button>
+            <button onclick="selectAllTypes()">Select all</button>
+            <button onclick="clearAllTypes()">Clear</button>
           </div>
           <label class="type-opt"><input type="checkbox" value="All" onchange="handleTypeCheck(this)" checked> All</label>
           <label class="type-opt"><input type="checkbox" value="LUC" onchange="handleTypeCheck(this)"> LUC</label>
@@ -160,14 +163,57 @@ $activeCourseJson = json_encode($activeCourse);
           <label class="type-opt"><input type="checkbox" value="SUC" onchange="handleTypeCheck(this)"> SUC</label>
           <label class="type-opt"><input type="checkbox" value="Private" onchange="handleTypeCheck(this)"> Private</label>
           <div class="type-dropdown-btns">
-            <button class="td-cancel" onclick="cancelFilter()">Cancel</button>
-            <button class="td-done" onclick="applyFilter()">Done</button>
+            <button class="td-cancel" onclick="cancelTypeFilter()">Cancel</button>
+            <button class="td-done" onclick="applyTypeFilter()">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Filter -->
+    <div class="filter-wrap" id="locFilterWrap">
+      <button class="filter-btn" id="locFilterBtn" onclick="toggleLocFilter()" title="Filter by location">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#101d89" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+      </button>
+      <div class="loc-dropdown" id="locDropdown">
+        <div class="filter-header">
+          <span class="filter-type-label">Location:</span>
+        </div>
+        <div class="loc-opts-scroll">
+          <div class="loc-dropdown-top">
+            <button onclick="selectAllLocs()">Select all</button>
+            <button onclick="clearAllLocs()">Clear</button>
+          </div>
+          <label class="loc-opt"><input type="checkbox" value="All" onchange="handleLocCheck(this)" checked> All</label>
+          <label class="loc-opt"><input type="checkbox" value="Quezon City" onchange="handleLocCheck(this)"> Quezon City</label>
+          <label class="loc-opt"><input type="checkbox" value="Manila" onchange="handleLocCheck(this)"> Manila</label>
+          <label class="loc-opt"><input type="checkbox" value="Makati" onchange="handleLocCheck(this)"> Makati</label>
+          <label class="loc-opt"><input type="checkbox" value="Pateros" onchange="handleLocCheck(this)"> Pateros</label>
+          <label class="loc-opt"><input type="checkbox" value="Taguig" onchange="handleLocCheck(this)"> Taguig</label>
+          <label class="loc-opt"><input type="checkbox" value="Las Pi&#241;as" onchange="handleLocCheck(this)"> Las Pi&#241;as</label>
+          <label class="loc-opt"><input type="checkbox" value="Para&#241;aque" onchange="handleLocCheck(this)"> Para&#241;aque</label>
+          <label class="loc-opt"><input type="checkbox" value="Caloocan" onchange="handleLocCheck(this)"> Caloocan</label>
+          <label class="loc-opt"><input type="checkbox" value="Muntinlupa" onchange="handleLocCheck(this)"> Muntinlupa</label>
+          <label class="loc-opt"><input type="checkbox" value="Pasay" onchange="handleLocCheck(this)"> Pasay</label>
+          <label class="loc-opt"><input type="checkbox" value="Valenzuela" onchange="handleLocCheck(this)"> Valenzuela</label>
+          <label class="loc-opt"><input type="checkbox" value="Malabon" onchange="handleLocCheck(this)"> Malabon</label>
+          <label class="loc-opt"><input type="checkbox" value="Marikina" onchange="handleLocCheck(this)"> Marikina</label>
+          <label class="loc-opt"><input type="checkbox" value="Pasig" onchange="handleLocCheck(this)"> Pasig</label>
+          <label class="loc-opt"><input type="checkbox" value="Mandaluyong" onchange="handleLocCheck(this)"> Mandaluyong</label>
+          <label class="loc-opt"><input type="checkbox" value="San Juan" onchange="handleLocCheck(this)"> San Juan</label>
+          <div class="loc-dropdown-btns">
+            <button class="td-cancel" onclick="cancelLocFilter()">Cancel</button>
+            <button class="td-done" onclick="applyLocFilter()">Done</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Tag row -->
   <div class="tag-row" id="tagRow">
     <span class="tag active-tag" id="activeFilterTag"><?= htmlspecialchars($activeCourse) ?></span>
     <span class="tag search-tag" id="allSearchTag" onclick="clearSearch()" style="display:none;">
@@ -176,6 +222,7 @@ $activeCourseJson = json_encode($activeCourse);
     </span>
   </div>
 
+  <!-- Grid -->
   <div class="grid-wrapper">
     <div class="school-grid" id="schoolGrid">
       <?php for ($i = 0; $i < 8; $i++): ?>
@@ -230,22 +277,22 @@ $activeCourseJson = json_encode($activeCourse);
 var TOP_COURSES   = <?= $topCoursesJson ?>;
 var ACTIVE_COURSE = <?= $activeCourseJson ?>;
 
-var SCHOOLS      = [];
-var activeTypes  = ['All'];
-var pendingTypes = ['All'];
-var searchQuery  = '';
+var SCHOOLS       = [];
+var activeTypes   = ['All'];
+var pendingTypes  = ['All'];
+var activeLocs    = ['All'];
+var pendingLocs   = ['All'];
+var searchQuery   = '';
 
 // ── Fetch universities ─────────────────────────────────────────────────────
 function fetchUniversitiesForCourse(courseName) {
   var grid = document.getElementById('schoolGrid');
   if (!grid) return;
 
-  // Fade out current content
   grid.style.transition = 'opacity 0.25s ease';
   grid.style.opacity    = '0';
 
   setTimeout(function() {
-    // Show skeletons
     grid.innerHTML = '';
     for (var i = 0; i < 8; i++) {
       grid.innerHTML += '<div class="school-card" style="gap:12px;">'
@@ -255,13 +302,11 @@ function fetchUniversitiesForCourse(courseName) {
         + '<div class="skeleton" style="height:30px;width:50%;align-self:flex-end;border-radius:20px;margin-top:auto;"></div>'
         + '</div>';
     }
-    // Fade skeletons in
     grid.style.opacity = '1';
 
     fetch('api/get_universities.php?course=' + encodeURIComponent(courseName))
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        // Fade out skeletons
         grid.style.opacity = '0';
         setTimeout(function() {
           if (data.success) {
@@ -270,7 +315,6 @@ function fetchUniversitiesForCourse(courseName) {
           } else {
             grid.innerHTML = '<div class="no-results">Failed to load universities: ' + (data.error || 'Unknown error') + '</div>';
           }
-          // Fade new cards in
           grid.style.opacity = '1';
         }, 200);
       })
@@ -282,7 +326,6 @@ function fetchUniversitiesForCourse(courseName) {
         }, 200);
         console.error('Fetch error:', err);
       });
-
   }, 250);
 }
 
@@ -294,12 +337,13 @@ function applyVisibility() {
 
   var filtered = SCHOOLS.filter(function(s) {
     var matchType   = activeTypes.includes('All') || activeTypes.includes(s.type);
+    var matchLoc    = activeLocs.includes('All')  || activeLocs.includes(s.location);
     var matchSearch = !searchQuery
       || s.name.toLowerCase().includes(searchQuery.toLowerCase())
       || (s.type || '').toLowerCase().includes(searchQuery.toLowerCase())
       || (s.location || '').toLowerCase().includes(searchQuery.toLowerCase())
       || (s.description || '').toLowerCase().includes(searchQuery.toLowerCase());
-    return matchType && matchSearch;
+    return matchType && matchLoc && matchSearch;
   });
 
   if (!filtered.length) {
@@ -330,13 +374,8 @@ function handleSearch() {
   searchQuery = document.getElementById('searchInput').value.trim();
   var clearBtn  = document.getElementById('searchClearBtn');
   var searchTag = document.getElementById('allSearchTag');
-  if (searchQuery) {
-    clearBtn.style.display = 'flex';
-    searchTag.style.display = 'inline-flex';
-  } else {
-    clearBtn.style.display = 'none';
-    searchTag.style.display = 'none';
-  }
+  clearBtn.style.display  = searchQuery ? 'flex' : 'none';
+  searchTag.style.display = searchQuery ? 'inline-flex' : 'none';
   applyVisibility();
 }
 
@@ -344,16 +383,20 @@ function clearSearch() {
   searchQuery = '';
   document.getElementById('searchInput').value = '';
   document.getElementById('searchClearBtn').style.display = 'none';
-  document.getElementById('allSearchTag').style.display = 'none';
+  document.getElementById('allSearchTag').style.display   = 'none';
   applyVisibility();
 }
 
-// ── Filter ─────────────────────────────────────────────────────────────────
-function toggleFilter() {
+// ── Type Filter ────────────────────────────────────────────────────────────
+function toggleTypeFilter() {
+  // Close loc filter if open
+  document.getElementById('locDropdown').classList.remove('open');
+  document.getElementById('locFilterBtn').classList.remove('active-filter');
+
   var dd = document.getElementById('filterDropdown');
   if (!dd.classList.contains('open')) {
     pendingTypes = activeTypes.slice();
-    syncCheckboxes();
+    syncTypeCheckboxes();
   }
   dd.classList.toggle('open');
 }
@@ -363,14 +406,14 @@ function toggleTypeDropdown() {
   document.getElementById('filterChevron').classList.toggle('flipped');
 }
 
-function syncCheckboxes() {
-  document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(cb) {
+function syncTypeCheckboxes() {
+  document.querySelectorAll('#filterDropdown .type-opt input[type="checkbox"]').forEach(function(cb) {
     cb.checked = pendingTypes.includes(cb.value);
   });
-  updateCurrentText();
+  updateTypeText();
 }
 
-function updateCurrentText() {
+function updateTypeText() {
   var el = document.getElementById('filterCurrentText');
   el.textContent = (pendingTypes.includes('All') || pendingTypes.length === 0) ? 'All' : pendingTypes.join(', ');
 }
@@ -378,46 +421,102 @@ function updateCurrentText() {
 function handleTypeCheck(cb) {
   if (cb.value === 'All') {
     pendingTypes = cb.checked ? ['All'] : [];
-    document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) {
+    document.querySelectorAll('#filterDropdown .type-opt input[type="checkbox"]').forEach(function(b) {
       b.checked = (b.value === 'All' && cb.checked);
     });
   } else {
-    var allBox = document.querySelector('.type-opt input[value="All"]');
+    var allBox = document.querySelector('#filterDropdown .type-opt input[value="All"]');
     if (allBox) allBox.checked = false;
     pendingTypes = pendingTypes.filter(function(t) { return t !== 'All'; });
     if (cb.checked) { if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value); }
     else { pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; }); }
   }
-  updateCurrentText();
+  updateTypeText();
 }
 
-function selectAll() { pendingTypes = ['All']; syncCheckboxes(); }
-function clearAll() {
+function selectAllTypes() { pendingTypes = ['All']; syncTypeCheckboxes(); }
+function clearAllTypes() {
   pendingTypes = [];
-  document.querySelectorAll('.type-opt input[type="checkbox"]').forEach(function(b) { b.checked = false; });
-  updateCurrentText();
+  document.querySelectorAll('#filterDropdown .type-opt input[type="checkbox"]').forEach(function(b) { b.checked = false; });
+  updateTypeText();
 }
-function applyFilter() {
+function applyTypeFilter() {
   activeTypes = pendingTypes.length ? pendingTypes.slice() : ['All'];
-  closeFilterDropdown();
+  var isFiltered = !activeTypes.includes('All');
+  document.getElementById('typeFilterBtn').classList.toggle('active-filter', isFiltered);
+  closeTypeFilterDropdown();
   applyVisibility();
 }
-function cancelFilter() {
+function cancelTypeFilter() {
   pendingTypes = activeTypes.slice();
-  closeFilterDropdown();
+  closeTypeFilterDropdown();
 }
-function closeFilterDropdown() {
+function closeTypeFilterDropdown() {
   document.getElementById('filterDropdown').classList.remove('open');
   document.getElementById('typeDropdown').classList.remove('open');
   document.getElementById('filterChevron').classList.remove('flipped');
 }
 
-document.addEventListener('click', function(e) {
-  var dd  = document.getElementById('filterDropdown');
-  var btn = document.getElementById('filterBtn');
-  if (dd && dd.classList.contains('open') && !dd.contains(e.target) && !btn.contains(e.target)) {
-    cancelFilter();
+// ── Location Filter ────────────────────────────────────────────────────────
+function toggleLocFilter() {
+  // Close type filter if open
+  closeTypeFilterDropdown();
+
+  var dd = document.getElementById('locDropdown');
+  if (!dd.classList.contains('open')) {
+    pendingLocs = activeLocs.slice();
+    syncLocCheckboxes();
   }
+  dd.classList.toggle('open');
+}
+
+function syncLocCheckboxes() {
+  document.querySelectorAll('#locDropdown .loc-opt input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = pendingLocs.includes(cb.value);
+  });
+}
+
+function handleLocCheck(cb) {
+  if (cb.value === 'All') {
+    pendingLocs = cb.checked ? ['All'] : [];
+    document.querySelectorAll('#locDropdown .loc-opt input[type="checkbox"]').forEach(function(b) {
+      b.checked = (b.value === 'All' && cb.checked);
+    });
+  } else {
+    var allBox = document.querySelector('#locDropdown .loc-opt input[value="All"]');
+    if (allBox) allBox.checked = false;
+    pendingLocs = pendingLocs.filter(function(l) { return l !== 'All'; });
+    if (cb.checked) { if (!pendingLocs.includes(cb.value)) pendingLocs.push(cb.value); }
+    else { pendingLocs = pendingLocs.filter(function(l) { return l !== cb.value; }); }
+  }
+}
+
+function selectAllLocs() {
+  pendingLocs = ['All'];
+  syncLocCheckboxes();
+}
+function clearAllLocs() {
+  pendingLocs = [];
+  document.querySelectorAll('#locDropdown .loc-opt input[type="checkbox"]').forEach(function(b) { b.checked = false; });
+}
+function applyLocFilter() {
+  activeLocs = pendingLocs.length ? pendingLocs.slice() : ['All'];
+  var isFiltered = !activeLocs.includes('All');
+  document.getElementById('locFilterBtn').classList.toggle('active-filter', isFiltered);
+  document.getElementById('locDropdown').classList.remove('open');
+  applyVisibility();
+}
+function cancelLocFilter() {
+  pendingLocs = activeLocs.slice();
+  document.getElementById('locDropdown').classList.remove('open');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+  var typeWrap = document.getElementById('typeFilterWrap');
+  var locWrap  = document.getElementById('locFilterWrap');
+  if (!typeWrap.contains(e.target)) cancelTypeFilter();
+  if (!locWrap.contains(e.target))  cancelLocFilter();
 });
 
 // ── Chat popup ─────────────────────────────────────────────────────────────
@@ -428,7 +527,6 @@ function buildTopCoursesList() {
 
   TOP_COURSES.forEach(function(c) {
     var isActive = c.course_name === ACTIVE_COURSE;
-
     var li  = document.createElement('li');
     var btn = document.createElement('button');
     btn.style.textDecoration = isActive ? 'none'      : 'underline';
@@ -480,7 +578,6 @@ function closeChatPopup() {
 function selectCourse(course) {
   ACTIVE_COURSE = course;
 
-  // Fade tag out, swap text, fade back in
   var tag = document.getElementById('activeFilterTag');
   if (tag) {
     tag.style.opacity = '0';
