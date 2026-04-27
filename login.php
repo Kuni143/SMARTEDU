@@ -121,7 +121,7 @@ $old_username = h($_POST['username'] ?? '');
 <body>
 <div class="page-wrapper">
 
-  <a class="logo" href="landpage.html">
+  <a class="logo" href="landpage.php">
     <img src="pics/logo.png" alt="SmartEdu Logo" onerror="this.style.display='none'"/>
     <span class="logo-name">SmartEdu</span>
   </a>

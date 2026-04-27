@@ -1,12 +1,8 @@
 <?php
-// ── config/db.php ──────────────────────────────────────
-// Shared PDO connection for the SmartEdu project.
-// Include this file wherever you need a DB handle.
-
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'smartedu');
-define('DB_USER', 'root');       // ← change to your DB user
-define('DB_PASS', '');           // ← change to your DB password
+define('DB_USER', 'root');
+define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
 function getDB(): PDO {
@@ -22,6 +18,7 @@ function getDB(): PDO {
             PDO::ATTR_EMULATE_PREPARES   => false,
         ];
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        $pdo->exec("SET time_zone = '+08:00'");
     }
     return $pdo;
 }
