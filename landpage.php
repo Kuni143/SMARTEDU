@@ -16,7 +16,7 @@
   <section class="hero">
     <div class="topbar">
       <a href="#about">About</a>
-      <button onclick="location.href='signup.html'">Get Started</button>
+      <button onclick="location.href='signup.php'">Get Started</button>
     </div>
 
     <img src="pics/univpic.png" alt="University Illustration">
@@ -35,14 +35,14 @@
       </p>
 
       <div class="button-row">
-        <a class="btn-primary" href="signup.html">Get my Recommendation →</a>
-        <a class="btn-secondary" href="login.html">Log In →</a>
+        <a class="btn-primary" href="signup.php">Get my Recommendation →</a>
+        <a class="btn-secondary" href="login.php">Log In →</a>
       </div>
     </div>
 
     <!-- RIGHT -->
     <div class="about-image">
-      <a href="admin_login.html">
+      <a href="admin_login.php">
         <img src="pics/abtpic.png" alt="Path Illustration">
       </a>
     </div>
