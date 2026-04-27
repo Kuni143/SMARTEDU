@@ -8,8 +8,28 @@ define('LOCKOUT_SECONDS', 300); // 5 minutes
 
 // ── Already logged in? ────────────────────────────────
 if (!empty($_SESSION['user_id'])) {
-  header('Location: studform.php');
-  exit;
+    try {
+        $pdo = getDB();
+        $checkStmt = $pdo->prepare("
+            SELECT s.id
+            FROM students s
+            INNER JOIN student_results sr ON sr.student_id = s.id
+            WHERE s.user_id = :uid
+            LIMIT 1
+        ");
+        $checkStmt->execute([':uid' => $_SESSION['user_id']]);
+        $existing = $checkStmt->fetch();
+
+        if ($existing) {
+            $_SESSION['student_id'] = $existing['id'];
+            header('Location: result_univs.php');
+        } else {
+            header('Location: studform.php');
+        }
+    } catch (PDOException $e) {
+        header('Location: studform.php');
+    }
+    exit;
 }
 if (!empty($_SESSION['admin_id'])) {
   header('Location: dashb_admin.php');
@@ -78,9 +98,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       if ($user && password_verify($password, $user['password_hash'])) {
         resetAttempts();
-        $_SESSION['user_id']   = $user['id'];
-        $_SESSION['username']  = $username;
-        header('Location: studform.php');
+        $_SESSION['user_id']  = $user['id'];
+        $_SESSION['username'] = $username;
+
+        // ── Check if user already completed the form ───
+        $checkStmt = $pdo->prepare("
+            SELECT s.id
+            FROM students s
+            INNER JOIN student_results sr ON sr.student_id = s.id
+            WHERE s.user_id = :uid
+            LIMIT 1
+        ");
+        $checkStmt->execute([':uid' => $user['id']]);
+        $existing = $checkStmt->fetch();
+
+        if ($existing) {
+            // Returning user — restore student_id and skip the form
+            $_SESSION['student_id'] = $existing['id'];
+            header('Location: result_univs.php');
+        } else {
+            // New user — send to form
+            header('Location: studform.php');
+        }
         exit;
       }
 

@@ -25,7 +25,7 @@ define('OTP_TTL', 300);
 define('OTP_RESEND', 60);
 
 function jsonResponse($arr) {
-    header('Content-Type: application/json');
+    header('Content-Type: application/json'); 
     echo json_encode($arr);
     exit;
 }
@@ -34,6 +34,10 @@ if (isset($_GET['ajax'])) {
 
     $pdo = getDB();
     $pdo->exec("SET time_zone = '+00:00'");
+
+    // ── Auto-purge used or expired password_resets ─────────────────────────
+    $pdo->exec("DELETE FROM password_resets WHERE used = 1 OR expires_at < NOW()");
+
     $action = $_GET['ajax'];
 
     // ── SEND OTP ─────────────────────────────

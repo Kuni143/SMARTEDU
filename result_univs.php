@@ -1,33 +1,25 @@
 <?php
 // ── result_univs.php ──────────────────────────────────────────────────────
-// Shows the student's top-5 recommended courses and the universities
-// that offer those courses, pulled from the database.
-// Requires: config/db.php, session with student_id set after form submission.
-// ─────────────────────────────────────────────────────────────────────────
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 require_once __DIR__ . '/config/db.php';
 
-// ── Guard: must have a student_id in session ──────────────────────────────
 $studentId = $_SESSION['student_id'] ?? null;
 if (!$studentId) {
     header('Location: studform.php');
     exit;
 }
 
-// ── Fetch top-5 recommended courses for this student ─────────────────────
 $topCourses = [];
 $username   = 'Student';
-$pdo = null;
-$dbError = null;
+$pdo        = null;
+$dbError    = null;
 
 try {
     $pdo = getDB();
 
-    // Get student info + username
     $stmt = $pdo->prepare("
         SELECT s.grade, s.strand, s.gpa, u.username
         FROM students s
@@ -41,7 +33,6 @@ try {
         $username = $studentRow['username'];
     }
 
-    // Get top courses ranked by score
     $stmt = $pdo->prepare("
         SELECT course_name, field_name, score, `rank`
         FROM student_results
@@ -56,7 +47,6 @@ try {
     $dbError = $e->getMessage();
 }
 
-// ── Encode top courses for JS ─────────────────────────────────────────────
 $topCoursesJson = json_encode(array_map(fn($r) => [
     'rank'        => (int)$r['rank'],
     'course_name' => $r['course_name'],
@@ -64,8 +54,7 @@ $topCoursesJson = json_encode(array_map(fn($r) => [
     'score'       => round((float)$r['score'] * 100, 1),
 ], $topCourses));
 
-// Default active course (rank 1)
-$activeCourse = $topCourses[0]['course_name'] ?? '';
+$activeCourse     = $topCourses[0]['course_name'] ?? '';
 $activeCourseJson = json_encode($activeCourse);
 ?>
 <!DOCTYPE html>
@@ -77,7 +66,6 @@ $activeCourseJson = json_encode($activeCourse);
   <link rel="icon" type="image/png" href="pics/logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
-    /* ── Reset & Base ─────────────────────────────── */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 100%; min-height: 100vh;
@@ -92,11 +80,9 @@ $activeCourseJson = json_encode($activeCourse);
     ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.95); }
     * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.75) transparent; }
 
-    /* ── Sidebar overlay ──────────────────────────── */
     .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:300; }
     .sidebar-overlay.show { display:block; }
 
-    /* ── Sidebar ──────────────────────────────────── */
     .sidebar {
       position:fixed; top:0; right:-280px; width:220px; height:100vh;
       background:#fff; border-radius:20px 0 0 20px; z-index:400;
@@ -138,7 +124,6 @@ $activeCourseJson = json_encode($activeCourse);
     .sidebar-logout:hover { background:#fdecea; color:#c0392b; }
     .sidebar-logout:hover svg { stroke:#c0392b; }
 
-    /* ── Navbar ───────────────────────────────────── */
     .navbar {
       width:100%; height:72px; background:#ced4df;
       display:flex; align-items:center; justify-content:space-between;
@@ -157,17 +142,14 @@ $activeCourseJson = json_encode($activeCourse);
     .hamburger span { display:block; width:28px; height:3px; background:#101d89; border-radius:2px; transition:opacity 0.2s; }
     .hamburger:hover span { opacity:0.7; }
 
-    /* ── Main ─────────────────────────────────────── */
     .main { max-width:1100px; margin:0 auto; padding:16px 24px 48px; }
 
-    /* ── DB Error banner ──────────────────────────── */
     .db-error-banner {
       background:#fdecea; color:#a32d2d; padding:12px 20px;
       border-radius:12px; font-family:'Inter',sans-serif; font-size:13px;
       margin-bottom:16px; border-left:4px solid #e24b4a;
     }
 
-    /* ── Search + Filter row ──────────────────────── */
     .search-row { display:flex; align-items:center; gap:14px; margin-bottom:12px; }
     .search-wrap { flex:1; position:relative; }
     .search-icon {
@@ -192,7 +174,6 @@ $activeCourseJson = json_encode($activeCourse);
     .search-clear-btn:hover { background:#d0d8ee; }
     .search-clear-btn svg { width:12px; height:12px; stroke:#061685; fill:none; stroke-width:2.5; stroke-linecap:round; }
 
-    /* Filter button */
     .filter-wrap { position:relative; flex-shrink:0; }
     .filter-btn {
       width:52px; height:52px; border-radius:50%; border:none; background:#fff;
@@ -247,7 +228,6 @@ $activeCourseJson = json_encode($activeCourse);
     }
     .td-done:hover { opacity:0.88; }
 
-    /* ── Tag row ──────────────────────────────────── */
     .tag-row {
       display:flex; gap:10px; margin-bottom:20px;
       flex-wrap:wrap; min-height:28px; align-items:center;
@@ -266,12 +246,15 @@ $activeCourseJson = json_encode($activeCourse);
     .search-tag:hover { background:#d0d8ee; }
     .search-tag svg { width:11px; height:11px; stroke:#061685; fill:none; stroke-width:2.5; stroke-linecap:round; }
 
-    /* ── Grid ─────────────────────────────────────── */
+    /* ── Active tag smooth transition ─────────── */
+    #activeFilterTag { transition: opacity 0.2s ease; }
+
     .grid-wrapper { height:692px; overflow-y:auto; flex-shrink:0; }
     .school-grid {
       display:grid;
       grid-template-columns:repeat(4, 1fr);
       gap:16px; align-content:start;
+      transition: opacity 0.25s ease;
     }
     .school-card {
       background:#fff; border-radius:18px; padding:22px 20px 18px;
@@ -307,7 +290,6 @@ $activeCourseJson = json_encode($activeCourse);
       font-family:'Inter',sans-serif; font-size:15px; color:#777;
     }
 
-    /* ── Chathead ─────────────────────────────────── */
     .chathead {
       position:fixed; bottom:28px; right:70px; width:64px; height:64px;
       border-radius:50%; cursor:pointer; z-index:600;
@@ -318,7 +300,6 @@ $activeCourseJson = json_encode($activeCourse);
     .chathead:hover { transform:scale(1.08); box-shadow:0 6px 24px rgba(6,22,133,0.3); }
     .chathead img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
 
-    /* ── Chat popup ───────────────────────────────── */
     .chat-popup {
       position:fixed; bottom:104px; right:70px; width:300px;
       background:#fff; border-radius:18px;
@@ -376,7 +357,6 @@ $activeCourseJson = json_encode($activeCourse);
       font-family:'Inter',sans-serif; font-size:12px; color:#aaa; font-style:italic;
     }
 
-    /* ── Empty state ──────────────────────────────── */
     .empty-course-state {
       grid-column:1/-1; text-align:center; padding:60px 24px;
       font-family:'Inter',sans-serif;
@@ -384,7 +364,6 @@ $activeCourseJson = json_encode($activeCourse);
     .empty-course-state h3 { font-size:18px; color:#061685; margin-bottom:8px; }
     .empty-course-state p { font-size:14px; color:#777; }
 
-    /* ── Loading skeleton ─────────────────────────── */
     .skeleton {
       background:linear-gradient(90deg,#e8ecf5 25%,#f4f6fb 50%,#e8ecf5 75%);
       background-size:200% 100%; border-radius:10px;
@@ -392,7 +371,6 @@ $activeCourseJson = json_encode($activeCourse);
     }
     @keyframes skeleton-shine { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-    /* ── Logout modal ─────────────────────────────── */
     .modal-overlay {
       display:none; position:fixed; inset:0;
       background:rgba(0,0,0,0.25); z-index:500;
@@ -419,7 +397,6 @@ $activeCourseJson = json_encode($activeCourse);
     .btn-confirm { border-radius:20px; padding:8px 22px; font-family:'Sora',sans-serif; font-size:13px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#061685; }
     .btn-confirm:hover { text-decoration:underline; }
 
-    /* ── Responsive ───────────────────────────────── */
     @media (max-width:900px)  { .school-grid { grid-template-columns:repeat(3,1fr); } }
     @media (max-width:680px)  { .school-grid { grid-template-columns:repeat(2,1fr); } .main { padding:12px 14px 40px; } }
     @media (max-width:420px)  { .school-grid { grid-template-columns:1fr; } }
@@ -427,10 +404,8 @@ $activeCourseJson = json_encode($activeCourse);
 </head>
 <body>
 
-<!-- Sidebar overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMenu()"></div>
 
-<!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <button class="sidebar-close" onclick="closeMenu()" aria-label="Close">&#x2715;</button>
   <div class="sidebar-top">
@@ -466,7 +441,6 @@ $activeCourseJson = json_encode($activeCourse);
   </div>
 </aside>
 
-<!-- Navbar -->
 <nav class="navbar">
   <a class="nav-logo" href="result_univs.php">
     <img src="pics/logo.png" alt="SmartEdu Logo"/>
@@ -477,7 +451,6 @@ $activeCourseJson = json_encode($activeCourse);
   </button>
 </nav>
 
-<!-- Main -->
 <main class="main">
 
   <?php if ($dbError): ?>
@@ -485,14 +458,12 @@ $activeCourseJson = json_encode($activeCourse);
   <?php endif; ?>
 
   <?php if (empty($topCourses)): ?>
-  <!-- No results found -->
   <div class="empty-course-state">
     <h3>No results found</h3>
     <p>It seems your form submission wasn't saved. Please <a href="studform.php" style="color:#061685;">retake the form</a>.</p>
   </div>
   <?php else: ?>
 
-  <!-- Search + Filter row -->
   <div class="search-row">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -532,7 +503,6 @@ $activeCourseJson = json_encode($activeCourse);
     </div>
   </div>
 
-  <!-- Tag row -->
   <div class="tag-row" id="tagRow">
     <span class="tag active-tag" id="activeFilterTag"><?= htmlspecialchars($activeCourse) ?></span>
     <span class="tag search-tag" id="allSearchTag" onclick="clearSearch()" style="display:none;">
@@ -541,10 +511,8 @@ $activeCourseJson = json_encode($activeCourse);
     </span>
   </div>
 
-  <!-- Grid -->
   <div class="grid-wrapper">
     <div class="school-grid" id="schoolGrid">
-      <!-- Skeleton loaders while JS fetches -->
       <?php for ($i = 0; $i < 8; $i++): ?>
       <div class="school-card" style="gap:12px;">
         <div class="skeleton" style="height:20px;width:80%;"></div>
@@ -560,12 +528,10 @@ $activeCourseJson = json_encode($activeCourse);
 
 </main>
 
-<!-- ── Top Courses Chathead ── -->
 <div class="chathead" id="chathead" onclick="toggleChatPopup()">
   <img src="pics/popup.png" alt="Top Courses" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:24px;\'>🎓</span>';"/>
 </div>
 
-<!-- Top Courses Popup -->
 <div class="chat-popup" id="chatPopup">
   <div class="chat-popup-header">
     <button class="chat-popup-close" onclick="closeChatPopup()">
@@ -575,14 +541,11 @@ $activeCourseJson = json_encode($activeCourse);
   <div class="chat-popup-body">
     <h3>Your Top Course Matches</h3>
     <p>Select a course to filter universities that offer it.</p>
-    <ol id="top-courses-list">
-      <!-- Populated by JS from PHP data -->
-    </ol>
+    <ol id="top-courses-list"></ol>
     <p class="redirecting-text" id="redirecting-text" style="display:none;">Filtering universities…</p>
   </div>
 </div>
 
-<!-- Logout Modal -->
 <div class="modal-overlay" id="logoutModal">
   <div class="modal">
     <button class="modal-close" onclick="closeLogoutModal()">&#x2715;</button>
@@ -593,52 +556,69 @@ $activeCourseJson = json_encode($activeCourse);
     <div class="modal-divider"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
-      <button class="btn-confirm" onclick="window.location.href='login.php'">Log Out</button>
+      <button class="btn-confirm" onclick="window.location.href='logout.php'">Log Out</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── PHP → JS data injection ────────────────────────────────────────────────
 var TOP_COURSES   = <?= $topCoursesJson ?>;
 var ACTIVE_COURSE = <?= $activeCourseJson ?>;
 
-// ── State ──────────────────────────────────────────────────────────────────
-var SCHOOLS      = [];   // fetched from API
+var SCHOOLS      = [];
 var activeTypes  = ['All'];
 var pendingTypes = ['All'];
 var searchQuery  = '';
 
-// ── Fetch universities for a given course from the server ──────────────────
+// ── Fetch universities ─────────────────────────────────────────────────────
 function fetchUniversitiesForCourse(courseName) {
   var grid = document.getElementById('schoolGrid');
   if (!grid) return;
 
-  // Show skeletons while loading
-  grid.innerHTML = '';
-  for (var i = 0; i < 8; i++) {
-    grid.innerHTML += '<div class="school-card" style="gap:12px;">'
-      + '<div class="skeleton" style="height:20px;width:80%;"></div>'
-      + '<div class="skeleton" style="height:14px;width:40%;"></div>'
-      + '<div class="skeleton" style="height:60px;"></div>'
-      + '<div class="skeleton" style="height:30px;width:50%;align-self:flex-end;border-radius:20px;margin-top:auto;"></div>'
-      + '</div>';
-  }
+  // Fade out current content
+  grid.style.transition = 'opacity 0.25s ease';
+  grid.style.opacity    = '0';
 
-  fetch('api/get_universities.php?course=' + encodeURIComponent(courseName))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.success) {
-        SCHOOLS = data.universities;
-        applyVisibility();
-      } else {
-        grid.innerHTML = '<div class="no-results">Failed to load universities: ' + (data.error || 'Unknown error') + '</div>';
-      }
-    })
-    .catch(function(err) {
-      grid.innerHTML = '<div class="no-results">Network error. Please refresh and try again.</div>';
-      console.error('Fetch error:', err);
-    });
+  setTimeout(function() {
+    // Show skeletons
+    grid.innerHTML = '';
+    for (var i = 0; i < 8; i++) {
+      grid.innerHTML += '<div class="school-card" style="gap:12px;">'
+        + '<div class="skeleton" style="height:20px;width:80%;"></div>'
+        + '<div class="skeleton" style="height:14px;width:40%;"></div>'
+        + '<div class="skeleton" style="height:60px;"></div>'
+        + '<div class="skeleton" style="height:30px;width:50%;align-self:flex-end;border-radius:20px;margin-top:auto;"></div>'
+        + '</div>';
+    }
+    // Fade skeletons in
+    grid.style.opacity = '1';
+
+    fetch('api/get_universities.php?course=' + encodeURIComponent(courseName))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        // Fade out skeletons
+        grid.style.opacity = '0';
+        setTimeout(function() {
+          if (data.success) {
+            SCHOOLS = data.universities;
+            applyVisibility();
+          } else {
+            grid.innerHTML = '<div class="no-results">Failed to load universities: ' + (data.error || 'Unknown error') + '</div>';
+          }
+          // Fade new cards in
+          grid.style.opacity = '1';
+        }, 200);
+      })
+      .catch(function(err) {
+        grid.style.opacity = '0';
+        setTimeout(function() {
+          grid.innerHTML = '<div class="no-results">Network error. Please refresh and try again.</div>';
+          grid.style.opacity = '1';
+        }, 200);
+        console.error('Fetch error:', err);
+      });
+
+  }, 250);
 }
 
 // ── Build / filter grid ────────────────────────────────────────────────────
@@ -779,15 +759,43 @@ document.addEventListener('click', function(e) {
 function buildTopCoursesList() {
   var list = document.getElementById('top-courses-list');
   if (!list) return;
-  list.innerHTML = TOP_COURSES.map(function(c) {
-    return '<li>'
-      + '<button onclick="selectCourse(' + JSON.stringify(c.course_name) + ')">'
-      + escHtml(c.course_name)
-      + '<span class="course-score-badge">' + c.score + '%</span>'
-      + '</button>'
-      + '<span class="course-field-label">' + escHtml(c.field_name || '') + '</span>'
-      + '</li>';
-  }).join('');
+  list.innerHTML = '';
+
+  TOP_COURSES.forEach(function(c) {
+    var isActive = c.course_name === ACTIVE_COURSE;
+
+    var li  = document.createElement('li');
+    var btn = document.createElement('button');
+    btn.style.textDecoration = isActive ? 'none'      : 'underline';
+    btn.style.fontWeight     = isActive ? '800'       : '600';
+    btn.style.opacity        = isActive ? '1'         : '0.75';
+    btn.style.background     = 'none';
+    btn.style.border         = 'none';
+    btn.style.cursor         = 'pointer';
+    btn.style.fontFamily     = 'Inter, sans-serif';
+    btn.style.fontSize       = '13px';
+    btn.style.color          = '#061685';
+    btn.style.padding        = '0';
+    btn.style.textAlign      = 'left';
+    btn.style.lineHeight     = '1.4';
+    btn.textContent          = c.course_name;
+    btn.addEventListener('click', (function(name) {
+      return function() { selectCourse(name); };
+    })(c.course_name));
+
+    var badge = document.createElement('span');
+    badge.className   = 'course-score-badge';
+    badge.textContent = c.score + '%';
+    btn.appendChild(badge);
+
+    var fieldLabel = document.createElement('span');
+    fieldLabel.className   = 'course-field-label';
+    fieldLabel.textContent = c.field_name || '';
+
+    li.appendChild(btn);
+    li.appendChild(fieldLabel);
+    list.appendChild(li);
+  });
 }
 
 function toggleChatPopup() {
@@ -807,29 +815,33 @@ function closeChatPopup() {
 function selectCourse(course) {
   ACTIVE_COURSE = course;
 
-  // Update tag
+  // Fade tag out, swap text, fade back in
   var tag = document.getElementById('activeFilterTag');
   if (tag) {
-    tag.textContent = course;
-    tag.classList.add('active-tag');
+    tag.style.opacity = '0';
+    setTimeout(function() {
+      tag.textContent = course;
+      tag.classList.add('active-tag');
+      tag.style.opacity = '1';
+    }, 200);
   }
 
-  document.getElementById('redirecting-text').style.display = 'block';
-
-  setTimeout(function() {
-    closeChatPopup();
-    fetchUniversitiesForCourse(course);
-  }, 800);
+  closeChatPopup();
+  fetchUniversitiesForCourse(course);
 }
 
 // ── Sidebar ────────────────────────────────────────────────────────────────
 function toggleMenu() {
+  var isOpening = !document.getElementById('sidebar').classList.contains('open');
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebarOverlay').classList.toggle('show');
+  document.getElementById('chathead').style.display = isOpening ? 'none' : 'flex';
+  document.getElementById('chatPopup').classList.remove('open');
 }
 function closeMenu() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebarOverlay').classList.remove('show');
+  document.getElementById('chathead').style.display = 'flex';
 }
 
 // ── Logout modal ───────────────────────────────────────────────────────────
