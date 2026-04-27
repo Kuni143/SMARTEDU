@@ -19,6 +19,7 @@ $dbError    = null;
 try {
     $pdo = getDB();
 
+    // Fetch student info + username
     $stmt = $pdo->prepare("
         SELECT s.grade, s.strand, s.gpa, u.username
         FROM students s
@@ -32,6 +33,7 @@ try {
         $username = $studentRow['username'];
     }
 
+    // Fetch top 5 course results
     $stmt = $pdo->prepare("
         SELECT course_name, field_name, score, `rank`
         FROM student_results
@@ -46,6 +48,20 @@ try {
     $dbError = $e->getMessage();
 }
 
+// ── Determine which course to highlight ───────────────────────────────────
+// Default: rank-1 course
+$activeCourse = $topCourses[0]['course_name'] ?? '';
+
+// Override if ?course= param is passed AND it matches one of the student's results
+$requestedCourse = $_GET['course'] ?? null;
+if ($requestedCourse) {
+    $validCourses = array_column($topCourses, 'course_name');
+    if (in_array($requestedCourse, $validCourses, true)) {
+        $activeCourse = $requestedCourse;
+    }
+}
+
+// JSON encode for JS
 $topCoursesJson = json_encode(array_map(fn($r) => [
     'rank'        => (int)$r['rank'],
     'course_name' => $r['course_name'],
@@ -53,10 +69,9 @@ $topCoursesJson = json_encode(array_map(fn($r) => [
     'score'       => round((float)$r['score'] * 100, 1),
 ], $topCourses), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
 
-$activeCourse     = $topCourses[0]['course_name'] ?? '';
 $activeCourseJson = json_encode($activeCourse, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
 
-if ($topCoursesJson === false)  $topCoursesJson  = '[]';
+if ($topCoursesJson   === false) $topCoursesJson   = '[]';
 if ($activeCourseJson === false) $activeCourseJson = '""';
 ?>
 <!DOCTYPE html>
@@ -96,7 +111,10 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
       Universities
     </a>
     <a href="result_hist.php" class="sidebar-link">
-      <svg data-stroke viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 9 15"/></svg>
+      <svg data-stroke viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 9 15"/>
+      </svg>
       Result history
     </a>
   </nav>
@@ -243,6 +261,7 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
 
 </main>
 
+<!-- Floating chat head (top courses popup) -->
 <div class="chathead" id="chathead" onclick="toggleChatPopup()">
   <img src="pics/popup.png" alt="Top Courses" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:24px;\'>🎓</span>';"/>
 </div>
@@ -261,6 +280,7 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
   </div>
 </div>
 
+<!-- Logout modal -->
 <div class="modal-overlay" id="logoutModal">
   <div class="modal">
     <button class="modal-close" onclick="closeLogoutModal()">&#x2715;</button>
@@ -287,7 +307,7 @@ var activeLocs   = ['All'];
 var pendingLocs  = ['All'];
 var searchQuery  = '';
 
-// ── Fetch universities ─────────────────────────────────────────────────────
+// ── Fetch universities for a course ───────────────────────────────────────
 function fetchUniversitiesForCourse(courseName) {
   var grid = document.getElementById('schoolGrid');
   if (!grid) return;
@@ -295,7 +315,7 @@ function fetchUniversitiesForCourse(courseName) {
   grid.style.transition = 'opacity 0.25s ease';
   grid.style.opacity    = '0';
 
-  setTimeout(function() {
+  setTimeout(function () {
     grid.innerHTML = '';
     for (var i = 0; i < 8; i++) {
       grid.innerHTML += '<div class="school-card" style="gap:12px;">'
@@ -308,10 +328,10 @@ function fetchUniversitiesForCourse(courseName) {
     grid.style.opacity = '1';
 
     fetch('api/get_universities.php?course=' + encodeURIComponent(courseName))
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
         grid.style.opacity = '0';
-        setTimeout(function() {
+        setTimeout(function () {
           if (data.success) {
             SCHOOLS = data.universities;
             applyVisibility();
@@ -321,9 +341,9 @@ function fetchUniversitiesForCourse(courseName) {
           grid.style.opacity = '1';
         }, 200);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         grid.style.opacity = '0';
-        setTimeout(function() {
+        setTimeout(function () {
           grid.innerHTML = '<div class="no-results">Network error. Please refresh and try again.</div>';
           grid.style.opacity = '1';
         }, 200);
@@ -338,12 +358,12 @@ function applyVisibility() {
   if (!grid) return;
   grid.innerHTML = '';
 
-  var filtered = SCHOOLS.filter(function(s) {
+  var filtered = SCHOOLS.filter(function (s) {
     var matchType   = activeTypes.includes('All') || activeTypes.includes(s.type);
     var matchLoc    = activeLocs.includes('All')  || activeLocs.includes(s.location);
     var matchSearch = !searchQuery
       || s.name.toLowerCase().includes(searchQuery.toLowerCase())
-      || (s.type || '').toLowerCase().includes(searchQuery.toLowerCase())
+      || (s.type     || '').toLowerCase().includes(searchQuery.toLowerCase())
       || (s.location || '').toLowerCase().includes(searchQuery.toLowerCase())
       || (s.description || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchType && matchLoc && matchSearch;
@@ -354,7 +374,7 @@ function applyVisibility() {
     return;
   }
 
-  filtered.forEach(function(s) {
+  filtered.forEach(function (s) {
     var card = document.createElement('div');
     card.className = 'school-card';
     card.innerHTML =
@@ -378,14 +398,13 @@ function handleSearch() {
   searchQuery = document.getElementById('searchInput').value.trim();
   var clearBtn  = document.getElementById('searchClearBtn');
   var searchTag = document.getElementById('allSearchTag');
-  clearBtn.style.display  = searchQuery ? 'flex' : 'none';
+  clearBtn.style.display  = searchQuery ? 'flex'        : 'none';
   searchTag.style.display = searchQuery ? 'inline-flex' : 'none';
   applyVisibility();
 }
-
 function clearSearch() {
   searchQuery = '';
-  document.getElementById('searchInput').value = '';
+  document.getElementById('searchInput').value           = '';
   document.getElementById('searchClearBtn').style.display = 'none';
   document.getElementById('allSearchTag').style.display   = 'none';
   applyVisibility();
@@ -395,7 +414,6 @@ function clearSearch() {
 function toggleTypeFilter() {
   document.getElementById('locDropdown').classList.remove('open');
   document.getElementById('locFilterBtn').classList.remove('active-filter');
-
   var dd = document.getElementById('filterDropdown');
   if (!dd.classList.contains('open')) {
     pendingTypes = activeTypes.slice();
@@ -403,57 +421,48 @@ function toggleTypeFilter() {
   }
   dd.classList.toggle('open');
 }
-
 function toggleTypeDropdown() {
   document.getElementById('typeDropdown').classList.toggle('open');
   document.getElementById('filterChevron').classList.toggle('flipped');
 }
-
 function syncTypeCheckboxes() {
-  document.querySelectorAll('#filterDropdown .type-opt input[type="checkbox"]').forEach(function(cb) {
+  document.querySelectorAll('#filterDropdown .type-opt input[type="checkbox"]').forEach(function (cb) {
     cb.checked = pendingTypes.includes(cb.value);
   });
   updateTypeText();
 }
-
 function updateTypeText() {
-  var el = document.getElementById('filterCurrentText');
-  el.textContent = (pendingTypes.includes('All') || pendingTypes.length === 0) ? 'All' : pendingTypes.join(', ');
+  document.getElementById('filterCurrentText').textContent =
+    (pendingTypes.includes('All') || !pendingTypes.length) ? 'All' : pendingTypes.join(', ');
 }
-
 function handleTypeCheck(cb) {
   if (cb.value === 'All') {
     pendingTypes = cb.checked ? ['All'] : [];
-    document.querySelectorAll('#filterDropdown .type-opt input[type="checkbox"]').forEach(function(b) {
+    document.querySelectorAll('#filterDropdown .type-opt input[type="checkbox"]').forEach(function (b) {
       b.checked = (b.value === 'All' && cb.checked);
     });
   } else {
     var allBox = document.querySelector('#filterDropdown .type-opt input[value="All"]');
     if (allBox) allBox.checked = false;
-    pendingTypes = pendingTypes.filter(function(t) { return t !== 'All'; });
+    pendingTypes = pendingTypes.filter(function (t) { return t !== 'All'; });
     if (cb.checked) { if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value); }
-    else { pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; }); }
+    else { pendingTypes = pendingTypes.filter(function (t) { return t !== cb.value; }); }
   }
   updateTypeText();
 }
-
 function selectAllTypes() { pendingTypes = ['All']; syncTypeCheckboxes(); }
 function clearAllTypes() {
   pendingTypes = [];
-  document.querySelectorAll('#filterDropdown .type-opt input[type="checkbox"]').forEach(function(b) { b.checked = false; });
+  document.querySelectorAll('#filterDropdown .type-opt input[type="checkbox"]').forEach(function (b) { b.checked = false; });
   updateTypeText();
 }
 function applyTypeFilter() {
   activeTypes = pendingTypes.length ? pendingTypes.slice() : ['All'];
-  var isFiltered = !activeTypes.includes('All');
-  document.getElementById('typeFilterBtn').classList.toggle('active-filter', isFiltered);
+  document.getElementById('typeFilterBtn').classList.toggle('active-filter', !activeTypes.includes('All'));
   closeTypeFilterDropdown();
   applyVisibility();
 }
-function cancelTypeFilter() {
-  pendingTypes = activeTypes.slice();
-  closeTypeFilterDropdown();
-}
+function cancelTypeFilter() { pendingTypes = activeTypes.slice(); closeTypeFilterDropdown(); }
 function closeTypeFilterDropdown() {
   document.getElementById('filterDropdown').classList.remove('open');
   document.getElementById('typeDropdown').classList.remove('open');
@@ -463,48 +472,37 @@ function closeTypeFilterDropdown() {
 // ── Location Filter ────────────────────────────────────────────────────────
 function toggleLocFilter() {
   closeTypeFilterDropdown();
-
   var dd = document.getElementById('locDropdown');
-  if (!dd.classList.contains('open')) {
-    pendingLocs = activeLocs.slice();
-    syncLocCheckboxes();
-  }
+  if (!dd.classList.contains('open')) { pendingLocs = activeLocs.slice(); syncLocCheckboxes(); }
   dd.classList.toggle('open');
 }
-
 function syncLocCheckboxes() {
-  document.querySelectorAll('#locDropdown .loc-opt input[type="checkbox"]').forEach(function(cb) {
+  document.querySelectorAll('#locDropdown .loc-opt input[type="checkbox"]').forEach(function (cb) {
     cb.checked = pendingLocs.includes(cb.value);
   });
 }
-
 function handleLocCheck(cb) {
   if (cb.value === 'All') {
     pendingLocs = cb.checked ? ['All'] : [];
-    document.querySelectorAll('#locDropdown .loc-opt input[type="checkbox"]').forEach(function(b) {
+    document.querySelectorAll('#locDropdown .loc-opt input[type="checkbox"]').forEach(function (b) {
       b.checked = (b.value === 'All' && cb.checked);
     });
   } else {
     var allBox = document.querySelector('#locDropdown .loc-opt input[value="All"]');
     if (allBox) allBox.checked = false;
-    pendingLocs = pendingLocs.filter(function(l) { return l !== 'All'; });
+    pendingLocs = pendingLocs.filter(function (l) { return l !== 'All'; });
     if (cb.checked) { if (!pendingLocs.includes(cb.value)) pendingLocs.push(cb.value); }
-    else { pendingLocs = pendingLocs.filter(function(l) { return l !== cb.value; }); }
+    else { pendingLocs = pendingLocs.filter(function (l) { return l !== cb.value; }); }
   }
 }
-
-function selectAllLocs() {
-  pendingLocs = ['All'];
-  syncLocCheckboxes();
-}
+function selectAllLocs() { pendingLocs = ['All']; syncLocCheckboxes(); }
 function clearAllLocs() {
   pendingLocs = [];
-  document.querySelectorAll('#locDropdown .loc-opt input[type="checkbox"]').forEach(function(b) { b.checked = false; });
+  document.querySelectorAll('#locDropdown .loc-opt input[type="checkbox"]').forEach(function (b) { b.checked = false; });
 }
 function applyLocFilter() {
   activeLocs = pendingLocs.length ? pendingLocs.slice() : ['All'];
-  var isFiltered = !activeLocs.includes('All');
-  document.getElementById('locFilterBtn').classList.toggle('active-filter', isFiltered);
+  document.getElementById('locFilterBtn').classList.toggle('active-filter', !activeLocs.includes('All'));
   document.getElementById('locDropdown').classList.remove('open');
   applyVisibility();
 }
@@ -514,26 +512,26 @@ function cancelLocFilter() {
 }
 
 // Close dropdowns when clicking outside
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   var typeWrap = document.getElementById('typeFilterWrap');
   var locWrap  = document.getElementById('locFilterWrap');
-  if (!typeWrap.contains(e.target)) cancelTypeFilter();
-  if (!locWrap.contains(e.target))  cancelLocFilter();
+  if (typeWrap && !typeWrap.contains(e.target)) cancelTypeFilter();
+  if (locWrap  && !locWrap.contains(e.target))  cancelLocFilter();
 });
 
-// ── Chat popup ─────────────────────────────────────────────────────────────
+// ── Chat popup (top courses) ───────────────────────────────────────────────
 function buildTopCoursesList() {
   var list = document.getElementById('top-courses-list');
   if (!list) return;
   list.innerHTML = '';
 
-  TOP_COURSES.forEach(function(c) {
-    var isActive = c.course_name === ACTIVE_COURSE;
+  TOP_COURSES.forEach(function (c) {
+    var isActive = (c.course_name === ACTIVE_COURSE);
     var li  = document.createElement('li');
     var btn = document.createElement('button');
-    btn.style.textDecoration = isActive ? 'none'      : 'underline';
-    btn.style.fontWeight     = isActive ? '800'       : '600';
-    btn.style.opacity        = isActive ? '1'         : '0.75';
+    btn.style.textDecoration = isActive ? 'none'  : 'underline';
+    btn.style.fontWeight     = isActive ? '800'   : '600';
+    btn.style.opacity        = isActive ? '1'     : '0.75';
     btn.style.background     = 'none';
     btn.style.border         = 'none';
     btn.style.cursor         = 'pointer';
@@ -544,8 +542,8 @@ function buildTopCoursesList() {
     btn.style.textAlign      = 'left';
     btn.style.lineHeight     = '1.4';
     btn.textContent          = c.course_name;
-    btn.addEventListener('click', (function(name) {
-      return function() { selectCourse(name); };
+    btn.addEventListener('click', (function (name) {
+      return function () { selectCourse(name); };
     })(c.course_name));
 
     var badge = document.createElement('span');
@@ -565,12 +563,8 @@ function buildTopCoursesList() {
 
 function toggleChatPopup() {
   var popup = document.getElementById('chatPopup');
-  if (popup.classList.contains('open')) {
-    closeChatPopup();
-  } else {
-    buildTopCoursesList();
-    popup.classList.add('open');
-  }
+  if (popup.classList.contains('open')) { closeChatPopup(); }
+  else { buildTopCoursesList(); popup.classList.add('open'); }
 }
 function closeChatPopup() {
   document.getElementById('chatPopup').classList.remove('open');
@@ -579,17 +573,15 @@ function closeChatPopup() {
 
 function selectCourse(course) {
   ACTIVE_COURSE = course;
-
   var tag = document.getElementById('activeFilterTag');
   if (tag) {
     tag.style.opacity = '0';
-    setTimeout(function() {
+    setTimeout(function () {
       tag.textContent = course;
       tag.classList.add('active-tag');
       tag.style.opacity = '1';
     }, 200);
   }
-
   closeChatPopup();
   fetchUniversitiesForCourse(course);
 }
@@ -616,7 +608,7 @@ function openLogoutModal() {
 function closeLogoutModal() {
   document.getElementById('logoutModal').classList.remove('show');
 }
-document.getElementById('logoutModal').addEventListener('click', function(e) {
+document.getElementById('logoutModal').addEventListener('click', function (e) {
   if (e.target === this) closeLogoutModal();
 });
 

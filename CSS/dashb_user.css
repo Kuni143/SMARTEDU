@@ -62,7 +62,7 @@
     .retake-text { flex: 1; }
     .retake-text h3 { font-size: 16px; font-weight: 800; color: #061685; margin-bottom: 6px; }
     .retake-text p { font-family: 'Inter', sans-serif; font-size: 13px; color: #444; line-height: 1.55; margin-bottom: 14px; }
-    .btn-retake { background: #8bb2fd; color: #fff; border: none; border-radius: 20px; padding: 8px 22px; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-retake { background: #061685; color: #fff; border: none; border-radius: 20px; padding: 8px 22px; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     .btn-retake:hover { background: #6a95e8; }
     .retake-img { width: 160px; height: 130px; object-fit: contain; flex-shrink: 0; border-radius: 10px; }
 
