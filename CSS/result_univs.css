@@ -170,9 +170,10 @@
     .loc-dropdown {
       display:none; position:absolute; top:60px; right:0; background:#fff;
       border-radius:14px; box-shadow:0 6px 24px rgba(0,0,0,0.13);
-      padding:14px 16px 12px; min-width:210px; z-index:200;
+      padding:14px 16px 0; min-width:210px; z-index:200;
+      display:none; flex-direction:column;
     }
-    .loc-dropdown.open { display:block; }
+    .loc-dropdown.open { display:flex; }
     .loc-opts-scroll { max-height:200px; overflow-y:auto; margin-top:8px; border:1px solid #e0e4f0; border-radius:10px; overflow-x:hidden; }
     .loc-dropdown-top {
       display:flex; justify-content:space-between; padding:8px 12px;
@@ -192,7 +193,9 @@
     .loc-opt input { accent-color:#061685; width:15px; height:15px; }
     .loc-dropdown-btns {
       display:flex; justify-content:flex-end; gap:8px;
-      padding:8px 12px; background:#f7f8fc; border-top:1px solid #e0e4f0;
+      padding:10px 12px 12px; background:#fff;
+      border-top:1px solid #e0e4f0; flex-shrink:0;
+      border-radius:0 0 14px 14px;
     }
 
     /* ── Tag row ──────────────────────────────────── */

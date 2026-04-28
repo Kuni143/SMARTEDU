@@ -359,6 +359,26 @@ html, body {
 }
 .btn-confirm:hover { opacity: 0.85; }
 
+/* ── Bookmark button ─────────────────────────────────────── */
+.bookmark-btn svg path {
+  fill: none;
+  stroke: #061685;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: fill 0.2s, stroke 0.2s;
+}
+
+.bookmark-btn.bookmarked svg path {
+  fill: #061685;
+  stroke: #061685;
+}
+
+.bookmark-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ═══ RESPONSIVE ═══ */
 @media (max-width: 680px) {
   .detail-card { padding: 22px 18px; }

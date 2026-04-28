@@ -245,7 +245,10 @@ if (isset($_GET['action'])) {
       <div class="select-wrapper">
         <select id="m-type">
           <option value="" disabled selected></option>
-          <option>LUC</option><option>OGS</option><option>SUC</option><option>Private</option>
+          <option value="LUC">Local Universities and Colleges</option>
+          <option value="OGS">Other Government Schools</option>
+          <option value="SUC">State Universities and Colleges</option>
+          <option value="Private">Private Universities and Colleges</option>
         </select>
         <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>

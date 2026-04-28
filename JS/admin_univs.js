@@ -223,13 +223,19 @@ function renderList() {
     var row = document.createElement('div');
     row.className = 'uni-row' + (u.id == activeId ? ' active' : '');
     row.onclick   = function(){ toggleDetail(u.id); };
+    var TYPE_FULL = {
+      'LUC':     'Local Universities and Colleges',
+      'OGS':     'Other Government Schools',
+      'SUC':     'State Universities and Colleges',
+      'Private': 'Private Universities and Colleges'
+    };
     var left = '<div class="uni-row-left"><span>' + escHtml(u.name) + '</span>'
-      + (u.type ? '<span class="type-badge">' + escHtml(u.type) + '</span>' : '') + '</div>';
-    row.innerHTML = left;
-    list.appendChild(row);
-    if (u.id == activeId) list.appendChild(buildDetail(u));
-  });
-}
+      + (u.type ? '<span class="type-badge">' + escHtml(TYPE_FULL[u.type] || u.type) + '</span>' : '') + '</div>';
+        row.innerHTML = left;
+        list.appendChild(row);
+        if (u.id == activeId) list.appendChild(buildDetail(u));
+      });
+    }
 
 // ── Toggle detail ─────────────────────────────────────
 function toggleDetail(id) {
@@ -244,9 +250,17 @@ function buildDetail(u) {
     'Caloocan','Muntinlupa','Pasig','Mandaluyong','San Juan','Pasay',
     'Marikina','Para\u00f1aque','Valenzuela','Malabon'];
 
-  var typeOpts = ['LUC','OGS','SUC','Private'].map(function(t) {
-    return '<option' + (t===u.type?' selected':'') + '>' + t + '</option>';
+var TYPE_MAP = [
+    { value: 'LUC',     label: 'Local Universities and Colleges' },
+    { value: 'OGS',     label: 'Other Government Schools' },
+    { value: 'SUC',     label: 'State Universities and Colleges' },
+    { value: 'Private', label: 'Private Universities and Colleges' },
+  ];
+  var typeOpts = TYPE_MAP.map(function(t) {
+    return '<option value="' + t.value + '"' + (t.value === u.type ? ' selected' : '') + '>'
+      + t.label + '</option>';
   }).join('');
+
   var locOpts = LOCATIONS.map(function(l) {
     return '<option' + (l===u.location?' selected':'') + '>' + escHtml(l) + '</option>';
   }).join('');

@@ -57,6 +57,20 @@ if ($univName === '') {
             ");
             $cStmt->execute([':id' => $university['id']]);
             $courses = $cStmt->fetchAll(PDO::FETCH_COLUMN);
+
+            // Check if already bookmarked
+            $isBookmarked = false;
+            try {
+                $userStmt = $pdo->prepare("SELECT user_id FROM students WHERE id = :sid LIMIT 1");
+                $userStmt->execute([':sid' => $studentId]);
+                $userRow = $userStmt->fetch();
+                if ($userRow && $userRow['user_id']) {
+                    $userId = (int) $userRow['user_id'];
+                    $bmStmt = $pdo->prepare("SELECT id FROM bookmarks WHERE user_id = ? AND university_id = ?");
+                    $bmStmt->execute([$userId, $university['id']]);
+                    $isBookmarked = (bool) $bmStmt->fetch();
+                }
+            } catch (PDOException $e) {}
         }
     } catch (PDOException $e) {
         $error = 'Database error: ' . $e->getMessage();
@@ -153,25 +167,39 @@ function renderLines(string $text): string {
 
     <!-- Top row -->
     <div class="detail-top">
-      <button class="back-btn" onclick="window.history.back()" aria-label="Go back">
+      <button class="back-btn" onclick="goBack()" aria-label="Go back">
         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <h1 class="detail-title" id="univName"><?= htmlspecialchars($university['name']) ?></h1>
-      <button class="bookmark-btn" aria-label="Bookmark">
+      <button
+        class="bookmark-btn <?= $isBookmarked ? 'bookmarked' : '' ?>"
+        id="bookmarkBtn"
+        data-id="<?= (int) $university['id'] ?>"
+        aria-label="Bookmark"
+      >
         <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
       </button>
     </div>
 
-    <!-- Type · Location badge -->
-    <?php if ($university['type'] || $university['location']): ?>
+  <!-- Type · Location badge -->
+  <?php
+    $typeFullNames = [
+    'LUC'     => 'Local Universities and Colleges',
+    'OGS'     => 'Other Government Schools',
+    'SUC'     => 'State Universities and Colleges',
+    'Private' => 'Private Universities and Colleges',
+    ];
+    $typeDisplay = $typeFullNames[$university['type']] ?? $university['type'];
+    ?>
+  <?php if ($university['type'] || $university['location']): ?>
     <div style="margin-bottom:12px;">
-      <span class="school-type-badge">
-        <?= htmlspecialchars($university['type'] ?? '') ?>
-        <?= ($university['type'] && $university['location']) ? ' · ' : '' ?>
-        <?= htmlspecialchars($university['location'] ?? '') ?>
-      </span>
+    <span class="school-type-badge">
+    <?= htmlspecialchars($typeDisplay ?? '') ?>
+    <?= ($university['type'] && $university['location']) ? ' · ' : '' ?>
+    <?= htmlspecialchars($university['location'] ?? '') ?>
+    </span>
     </div>
-    <?php endif; ?>
+  <?php endif; ?>
 
     <!-- Intro bullets -->
     <?php if ($university['description']): ?>
@@ -284,6 +312,55 @@ function closeLogoutModal() {
 document.getElementById('logoutModal').addEventListener('click', function(e) {
   if (e.target === this) closeLogoutModal();
 });
+
+// ── Back button — restores active course ─────────────────────────────────────
+function goBack() {
+  var savedCourse = sessionStorage.getItem('lastActiveCourse');
+  if (savedCourse) {
+    window.location.href = 'result_univs.php?course=' + encodeURIComponent(savedCourse);
+  } else {
+    window.location.href = 'result_univs.php';
+  }
+}
+
+// ── Bookmark toggle ──────────────────────────────────────────────────────────
+(function () {
+  var btn = document.getElementById('bookmarkBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', function () {
+    var universityId = parseInt(btn.getAttribute('data-id'), 10);
+    if (!universityId || universityId === 0) {
+      alert('Button has no university ID.');
+      return;
+    }
+
+    btn.disabled = true;
+
+    var formData = new FormData();
+    formData.append('university_id', universityId);
+
+    fetch('api/toggle_bookmark.php', {
+      method: 'POST',
+      body:   formData
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.success) {
+        btn.classList.toggle('bookmarked');
+      } else {
+        alert(data.message || 'Could not update bookmark. Please try again.');
+      }
+    })
+    .catch(function (err) {
+      console.error('Fetch error:', err);
+      alert('Network error. Please try again.');
+    })
+    .finally(function () {
+      btn.disabled = false;
+    });
+  });
+})();
 </script>
 
 </body>

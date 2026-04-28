@@ -49,10 +49,8 @@ try {
 }
 
 // ── Determine which course to highlight ───────────────────────────────────
-// Default: rank-1 course
 $activeCourse = $topCourses[0]['course_name'] ?? '';
 
-// Override if ?course= param is passed AND it matches one of the student's results
 $requestedCourse = $_GET['course'] ?? null;
 if ($requestedCourse) {
     $validCourses = array_column($topCourses, 'course_name');
@@ -151,7 +149,6 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
 
   <!-- Search + Filter row -->
   <div class="search-row">
-    <!-- Search -->
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="searchInput" placeholder="Search universities…" oninput="handleSearch()"/>
@@ -160,7 +157,6 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
       </button>
     </div>
 
-    <!-- Type Filter -->
     <div class="filter-wrap" id="typeFilterWrap">
       <button class="filter-btn" id="typeFilterBtn" onclick="toggleTypeFilter()" title="Filter by type">
         <svg viewBox="0 0 24 24" class="funnel-icon"><polygon points="3 5 10 14 10 21 14 19 14 14 21 5 3 5"/></svg>
@@ -191,46 +187,46 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
       </div>
     </div>
 
-    <!-- Location Filter -->
-    <div class="filter-wrap" id="locFilterWrap">
-      <button class="filter-btn" id="locFilterBtn" onclick="toggleLocFilter()" title="Filter by location">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#101d89" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-          <circle cx="12" cy="9" r="2.5"/>
-        </svg>
-      </button>
-      <div class="loc-dropdown" id="locDropdown">
-        <div class="filter-header">
-          <span class="filter-type-label">Location:</span>
-        </div>
-        <div class="loc-opts-scroll">
-          <div class="loc-dropdown-top">
-            <button onclick="selectAllLocs()">Select all</button>
-            <button onclick="clearAllLocs()">Clear</button>
-          </div>
-          <label class="loc-opt"><input type="checkbox" value="All" onchange="handleLocCheck(this)" checked> All</label>
-          <label class="loc-opt"><input type="checkbox" value="Quezon City" onchange="handleLocCheck(this)"> Quezon City</label>
-          <label class="loc-opt"><input type="checkbox" value="Manila" onchange="handleLocCheck(this)"> Manila</label>
-          <label class="loc-opt"><input type="checkbox" value="Makati" onchange="handleLocCheck(this)"> Makati</label>
-          <label class="loc-opt"><input type="checkbox" value="Pateros" onchange="handleLocCheck(this)"> Pateros</label>
-          <label class="loc-opt"><input type="checkbox" value="Taguig" onchange="handleLocCheck(this)"> Taguig</label>
-          <label class="loc-opt"><input type="checkbox" value="Las Pi&#241;as" onchange="handleLocCheck(this)"> Las Pi&#241;as</label>
-          <label class="loc-opt"><input type="checkbox" value="Para&#241;aque" onchange="handleLocCheck(this)"> Para&#241;aque</label>
-          <label class="loc-opt"><input type="checkbox" value="Caloocan" onchange="handleLocCheck(this)"> Caloocan</label>
-          <label class="loc-opt"><input type="checkbox" value="Muntinlupa" onchange="handleLocCheck(this)"> Muntinlupa</label>
-          <label class="loc-opt"><input type="checkbox" value="Pasay" onchange="handleLocCheck(this)"> Pasay</label>
-          <label class="loc-opt"><input type="checkbox" value="Valenzuela" onchange="handleLocCheck(this)"> Valenzuela</label>
-          <label class="loc-opt"><input type="checkbox" value="Malabon" onchange="handleLocCheck(this)"> Malabon</label>
-          <label class="loc-opt"><input type="checkbox" value="Marikina" onchange="handleLocCheck(this)"> Marikina</label>
-          <label class="loc-opt"><input type="checkbox" value="Pasig" onchange="handleLocCheck(this)"> Pasig</label>
-          <label class="loc-opt"><input type="checkbox" value="Mandaluyong" onchange="handleLocCheck(this)"> Mandaluyong</label>
-          <label class="loc-opt"><input type="checkbox" value="San Juan" onchange="handleLocCheck(this)"> San Juan</label>
-          <div class="loc-dropdown-btns">
-            <button class="td-cancel" onclick="cancelLocFilter()">Cancel</button>
-            <button class="td-done" onclick="applyLocFilter()">Done</button>
-          </div>
-        </div>
+<div class="filter-wrap" id="locFilterWrap">
+  <button class="filter-btn" id="locFilterBtn" onclick="toggleLocFilter()" title="Filter by location">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#101d89" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+      <circle cx="12" cy="9" r="2.5"/>
+    </svg>
+  </button>
+  <div class="loc-dropdown" id="locDropdown">
+    <div class="filter-header">
+      <span class="filter-type-label">Location:</span>
+    </div>
+    <div class="loc-opts-scroll">
+      <div class="loc-dropdown-top">
+        <button onclick="selectAllLocs()">Select all</button>
+        <button onclick="clearAllLocs()">Clear</button>
       </div>
+      <label class="loc-opt"><input type="checkbox" value="All" onchange="handleLocCheck(this)" checked> All</label>
+      <label class="loc-opt"><input type="checkbox" value="Quezon City" onchange="handleLocCheck(this)"> Quezon City</label>
+      <label class="loc-opt"><input type="checkbox" value="Manila" onchange="handleLocCheck(this)"> Manila</label>
+      <label class="loc-opt"><input type="checkbox" value="Makati" onchange="handleLocCheck(this)"> Makati</label>
+      <label class="loc-opt"><input type="checkbox" value="Pateros" onchange="handleLocCheck(this)"> Pateros</label>
+      <label class="loc-opt"><input type="checkbox" value="Taguig" onchange="handleLocCheck(this)"> Taguig</label>
+      <label class="loc-opt"><input type="checkbox" value="Las Pi&#241;as" onchange="handleLocCheck(this)"> Las Pi&#241;as</label>
+      <label class="loc-opt"><input type="checkbox" value="Para&#241;aque" onchange="handleLocCheck(this)"> Para&#241;aque</label>
+      <label class="loc-opt"><input type="checkbox" value="Caloocan" onchange="handleLocCheck(this)"> Caloocan</label>
+      <label class="loc-opt"><input type="checkbox" value="Muntinlupa" onchange="handleLocCheck(this)"> Muntinlupa</label>
+      <label class="loc-opt"><input type="checkbox" value="Pasay" onchange="handleLocCheck(this)"> Pasay</label>
+      <label class="loc-opt"><input type="checkbox" value="Valenzuela" onchange="handleLocCheck(this)"> Valenzuela</label>
+      <label class="loc-opt"><input type="checkbox" value="Malabon" onchange="handleLocCheck(this)"> Malabon</label>
+      <label class="loc-opt"><input type="checkbox" value="Marikina" onchange="handleLocCheck(this)"> Marikina</label>
+      <label class="loc-opt"><input type="checkbox" value="Pasig" onchange="handleLocCheck(this)"> Pasig</label>
+      <label class="loc-opt"><input type="checkbox" value="Mandaluyong" onchange="handleLocCheck(this)"> Mandaluyong</label>
+      <label class="loc-opt"><input type="checkbox" value="San Juan" onchange="handleLocCheck(this)"> San Juan</label>
+    </div>
+    <div class="loc-dropdown-btns">
+      <button class="td-cancel" onclick="cancelLocFilter()">Cancel</button>
+      <button class="td-done" onclick="applyLocFilter()">Done</button>
+    </div>
+    </div>
+    </div>
     </div>
   </div>
 
@@ -261,7 +257,7 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
 
 </main>
 
-<!-- Floating chat head (top courses popup) -->
+<!-- Floating chat head -->
 <div class="chathead" id="chathead" onclick="toggleChatPopup()">
   <img src="pics/popup.png" alt="Top Courses" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:24px;\'>🎓</span>';"/>
 </div>
@@ -375,11 +371,17 @@ function applyVisibility() {
   }
 
   filtered.forEach(function (s) {
+    var TYPE_FULL = {
+      'LUC':     'Local Universities and Colleges',
+      'OGS':     'Other Government Schools',
+      'SUC':     'State Universities and Colleges',
+      'Private': 'Private Universities and Colleges'
+      };
     var card = document.createElement('div');
     card.className = 'school-card';
     card.innerHTML =
-      '<div class="school-name">' + escHtml(s.name) + '</div>'
-      + (s.type ? '<span class="school-type-badge">' + escHtml(s.type) + ' · ' + escHtml(s.location || '') + '</span>' : '')
+  '<div class="school-name">' + escHtml(s.name) + '</div>'
+  + (s.type ? '<span class="school-type-badge">' + escHtml(TYPE_FULL[s.type] || s.type) + ' · ' + escHtml(s.location || '') + '</span>' : '')
       + '<div class="school-desc">' + escHtml(s.description || 'No description available.') + '</div>'
       + '<div class="school-card-footer">'
       + '<button class="btn-details" data-name="' + encodeURIComponent(s.name) + '" onclick="goDetailsFromBtn(this)">Details</button>'
@@ -388,8 +390,10 @@ function applyVisibility() {
   });
 }
 
+// ── Navigate to detail — save active course first ─────────────────────────
 function goDetailsFromBtn(btn) {
   var name = decodeURIComponent(btn.getAttribute('data-name'));
+  sessionStorage.setItem('lastActiveCourse', ACTIVE_COURSE);
   window.location.href = 'detail_univ.php?name=' + encodeURIComponent(name);
 }
 
@@ -571,8 +575,10 @@ function closeChatPopup() {
   document.getElementById('redirecting-text').style.display = 'none';
 }
 
+// ── Select course — save to sessionStorage so back button restores it ─────
 function selectCourse(course) {
   ACTIVE_COURSE = course;
+  sessionStorage.setItem('lastActiveCourse', ACTIVE_COURSE);
   var tag = document.getElementById('activeFilterTag');
   if (tag) {
     tag.style.opacity = '0';
@@ -623,6 +629,15 @@ function escHtml(s) {
 
 // ── Init ───────────────────────────────────────────────────────────────────
 if (TOP_COURSES.length > 0) {
+  var savedCourse = sessionStorage.getItem('lastActiveCourse');
+  var validCourseNames = TOP_COURSES.map(function(c) { return c.course_name; });
+  if (savedCourse && validCourseNames.includes(savedCourse)) {
+    ACTIVE_COURSE = savedCourse;
+  }
+  // Sync the tag label to the active course
+  var tag = document.getElementById('activeFilterTag');
+  if (tag) tag.textContent = ACTIVE_COURSE;
+
   fetchUniversitiesForCourse(ACTIVE_COURSE);
 }
 </script>

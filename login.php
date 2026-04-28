@@ -22,7 +22,7 @@ if (!empty($_SESSION['user_id'])) {
 
         if ($existing) {
             $_SESSION['student_id'] = $existing['id'];
-            header('Location: result_univs.php');
+            header('Location: dashb_user.php');
         } else {
             header('Location: studform.php');
         }
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($existing) {
             // Returning user — restore student_id and skip the form
             $_SESSION['student_id'] = $existing['id'];
-            header('Location: result_univs.php');
+            header('Location: dashb_user.php');
         } else {
             // New user — send to form
             header('Location: studform.php');
