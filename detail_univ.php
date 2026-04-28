@@ -26,6 +26,17 @@ try {
     if ($row && $row['username']) $username = $row['username'];
 } catch (PDOException $e) {}
 
+// ── Capture return-navigation params ─────────────────────────────────────
+$returnSid    = isset($_GET['sid'])    ? (int)$_GET['sid']    : null;
+$returnCourse = isset($_GET['course']) ? trim($_GET['course']) : null;
+
+// Build the URL to go back to result_univs.php with preserved state
+$backUrl = 'result_univs.php';
+$backParams = [];
+if ($returnSid)    $backParams[] = 'sid='    . $returnSid;
+if ($returnCourse) $backParams[] = 'course=' . urlencode($returnCourse);
+if (!empty($backParams)) $backUrl .= '?' . implode('&', $backParams);
+
 // Get university name from URL
 $univName = trim($_GET['name'] ?? '');
 $university = null;
@@ -115,15 +126,15 @@ function renderLines(string $text): string {
     <p class="sidebar-username" id="sidebarUsername"><?= htmlspecialchars($username) ?></p>
   </div>
   <nav class="sidebar-nav">
-    <a href="dashb_user.php" class="sidebar-link">
+    <a href="dashb_user.php<?= $returnSid ? '?sid=' . $returnSid : '' ?>" class="sidebar-link">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </a>
-    <a href="studprofile.php" class="sidebar-link">
+    <a href="studprofile.php<?= $returnSid ? '?sid=' . $returnSid : '' ?>" class="sidebar-link">
       <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/></svg>
       Profile
     </a>
-    <a href="result_univs.php" class="sidebar-link active">
+    <a href="<?= htmlspecialchars($backUrl) ?>" class="sidebar-link active">
       <svg viewBox="0 0 24 24" style="fill:none;stroke:#061685;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
@@ -147,7 +158,7 @@ function renderLines(string $text): string {
 
 <!-- Navbar -->
 <nav class="navbar">
-  <a class="nav-logo" href="result_univs.php">
+  <a class="nav-logo" href="<?= htmlspecialchars($backUrl) ?>">
     <img src="pics/logo.png" alt="SmartEdu Logo"/>
     <span>SmartEdu</span>
   </a>
@@ -162,7 +173,7 @@ function renderLines(string $text): string {
 <?php if ($error): ?>
   <div class="detail-card" style="text-align:center;padding:48px 24px;">
     <p style="color:#c0392b;font-size:16px;margin-bottom:16px;"><?= htmlspecialchars($error) ?></p>
-    <a href="result_univs.php" style="color:#061685;font-weight:600;">← Back to Universities</a>
+    <a href="<?= htmlspecialchars($backUrl) ?>" style="color:#061685;font-weight:600;">← Back to Universities</a>
   </div>
 
 <?php else: ?>
@@ -340,17 +351,12 @@ document.getElementById('logoutModal').addEventListener('click', function(e) {
   if (e.target === this) closeLogoutModal();
 });
 
-// ── Back button — restores active course ─────────────────────────────────────
+// ── Back button — always returns to result_univs.php with preserved state ─
 function goBack() {
-  var savedCourse = sessionStorage.getItem('lastActiveCourse');
-  if (savedCourse) {
-    window.location.href = 'result_univs.php?course=' + encodeURIComponent(savedCourse);
-  } else {
-    window.location.href = 'result_univs.php';
-  }
+  window.location.href = '<?= addslashes($backUrl) ?>';
 }
 
-// ── Bookmark toggle ──────────────────────────────────────────────────────────
+// ── Bookmark toggle ──────────────────────────────────────────────────────
 (function () {
   var btn = document.getElementById('bookmarkBtn');
   if (!btn) return;

@@ -5,21 +5,69 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/config/db.php';
 
-$studentId = $_SESSION['student_id'] ?? null;
-if (!$studentId) {
-    header('Location: studform.php');
+// ── Auth ──────────────────────────────────────────────────────────────────
+$userId = $_SESSION['user_id'] ?? null;
+if (!$userId) {
+    header('Location: login.php');
     exit;
 }
 
-$topCourses = [];
-$username   = 'Student';
-$pdo        = null;
-$dbError    = null;
+// ── Resolve which student take to show (mirrors dashb_user.php logic) ─────
+$requestedSid = isset($_GET['sid']) ? (int)$_GET['sid'] : null;
+$studentId    = null;
+$dbError      = null;
+$topCourses   = [];
+$username     = 'Student';
+$isHistoricalView = false;
 
 try {
     $pdo = getDB();
 
-    // Fetch student info + username
+    // 1. Verify requested sid belongs to this user
+    if ($requestedSid) {
+        $chk = $pdo->prepare("
+            SELECT id FROM students
+            WHERE id = :sid AND user_id = :uid
+            LIMIT 1
+        ");
+        $chk->execute([':sid' => $requestedSid, ':uid' => $userId]);
+        if ($chk->fetch()) {
+            $studentId = $requestedSid;
+        }
+    }
+
+    // Fall back to latest take
+    if (!$studentId) {
+        $latest = $pdo->prepare("
+            SELECT id FROM students
+            WHERE user_id = :uid
+            ORDER BY submitted_at DESC
+            LIMIT 1
+        ");
+        $latest->execute([':uid' => $userId]);
+        $row = $latest->fetch();
+        $studentId = $row ? (int)$row['id'] : null;
+    }
+
+    if (!$studentId) {
+        header('Location: studform.php');
+        exit;
+    }
+
+    // 2. Check if this is a historical view
+    $latestCheck = $pdo->prepare("
+        SELECT id FROM students
+        WHERE user_id = :uid
+        ORDER BY submitted_at DESC
+        LIMIT 1
+    ");
+    $latestCheck->execute([':uid' => $userId]);
+    $latestRow = $latestCheck->fetch();
+    if ($latestRow && (int)$latestRow['id'] !== $studentId) {
+        $isHistoricalView = true;
+    }
+
+    // 3. Fetch student info + username
     $stmt = $pdo->prepare("
         SELECT s.grade, s.strand, s.gpa, u.username
         FROM students s
@@ -33,7 +81,7 @@ try {
         $username = $studentRow['username'];
     }
 
-    // Fetch top 5 course results
+    // 4. Fetch top 5 course results for this specific take
     $stmt = $pdo->prepare("
         SELECT course_name, field_name, score, `rank`
         FROM student_results
@@ -98,22 +146,22 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
     <p class="sidebar-username" id="sidebarUsername"><?= htmlspecialchars($username) ?></p>
   </div>
   <nav class="sidebar-nav">
-    <a href="dashb_user.php" class="sidebar-link">
+    <a href="dashb_user.php<?= $isHistoricalView ? '?sid='.(int)$studentId : '' ?>" class="sidebar-link">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </a>
-    <a href="studprofile.php" class="sidebar-link">
+    <a href="studprofile.php<?= $isHistoricalView ? '?sid='.(int)$studentId : '' ?>" class="sidebar-link">
       <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/></svg>
       Profile
     </a>
-    <a href="result_univs.php" class="sidebar-link active">
+    <a href="result_univs.php?sid=<?= (int)$studentId ?>" class="sidebar-link active">
       <svg data-stroke viewBox="0 0 24 24">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
       Universities
     </a>
-    <a href="result_hist.php" class="sidebar-link">
+    <a href="result_hist.php?sid=<?= (int)$studentId ?>" class="sidebar-link">
       <svg data-stroke viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10"/>
         <polyline points="12 6 12 12 9 15"/>
@@ -130,7 +178,7 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
 </aside>
 
 <nav class="navbar">
-  <a class="nav-logo" href="result_univs.php">
+  <a class="nav-logo" href="result_univs.php?sid=<?= (int)$studentId ?>">
     <img src="pics/logo.png" alt="SmartEdu Logo"/>
     <span>SmartEdu</span>
   </a>
@@ -143,6 +191,13 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
 
   <?php if ($dbError): ?>
   <div class="db-error-banner">⚠️ Database error: <?= htmlspecialchars($dbError) ?></div>
+  <?php endif; ?>
+
+  <?php if ($isHistoricalView): ?>
+  <div style="background:#fff8e1;border-radius:12px;padding:14px 20px;color:#856404;font-size:13px;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+    <span>📋 You are viewing universities for a <strong>past result</strong>. This is not your latest assessment.</span>
+    <a href="result_univs.php" style="color:#061685;font-weight:600;white-space:nowrap;text-decoration:none;">View Latest →</a>
+  </div>
   <?php endif; ?>
 
   <?php if (empty($topCourses)): ?>
@@ -192,46 +247,45 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
       </div>
     </div>
 
-<div class="filter-wrap" id="locFilterWrap">
-  <button class="filter-btn" id="locFilterBtn" onclick="toggleLocFilter()" title="Filter by location">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#101d89" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;">
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-      <circle cx="12" cy="9" r="2.5"/>
-    </svg>
-  </button>
-  <div class="loc-dropdown" id="locDropdown">
-    <div class="filter-header">
-      <span class="filter-type-label">Location:</span>
-    </div>
-    <div class="loc-opts-scroll">
-      <div class="loc-dropdown-top">
-        <button onclick="selectAllLocs()">Select all</button>
-        <button onclick="clearAllLocs()">Clear</button>
+    <div class="filter-wrap" id="locFilterWrap">
+      <button class="filter-btn" id="locFilterBtn" onclick="toggleLocFilter()" title="Filter by location">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#101d89" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+      </button>
+      <div class="loc-dropdown" id="locDropdown">
+        <div class="filter-header">
+          <span class="filter-type-label">Location:</span>
+        </div>
+        <div class="loc-opts-scroll">
+          <div class="loc-dropdown-top">
+            <button onclick="selectAllLocs()">Select all</button>
+            <button onclick="clearAllLocs()">Clear</button>
+          </div>
+          <label class="loc-opt"><input type="checkbox" value="All" onchange="handleLocCheck(this)" checked> All</label>
+          <label class="loc-opt"><input type="checkbox" value="Quezon City" onchange="handleLocCheck(this)"> Quezon City</label>
+          <label class="loc-opt"><input type="checkbox" value="Manila" onchange="handleLocCheck(this)"> Manila</label>
+          <label class="loc-opt"><input type="checkbox" value="Makati" onchange="handleLocCheck(this)"> Makati</label>
+          <label class="loc-opt"><input type="checkbox" value="Pateros" onchange="handleLocCheck(this)"> Pateros</label>
+          <label class="loc-opt"><input type="checkbox" value="Taguig" onchange="handleLocCheck(this)"> Taguig</label>
+          <label class="loc-opt"><input type="checkbox" value="Las Pi&#241;as" onchange="handleLocCheck(this)"> Las Pi&#241;as</label>
+          <label class="loc-opt"><input type="checkbox" value="Para&#241;aque" onchange="handleLocCheck(this)"> Para&#241;aque</label>
+          <label class="loc-opt"><input type="checkbox" value="Caloocan" onchange="handleLocCheck(this)"> Caloocan</label>
+          <label class="loc-opt"><input type="checkbox" value="Muntinlupa" onchange="handleLocCheck(this)"> Muntinlupa</label>
+          <label class="loc-opt"><input type="checkbox" value="Pasay" onchange="handleLocCheck(this)"> Pasay</label>
+          <label class="loc-opt"><input type="checkbox" value="Valenzuela" onchange="handleLocCheck(this)"> Valenzuela</label>
+          <label class="loc-opt"><input type="checkbox" value="Malabon" onchange="handleLocCheck(this)"> Malabon</label>
+          <label class="loc-opt"><input type="checkbox" value="Marikina" onchange="handleLocCheck(this)"> Marikina</label>
+          <label class="loc-opt"><input type="checkbox" value="Pasig" onchange="handleLocCheck(this)"> Pasig</label>
+          <label class="loc-opt"><input type="checkbox" value="Mandaluyong" onchange="handleLocCheck(this)"> Mandaluyong</label>
+          <label class="loc-opt"><input type="checkbox" value="San Juan" onchange="handleLocCheck(this)"> San Juan</label>
+        </div>
+        <div class="loc-dropdown-btns">
+          <button class="td-cancel" onclick="cancelLocFilter()">Cancel</button>
+          <button class="td-done" onclick="applyLocFilter()">Done</button>
+        </div>
       </div>
-      <label class="loc-opt"><input type="checkbox" value="All" onchange="handleLocCheck(this)" checked> All</label>
-      <label class="loc-opt"><input type="checkbox" value="Quezon City" onchange="handleLocCheck(this)"> Quezon City</label>
-      <label class="loc-opt"><input type="checkbox" value="Manila" onchange="handleLocCheck(this)"> Manila</label>
-      <label class="loc-opt"><input type="checkbox" value="Makati" onchange="handleLocCheck(this)"> Makati</label>
-      <label class="loc-opt"><input type="checkbox" value="Pateros" onchange="handleLocCheck(this)"> Pateros</label>
-      <label class="loc-opt"><input type="checkbox" value="Taguig" onchange="handleLocCheck(this)"> Taguig</label>
-      <label class="loc-opt"><input type="checkbox" value="Las Pi&#241;as" onchange="handleLocCheck(this)"> Las Pi&#241;as</label>
-      <label class="loc-opt"><input type="checkbox" value="Para&#241;aque" onchange="handleLocCheck(this)"> Para&#241;aque</label>
-      <label class="loc-opt"><input type="checkbox" value="Caloocan" onchange="handleLocCheck(this)"> Caloocan</label>
-      <label class="loc-opt"><input type="checkbox" value="Muntinlupa" onchange="handleLocCheck(this)"> Muntinlupa</label>
-      <label class="loc-opt"><input type="checkbox" value="Pasay" onchange="handleLocCheck(this)"> Pasay</label>
-      <label class="loc-opt"><input type="checkbox" value="Valenzuela" onchange="handleLocCheck(this)"> Valenzuela</label>
-      <label class="loc-opt"><input type="checkbox" value="Malabon" onchange="handleLocCheck(this)"> Malabon</label>
-      <label class="loc-opt"><input type="checkbox" value="Marikina" onchange="handleLocCheck(this)"> Marikina</label>
-      <label class="loc-opt"><input type="checkbox" value="Pasig" onchange="handleLocCheck(this)"> Pasig</label>
-      <label class="loc-opt"><input type="checkbox" value="Mandaluyong" onchange="handleLocCheck(this)"> Mandaluyong</label>
-      <label class="loc-opt"><input type="checkbox" value="San Juan" onchange="handleLocCheck(this)"> San Juan</label>
-    </div>
-    <div class="loc-dropdown-btns">
-      <button class="td-cancel" onclick="cancelLocFilter()">Cancel</button>
-      <button class="td-done" onclick="applyLocFilter()">Done</button>
-    </div>
-    </div>
-    </div>
     </div>
   </div>
 
@@ -322,6 +376,7 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
 <script>
 var TOP_COURSES   = <?= $topCoursesJson ?>;
 var ACTIVE_COURSE = <?= $activeCourseJson ?>;
+var STUDENT_ID    = <?= (int)$studentId ?>;
 
 var SCHOOLS      = [];
 var activeTypes  = ['All'];
@@ -330,7 +385,6 @@ var activeLocs   = ['All'];
 var pendingLocs  = ['All'];
 var searchQuery  = '';
 
-// ── Fetch universities for a course ───────────────────────────────────────
 function fetchUniversitiesForCourse(courseName) {
   var grid = document.getElementById('schoolGrid');
   if (!grid) return;
@@ -375,7 +429,6 @@ function fetchUniversitiesForCourse(courseName) {
   }, 250);
 }
 
-// ── Build / filter grid ────────────────────────────────────────────────────
 function applyVisibility() {
   var grid = document.getElementById('schoolGrid');
   if (!grid) return;
@@ -403,12 +456,12 @@ function applyVisibility() {
       'OGS':     'Other Government Schools',
       'SUC':     'State Universities and Colleges',
       'Private': 'Private Universities and Colleges'
-      };
+    };
     var card = document.createElement('div');
     card.className = 'school-card';
     card.innerHTML =
-  '<div class="school-name">' + escHtml(s.name) + '</div>'
-  + (s.type ? '<span class="school-type-badge">' + escHtml(TYPE_FULL[s.type] || s.type) + ' · ' + escHtml(s.location || '') + '</span>' : '')
+      '<div class="school-name">' + escHtml(s.name) + '</div>'
+      + (s.type ? '<span class="school-type-badge">' + escHtml(TYPE_FULL[s.type] || s.type) + ' · ' + escHtml(s.location || '') + '</span>' : '')
       + '<div class="school-desc">' + escHtml(s.description || 'No description available.') + '</div>'
       + '<div class="school-card-footer">'
       + '<button class="btn-details" data-name="' + encodeURIComponent(s.name) + '" onclick="goDetailsFromBtn(this)">Details</button>'
@@ -417,14 +470,16 @@ function applyVisibility() {
   });
 }
 
-// ── Navigate to detail — save active course first ─────────────────────────
+// ── Navigate to detail page — passes sid + active course for round-trip ──
 function goDetailsFromBtn(btn) {
   var name = decodeURIComponent(btn.getAttribute('data-name'));
   sessionStorage.setItem('lastActiveCourse', ACTIVE_COURSE);
-  window.location.href = 'detail_univ.php?name=' + encodeURIComponent(name);
+  sessionStorage.setItem('lastStudentId', STUDENT_ID);
+  window.location.href = 'detail_univ.php?name=' + encodeURIComponent(name)
+    + '&course=' + encodeURIComponent(ACTIVE_COURSE)
+    + (STUDENT_ID ? '&sid=' + STUDENT_ID : '');
 }
 
-// ── Search ─────────────────────────────────────────────────────────────────
 function handleSearch() {
   searchQuery = document.getElementById('searchInput').value.trim();
   var clearBtn  = document.getElementById('searchClearBtn');
@@ -441,15 +496,11 @@ function clearSearch() {
   applyVisibility();
 }
 
-// ── Type Filter ────────────────────────────────────────────────────────────
 function toggleTypeFilter() {
   document.getElementById('locDropdown').classList.remove('open');
   document.getElementById('locFilterBtn').classList.remove('active-filter');
   var dd = document.getElementById('filterDropdown');
-  if (!dd.classList.contains('open')) {
-    pendingTypes = activeTypes.slice();
-    syncTypeCheckboxes();
-  }
+  if (!dd.classList.contains('open')) { pendingTypes = activeTypes.slice(); syncTypeCheckboxes(); }
   dd.classList.toggle('open');
 }
 function toggleTypeDropdown() {
@@ -500,7 +551,6 @@ function closeTypeFilterDropdown() {
   document.getElementById('filterChevron').classList.remove('flipped');
 }
 
-// ── Location Filter ────────────────────────────────────────────────────────
 function toggleLocFilter() {
   closeTypeFilterDropdown();
   var dd = document.getElementById('locDropdown');
@@ -542,7 +592,6 @@ function cancelLocFilter() {
   document.getElementById('locDropdown').classList.remove('open');
 }
 
-// Close dropdowns when clicking outside
 document.addEventListener('click', function (e) {
   var typeWrap = document.getElementById('typeFilterWrap');
   var locWrap  = document.getElementById('locFilterWrap');
@@ -550,7 +599,6 @@ document.addEventListener('click', function (e) {
   if (locWrap  && !locWrap.contains(e.target))  cancelLocFilter();
 });
 
-// ── Chat popup (top courses) ───────────────────────────────────────────────
 function buildTopCoursesList() {
   var list = document.getElementById('top-courses-list');
   if (!list) return;
@@ -602,7 +650,6 @@ function closeChatPopup() {
   document.getElementById('redirecting-text').style.display = 'none';
 }
 
-// ── Select course — save to sessionStorage so back button restores it ─────
 function selectCourse(course) {
   ACTIVE_COURSE = course;
   sessionStorage.setItem('lastActiveCourse', ACTIVE_COURSE);
@@ -619,7 +666,6 @@ function selectCourse(course) {
   fetchUniversitiesForCourse(course);
 }
 
-// ── Sidebar ────────────────────────────────────────────────────────────────
 function toggleMenu() {
   var isOpening = !document.getElementById('sidebar').classList.contains('open');
   document.getElementById('sidebar').classList.toggle('open');
@@ -633,7 +679,6 @@ function closeMenu() {
   document.getElementById('chathead').style.display = 'flex';
 }
 
-// ── Logout modal ───────────────────────────────────────────────────────────
 function openLogoutModal() {
   closeMenu();
   document.getElementById('logoutModal').classList.add('show');
@@ -645,7 +690,6 @@ document.getElementById('logoutModal').addEventListener('click', function (e) {
   if (e.target === this) closeLogoutModal();
 });
 
-// ── Helper ─────────────────────────────────────────────────────────────────
 function escHtml(s) {
   return String(s || '')
     .replace(/&/g, '&amp;')
@@ -654,17 +698,24 @@ function escHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
+// ── Initialise on page load ───────────────────────────────────────────────
+// Priority: ?course= URL param → sessionStorage → PHP default
 if (TOP_COURSES.length > 0) {
-  var savedCourse = sessionStorage.getItem('lastActiveCourse');
-  var validCourseNames = TOP_COURSES.map(function(c) { return c.course_name; });
-  if (savedCourse && validCourseNames.includes(savedCourse)) {
-    ACTIVE_COURSE = savedCourse;
+  var urlCourse  = (new URLSearchParams(window.location.search)).get('course');
+  var validNames = TOP_COURSES.map(function(c) { return c.course_name; });
+
+  if (urlCourse && validNames.includes(urlCourse)) {
+    ACTIVE_COURSE = urlCourse;
+    sessionStorage.setItem('lastActiveCourse', ACTIVE_COURSE);
+  } else {
+    var savedCourse = sessionStorage.getItem('lastActiveCourse');
+    if (savedCourse && validNames.includes(savedCourse)) {
+      ACTIVE_COURSE = savedCourse;
+    }
   }
-  // Sync the tag label to the active course
+
   var tag = document.getElementById('activeFilterTag');
   if (tag) tag.textContent = ACTIVE_COURSE;
-
   fetchUniversitiesForCourse(ACTIVE_COURSE);
 }
 </script>

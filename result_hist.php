@@ -9,6 +9,12 @@ $username = 'Student';
 $takes    = [];
 $dbError  = null;
 
+// ── Track which take the user is currently viewing ────────────────────────
+// result_hist.php is a list page, so there's no single "active sid" here.
+// However when coming FROM dashb_user.php or result_univs.php via the sidebar,
+// we may receive a ?sid= — we store it so the sidebar links round-trip correctly.
+$activeSid = isset($_GET['sid']) ? (int)$_GET['sid'] : null;
+
 try {
     $pdo = getDB();
 
@@ -17,6 +23,28 @@ try {
     $stmt->execute([':uid' => $userId]);
     $row = $stmt->fetch();
     if ($row) $username = $row['username'];
+
+    // Verify activeSid belongs to this user; fall back to latest if not
+    if ($activeSid) {
+        $chk = $pdo->prepare("SELECT id FROM students WHERE id = :sid AND user_id = :uid LIMIT 1");
+        $chk->execute([':sid' => $activeSid, ':uid' => $userId]);
+        if (!$chk->fetch()) $activeSid = null;
+    }
+
+    // If no valid activeSid, resolve to latest so sidebar links are always correct
+    if (!$activeSid) {
+        $latest = $pdo->prepare("SELECT id FROM students WHERE user_id = :uid ORDER BY submitted_at DESC LIMIT 1");
+        $latest->execute([':uid' => $userId]);
+        $latestRow = $latest->fetch();
+        $activeSid = $latestRow ? (int)$latestRow['id'] : null;
+    }
+
+    // Determine if the active sid is a historical view
+    $latestCheck = $pdo->prepare("SELECT id FROM students WHERE user_id = :uid ORDER BY submitted_at DESC LIMIT 1");
+    $latestCheck->execute([':uid' => $userId]);
+    $latestRow2       = $latestCheck->fetch();
+    $latestSid        = $latestRow2 ? (int)$latestRow2['id'] : null;
+    $isHistoricalView = ($latestSid && $activeSid && $latestSid !== $activeSid);
 
     // Get ALL student takes for this user, newest first
     $stmt = $pdo->prepare("
@@ -43,12 +71,12 @@ try {
         $courses = $rStmt->fetchAll();
 
         $takes[] = [
-            'student_id'  => $sid,
-            'is_latest'   => ($i === 0),
-            'submitted_at'=> $stu['submitted_at'],
-            'strand'      => $stu['strand'],
-            'grade'       => $stu['grade'],
-            'courses'     => $courses,
+            'student_id'   => $sid,
+            'is_latest'    => ($i === 0),
+            'submitted_at' => $stu['submitted_at'],
+            'strand'       => $stu['strand'],
+            'grade'        => $stu['grade'],
+            'courses'      => $courses,
         ];
     }
 } catch (PDOException $e) {
@@ -83,15 +111,15 @@ try {
     <p class="sidebar-username" id="sidebarUsername"><?= htmlspecialchars($username) ?></p>
   </div>
   <nav class="sidebar-nav">
-    <a href="dashb_user.php" class="sidebar-link">
+    <a href="dashb_user.php<?= $activeSid ? '?sid=' . $activeSid : '' ?>" class="sidebar-link">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </a>
-    <a href="studprofile.php" class="sidebar-link">
+    <a href="studprofile.php<?= $activeSid && $isHistoricalView ? '?sid=' . $activeSid : '' ?>" class="sidebar-link">
       <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/></svg>
       Profile
     </a>
-    <a href="result_univs.php" class="sidebar-link">
+    <a href="result_univs.php<?= $activeSid ? '?sid=' . $activeSid : '' ?>" class="sidebar-link">
       <svg viewBox="0 0 24 24" style="fill:none;stroke:#888;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
@@ -213,8 +241,6 @@ try {
     </div>
   </div>
 </div>
-
-
 
 <script>
   (function() {

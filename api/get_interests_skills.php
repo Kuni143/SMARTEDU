@@ -1,7 +1,6 @@
 <?php
 require_once '../config/db.php';
-$pdo = getDB();
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
@@ -10,20 +9,32 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = (int) $_SESSION['user_id'];
+$pdo = getDB();
 
-// Get student_id
-$stmt = $pdo->prepare("SELECT id FROM students WHERE user_id = ? ORDER BY id DESC LIMIT 1");
-$stmt->execute([$user_id]);
-$student = $stmt->fetch(PDO::FETCH_ASSOC);
+// ── Resolve student_id: use ?sid= if provided and verified, else latest ───
+$requestedSid = isset($_GET['sid']) ? (int)$_GET['sid'] : null;
+$student_id   = null;
 
-if (!$student) {
+if ($requestedSid) {
+    $chk = $pdo->prepare("SELECT id FROM students WHERE id = ? AND user_id = ? LIMIT 1");
+    $chk->execute([$requestedSid, $user_id]);
+    $row = $chk->fetch(PDO::FETCH_ASSOC);
+    if ($row) $student_id = (int)$row['id'];
+}
+
+if (!$student_id) {
+    $stmt = $pdo->prepare("SELECT id FROM students WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+    $stmt->execute([$user_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row) $student_id = (int)$row['id'];
+}
+
+if (!$student_id) {
     echo json_encode(['success' => true, 'interests' => [], 'skills' => []]);
     exit;
 }
 
-$student_id = $student['id'];
-
-// Get all "Strongly Agree" responses
+// Get all "Strongly Agree" responses for this specific take
 $stmt = $pdo->prepare("
     SELECT question_no FROM responses
     WHERE student_id = ? AND sentiment = 'Strongly Agree'
@@ -32,8 +43,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$student_id]);
 $strongly_agreed = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'question_no');
 
-// ── Question-to-label mapping ──────────────────────────────────────────────
-// A. Interests (Q1–Q15)
+// ── Question-to-label mapping ─────────────────────────────────────────────
 $interest_map = [
     1  => 'Mathematically inclined',
     2  => 'Science enthusiast',
@@ -52,7 +62,6 @@ $interest_map = [
     15 => 'Passionate educator',
 ];
 
-// B. Skills (Q16–Q30)
 $skill_map = [
     16 => 'Logical problem solver',
     17 => 'Effective communicator',
@@ -71,7 +80,6 @@ $skill_map = [
     30 => 'Research-driven',
 ];
 
-// C. Academic Strengths (Q31–Q40) — shown under skills
 $academic_map = [
     31 => 'Math achiever',
     32 => 'Science achiever',
@@ -85,7 +93,6 @@ $academic_map = [
     40 => 'Self-motivated learner',
 ];
 
-// D. Strand Alignment (Q41–Q50) — shown under interests
 $strand_map = [
     41 => 'Strand-interest aligned',
     42 => 'Skills-based strand choice',
@@ -99,7 +106,6 @@ $strand_map = [
     50 => 'Proactive course researcher',
 ];
 
-// E. Career Preferences (Q51–Q60) — shown under interests
 $career_map = [
     51 => 'Problem-solving career seeker',
     52 => 'People-helping career seeker',
@@ -113,22 +119,15 @@ $career_map = [
     60 => 'Hardworking & driven',
 ];
 
-// Build results
 $interests = [];
 $skills    = [];
 
 foreach ($strongly_agreed as $qno) {
-    if (isset($interest_map[$qno])) {
-        $interests[] = $interest_map[$qno];
-    } elseif (isset($strand_map[$qno])) {
-        $interests[] = $strand_map[$qno];
-    } elseif (isset($career_map[$qno])) {
-        $interests[] = $career_map[$qno];
-    } elseif (isset($skill_map[$qno])) {
-        $skills[] = $skill_map[$qno];
-    } elseif (isset($academic_map[$qno])) {
-        $skills[] = $academic_map[$qno];
-    }
+    if (isset($interest_map[$qno]))  $interests[] = $interest_map[$qno];
+    elseif (isset($strand_map[$qno]))  $interests[] = $strand_map[$qno];
+    elseif (isset($career_map[$qno]))  $interests[] = $career_map[$qno];
+    elseif (isset($skill_map[$qno]))   $skills[]    = $skill_map[$qno];
+    elseif (isset($academic_map[$qno])) $skills[]   = $academic_map[$qno];
 }
 
 echo json_encode([

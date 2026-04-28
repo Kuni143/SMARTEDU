@@ -6,15 +6,22 @@
 
 /* ── State ─────────────────────────────────────────────── */
 let profileData = {
-  username:           '',
-  grade:              '',
-  strand:             '',
-  avatar_url:         null,
+  username:            '',
+  grade:               '',
+  strand:              '',
+  avatar_url:          null,
   can_change_username: true,
-  days_remaining:     0,
+  days_remaining:      0,
 };
 
 let pendingAvatarFile = null;
+
+/* ── Get ?sid= from URL if present (for historical views) ── */
+function getSidParam() {
+  const params = new URLSearchParams(window.location.search);
+  const sid = params.get('sid');
+  return sid ? parseInt(sid, 10) : null;
+}
 
 /* ── Toast helper ───────────────────────────────────────── */
 function showToast(msg, type = 'info') {
@@ -34,6 +41,7 @@ async function loadProfile() {
 
     profileData = { ...profileData, ...data };
 
+    // Profile card always shows the user-level info (latest form data for grade/strand)
     document.getElementById('displayName').textContent   = data.username  || '—';
     document.getElementById('displayGrade').textContent  = data.grade     || '—';
     document.getElementById('displayStrand').textContent = data.strand    || '—';
@@ -47,10 +55,15 @@ async function loadProfile() {
   }
 }
 
-/* ── Load interests & skills ────────────────────────────── */
+/* ── Load interests & skills (respects ?sid= for historical takes) ── */
 async function loadInterestsSkills() {
   try {
-    const res  = await fetch('api/get_interests_skills.php');
+    const sid = getSidParam();
+    const url = sid
+      ? 'api/get_interests_skills.php?sid=' + sid
+      : 'api/get_interests_skills.php';
+
+    const res  = await fetch(url);
     const data = await res.json();
     if (!data.success) return;
 
@@ -103,7 +116,6 @@ async function loadBookmarks() {
     data.bookmarks.forEach(u => {
       const li = document.createElement('li');
       const a  = document.createElement('a');
-      // FIX: use ?name= to match what detail_univ.php expects
       a.href        = 'detail_univ.php?name=' + encodeURIComponent(u.name);
       a.textContent = u.name;
       li.appendChild(a);
@@ -118,12 +130,12 @@ async function loadBookmarks() {
 function setAvatarSrc(src) {
   const mainImg  = document.getElementById('avatarImg');
   const mainIcon = document.getElementById('avatarIcon');
-  mainImg.src           = src;
-  mainImg.style.display = 'block';
+  mainImg.src            = src;
+  mainImg.style.display  = 'block';
   mainIcon.style.display = 'none';
 
-  const sidebarLogo = document.getElementById('sidebarLogo');
-  if (sidebarLogo) sidebarLogo.src = src;
+  // NOTE: do NOT replace the sidebar logo — it's the SmartEdu brand logo, not the avatar.
+  // The sidebar in studprofile uses sidebarLogo (brand logo), not an avatar img.
 
   syncModalAvatar(src, true);
 }
@@ -132,7 +144,7 @@ function syncModalAvatar(src, show) {
   const modalImg  = document.getElementById('modalAvatarImg');
   const modalIcon = document.getElementById('modalAvatarIcon');
   if (show && src) {
-    modalImg.src          = src;
+    modalImg.src           = src;
     modalImg.style.display = 'block';
     modalIcon.style.display = 'none';
   } else {
@@ -310,6 +322,6 @@ async function saveProfile() {
 /* ── Init ────────────────────────────────────────────────── */
 (async function init() {
   await loadProfile();
-  loadInterestsSkills();
+  loadInterestsSkills();  // respects ?sid= automatically
   loadBookmarks();
 })();

@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/config/db.php';
 
-// ── Auth: must be a logged-in user ────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────
 $userId = $_SESSION['user_id'] ?? null;
 if (!$userId) {
     header('Location: login.php');
@@ -13,8 +13,6 @@ if (!$userId) {
 }
 
 // ── Resolve which student take to show ────────────────────────────────────
-// ?sid= lets result_hist.php deep-link to a specific historical take.
-// We verify the requested sid actually belongs to this user before trusting it.
 $requestedSid = isset($_GET['sid']) ? (int)$_GET['sid'] : null;
 $studentId    = null;
 $dbError      = null;
@@ -26,7 +24,7 @@ $strand     = '';
 try {
     $pdo = getDB();
 
-    // 1. Resolve student ID
+    // 1. Verify requested sid belongs to this user
     if ($requestedSid) {
         $chk = $pdo->prepare("
             SELECT id FROM students
@@ -39,7 +37,7 @@ try {
         }
     }
 
-    // Fall back to latest take for this user
+    // Fall back to latest take
     if (!$studentId) {
         $latest = $pdo->prepare("
             SELECT id FROM students
@@ -52,13 +50,24 @@ try {
         $studentId = $row ? (int)$row['id'] : null;
     }
 
-    // If still no student record, send to form
     if (!$studentId) {
         header('Location: studform.php');
         exit;
     }
 
-    // 2. Fetch student info + username
+    // 2. Check if this is a historical view
+    $latestCheck = $pdo->prepare("
+        SELECT id FROM students
+        WHERE user_id = :uid
+        ORDER BY submitted_at DESC
+        LIMIT 1
+    ");
+    $latestCheck->execute([':uid' => $userId]);
+    $latestRow    = $latestCheck->fetch();
+    $latestSid    = $latestRow ? (int)$latestRow['id'] : null;
+    $isHistoricalView = ($latestSid && $latestSid !== $studentId);
+
+    // 3. Fetch student info + username
     $stmt = $pdo->prepare("
         SELECT s.strand, s.grade, s.gpa, u.username
         FROM students s
@@ -74,7 +83,7 @@ try {
         $strand   = $studentRow['strand']   ?? '';
     }
 
-    // 3. Fetch top 5 course results for this take
+    // 4. Fetch top 5 course results for this take
     $stmt = $pdo->prepare("
         SELECT course_name, field_name, score, `rank`
         FROM student_results
@@ -116,26 +125,6 @@ $fieldDataJson = json_encode($fieldData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX
 
 if ($topCoursesJson === false) $topCoursesJson = '[]';
 if ($fieldDataJson  === false) $fieldDataJson  = '[]';
-
-// ── Is this a historical view (not the latest take)? ─────────────────────
-// Used to show a banner so the user knows they're viewing an old result.
-$isHistoricalView = false;
-if ($requestedSid && $requestedSid === $studentId) {
-    // Check if the requested sid is NOT the most recent take
-    try {
-        $latestCheck = $pdo->prepare("
-            SELECT id FROM students
-            WHERE user_id = :uid
-            ORDER BY submitted_at DESC
-            LIMIT 1
-        ");
-        $latestCheck->execute([':uid' => $userId]);
-        $latestRow = $latestCheck->fetch();
-        if ($latestRow && (int)$latestRow['id'] !== $studentId) {
-            $isHistoricalView = true;
-        }
-    } catch (PDOException $e) { /* non-critical */ }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -166,11 +155,11 @@ if ($requestedSid && $requestedSid === $studentId) {
     <p class="sidebar-username" id="sidebarUsername"><?= htmlspecialchars($username) ?></p>
   </div>
   <nav class="sidebar-nav">
-    <a href="dashb_user.php" class="sidebar-link active">
+    <a href="dashb_user.php<?= $isHistoricalView ? '?sid='.(int)$studentId : '' ?>" class="sidebar-link active">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </a>
-    <a href="studprofile.php" class="sidebar-link">
+    <a href="studprofile.php<?= $isHistoricalView ? '?sid='.(int)$studentId : '' ?>" class="sidebar-link">
       <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/></svg>
       Profile
     </a>
@@ -181,7 +170,7 @@ if ($requestedSid && $requestedSid === $studentId) {
       </svg>
       Universities
     </a>
-    <a href="result_hist.php" class="sidebar-link">
+    <a href="result_hist.php?sid=<?= (int)$studentId ?>" class="sidebar-link">
       <svg viewBox="0 0 24 24" style="fill:none;stroke:#888;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
         <circle cx="12" cy="12" r="10"/>
         <polyline points="12 6 12 12 9 15"/>
@@ -218,7 +207,7 @@ if ($requestedSid && $requestedSid === $studentId) {
   <?php endif; ?>
 
   <?php if ($isHistoricalView): ?>
-  <div style="grid-column:1/-1;background:#fff8e1;border-radius:12px;padding:14px 20px;color:#856404;font-size:13px;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+  <div style="grid-column:1/-1;background:#fff8e1;border-radius:12px;padding:14px 20px;color:#856404;font-size:13px;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px;">
     <span>📋 You are viewing a <strong>past result</strong>. This is not your latest assessment.</span>
     <a href="dashb_user.php" style="color:#061685;font-weight:600;white-space:nowrap;text-decoration:none;">View Latest →</a>
   </div>
@@ -270,10 +259,6 @@ if ($requestedSid && $requestedSid === $studentId) {
         </div>
       <?php else: ?>
         <?php foreach ($topCourses as $c): ?>
-          <!--
-            Pass both sid and course so result_univs.php loads the
-            correct take AND filters by this course
-          -->
           <a href="result_univs.php?sid=<?= (int)$studentId ?>&course=<?= urlencode($c['course_name']) ?>"
              class="course-item">
             <?= htmlspecialchars($c['course_name']) ?>
@@ -317,8 +302,7 @@ if ($requestedSid && $requestedSid === $studentId) {
   </div>
 </div>
 
-<!-- Inject PHP data into JS before the script loads -->
- <script>
+<script>
   (function() {
     fetch('api/get_profile.php')
       .then(function(r) { return r.json(); })
