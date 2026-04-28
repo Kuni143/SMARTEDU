@@ -1,5 +1,6 @@
 <?php
 require_once '../config/db.php';
+$pdo = getDB();
 session_start();
 header('Content-Type: application/json');
 
@@ -8,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data         = json_decode(file_get_contents('php://input'), true);
 $new_username = trim($data['username'] ?? '');
 
 if (empty($new_username)) {

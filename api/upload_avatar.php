@@ -1,5 +1,6 @@
 <?php
 require_once '../config/db.php';
+$pdo = getDB();
 session_start();
 header('Content-Type: application/json');
 
@@ -9,7 +10,12 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
-    echo json_encode(['success' => false, 'message' => 'No file uploaded or upload error']);
+    $error_code = $_FILES['avatar']['error'] ?? 'no file key';
+    echo json_encode([
+        'success'    => false,
+        'message'    => 'No file uploaded or upload error',
+        'error_code' => $error_code
+    ]);
     exit;
 }
 
@@ -58,7 +64,6 @@ if (!move_uploaded_file($file['tmp_name'], $dest_path)) {
 }
 
 $avatar_url = 'uploads/avatars/' . $filename;
-
 $stmt = $pdo->prepare("UPDATE users SET avatar_url = ? WHERE id = ?");
 $stmt->execute([$avatar_url, $user_id]);
 

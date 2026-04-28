@@ -1,3 +1,4 @@
+// get_profile.php
 <?php
 require_once '../config/db.php';
 session_start();

@@ -1,5 +1,6 @@
 <?php
 require_once '../config/db.php';
+$pdo = getDB();
 session_start();
 header('Content-Type: application/json');
 

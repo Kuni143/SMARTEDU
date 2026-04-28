@@ -74,8 +74,13 @@ try {
 <aside class="sidebar" id="sidebar">
   <button class="sidebar-close" onclick="closeMenu()" aria-label="Close">&#x2715;</button>
   <div class="sidebar-top">
-    <img src="pics/logo.png" alt="SmartEdu Logo" class="sidebar-logo"/>
-    <p class="sidebar-username"><?= htmlspecialchars($username) ?></p>
+    <div class="sidebar-avatar-wrap" id="sidebarAvatarWrap">
+      <svg id="sidebarAvatarIcon" viewBox="0 0 24 24" class="sidebar-avatar-icon">
+        <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/>
+      </svg>
+      <img id="sidebarAvatarImg" alt="Avatar" class="sidebar-avatar-img"/>
+    </div>
+    <p class="sidebar-username" id="sidebarUsername"><?= htmlspecialchars($username) ?></p>
   </div>
   <nav class="sidebar-nav">
     <a href="dashb_user.php" class="sidebar-link">
@@ -209,7 +214,29 @@ try {
   </div>
 </div>
 
+
+
 <script>
+  (function() {
+    fetch('api/get_profile.php')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.success) return;
+        var nameEl = document.getElementById('sidebarUsername');
+        if (nameEl && data.username) nameEl.textContent = data.username;
+        if (data.avatar_url) {
+          var img  = document.getElementById('sidebarAvatarImg');
+          var icon = document.getElementById('sidebarAvatarIcon');
+          if (img && icon) {
+            img.src            = data.avatar_url;
+            img.style.display  = 'block';
+            icon.style.display = 'none';
+          }
+        }
+      })
+      .catch(function() {});
+  })();
+
 function toggleMenu() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebarOverlay').classList.toggle('show');

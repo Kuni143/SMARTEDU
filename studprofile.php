@@ -201,15 +201,11 @@ if (!isset($_SESSION['user_id'])) {
 
   <!-- Profile Card -->
   <div class="profile-card">
-    <div class="avatar-wrap" onclick="document.getElementById('avatarInput').click()" title="Change photo">
+    <div class="avatar-wrap">
       <svg class="avatar-icon" id="avatarIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/>
       </svg>
       <img id="avatarImg" alt="Profile photo" style="display:none;"/>
-      <div class="avatar-overlay">
-        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        <span>Change</span>
-      </div>
     </div>
 
     <div class="profile-info">

@@ -56,8 +56,11 @@ function resetAttempts() {
   unset($_SESSION['login_attempts'], $_SESSION['lockout_until']);
 }
 
-$error   = '';
-$success = false;
+$error          = '';
+$success        = false;
+$lockoutSeconds = 0;
+$loginSuccess   = false;
+$redirectTarget = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $username = trim($_POST['username'] ?? '');
@@ -69,14 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // ── Locked out ────────────────────────────────────
   } elseif (isLockedOut()) {
-    $remaining = getLockoutTime() - time();
-    $mins = ceil($remaining / 60);
-    $error = 'Too many failed attempts. Please try again in ' . $mins . ' minute(s).';
+    $lockoutSeconds = getLockoutTime() - time();
+    $error = 'Too many failed attempts. Please try again in <span id="lockout-timer"></span>';
 
   } else {
     try {
       $pdo = getDB();
-      $matched = false;
 
       // ── Check admins table first ───────────────────
       $stmt = $pdo->prepare("SELECT id, password_hash FROM admins WHERE username = ? LIMIT 1");
@@ -87,58 +88,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         resetAttempts();
         $_SESSION['admin_id']   = $admin['id'];
         $_SESSION['admin_name'] = $username;
-        header('Location: dashb_admin.php');
-        exit;
+        $loginSuccess   = true;
+        $redirectTarget = 'dashb_admin.php';
       }
 
       // ── Check users table ──────────────────────────
-      $stmt = $pdo->prepare("SELECT id, password_hash FROM users WHERE username = ? LIMIT 1");
-      $stmt->execute([$username]);
-      $user = $stmt->fetch();
+      if (!$loginSuccess) {
+        $stmt = $pdo->prepare("SELECT id, password_hash FROM users WHERE username = ? LIMIT 1");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch();
 
-      if ($user && password_verify($password, $user['password_hash'])) {
-        resetAttempts();
-        $_SESSION['user_id']  = $user['id'];
-        $_SESSION['username'] = $username;
+        if ($user && password_verify($password, $user['password_hash'])) {
+          resetAttempts();
+          $_SESSION['user_id']  = $user['id'];
+          $_SESSION['username'] = $username;
 
-        // ── Check if user already completed the form ───
-        $checkStmt = $pdo->prepare("
-            SELECT s.id
-            FROM students s
-            INNER JOIN student_results sr ON sr.student_id = s.id
-            WHERE s.user_id = :uid
-            LIMIT 1
-        ");
-        $checkStmt->execute([':uid' => $user['id']]);
-        $existing = $checkStmt->fetch();
+          // ── Check if user already completed the form ───
+          $checkStmt = $pdo->prepare("
+              SELECT s.id
+              FROM students s
+              INNER JOIN student_results sr ON sr.student_id = s.id
+              WHERE s.user_id = :uid
+              LIMIT 1
+          ");
+          $checkStmt->execute([':uid' => $user['id']]);
+          $existing = $checkStmt->fetch();
 
-        if ($existing) {
-            // Returning user — restore student_id and skip the form
-            $_SESSION['student_id'] = $existing['id'];
-            header('Location: dashb_user.php');
-        } else {
-            // New user — send to form
-            header('Location: studform.php');
+          if ($existing) {
+              $_SESSION['student_id'] = $existing['id'];
+              $redirectTarget = 'dashb_user.php';
+          } else {
+              $redirectTarget = 'studform.php';
+          }
+          $loginSuccess = true;
         }
-        exit;
       }
 
       // ── Failed login ───────────────────────────────
-      incrementAttempts();
-      $attempts   = getAttempts();
-      $remaining  = MAX_ATTEMPTS - $attempts;
+      if (!$loginSuccess) {
+        incrementAttempts();
+        $attempts  = getAttempts();
+        $remaining = MAX_ATTEMPTS - $attempts;
 
-      if ($attempts >= MAX_ATTEMPTS) {
-        $mins  = ceil(LOCKOUT_SECONDS / 60);
-        $error = $attempts . ' attempt(s) used. Account locked for ' . $mins . ' minute(s). Reset password or try later.';
-      } else {
-        $error = 'Incorrect username or password. ' . $remaining . ' attempt(s) remaining.';
+        if ($attempts >= MAX_ATTEMPTS) {
+          $lockoutSeconds = LOCKOUT_SECONDS;
+          $error = 'Too many failed attempts. Please try again in <span id="lockout-timer"></span>';
+        } else {
+          $error = 'Incorrect username or password. ' . $remaining . ' attempt(s) remaining.';
+        }
       }
 
     } catch (PDOException $e) {
       $error = 'A server error occurred. Please try again later.';
     }
   }
+}
+
+// Re-check lockout for page load (e.g. on refresh while locked)
+if (!$error && !$loginSuccess && isLockedOut()) {
+  $lockoutSeconds = getLockoutTime() - time();
+  $error = 'Too many failed attempts. Please try again in <span id="lockout-timer"></span>';
 }
 
 $attempts_used = getAttempts();
@@ -211,16 +220,16 @@ $old_username = h($_POST['username'] ?? '');
 
         <!-- Server error -->
         <?php if ($error): ?>
-          <div class="error-row visible" id="error-row">
+          <div class="error-row visible" id="error-row" data-lockout="<?= (int)$lockoutSeconds ?>">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="12"/>
               <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <p id="error-text"><?= h($error) ?></p>
+            <p id="error-text"><?= $error ?></p>
           </div>
         <?php else: ?>
-          <div class="error-row" id="error-row">
+          <div class="error-row" id="error-row" data-lockout="0">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="12"/>
@@ -248,9 +257,31 @@ $old_username = h($_POST['username'] ?? '');
         <button type="submit" class="btn-login" id="btn-login" <?= $locked ? 'disabled' : '' ?>>Log In</button>
 
       </form>
-
     </div>
   </div>
+
+  <!-- Login success toast -->
+  <div class="login-toast" id="loginToast" style="display:none;">
+    <div class="login-toast-inner">
+      <span class="login-toast-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" fill="#22c55e" stroke="none"/>
+          <polyline points="8 12 11 15 16 9" stroke="#fff"/>
+        </svg>
+      </span>
+      <span class="login-toast-msg">Login successful! Redirecting…</span>
+      <button class="login-toast-close" onclick="document.getElementById('loginToast').style.display='none'">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <?php if ($loginSuccess): ?>
+  <span id="loginRedirect" data-href="<?= h($redirectTarget) ?>" style="display:none;"></span>
+  <?php endif; ?>
 
 </div>
 
