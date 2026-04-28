@@ -1,7 +1,6 @@
-// get_profile.php
 <?php
-require_once '../config/db.php';
 session_start();
+require_once '../config/db.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
@@ -14,7 +13,6 @@ $user_id = (int) $_SESSION['user_id'];
 try {
     $pdo = getDB();
 
-    // Get user info + latest student record
     $stmt = $pdo->prepare("
         SELECT u.id, u.username, u.avatar_url, u.username_changed_at,
                s.grade, s.strand, s.id AS student_id
@@ -32,7 +30,6 @@ try {
         exit;
     }
 
-    // Compute days until username can be changed
     $can_change_username = true;
     $days_remaining = 0;
     if (!empty($user['username_changed_at'])) {

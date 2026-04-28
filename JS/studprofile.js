@@ -35,16 +35,33 @@ function showToast(msg, type = 'info') {
 /* ── Load profile data on page start ───────────────────── */
 async function loadProfile() {
   try {
-    const res  = await fetch('api/get_profile.php');
-    const data = await res.json();
-    if (!data.success) { showToast('Could not load profile.', 'error'); return; }
+    const res = await fetch('api/get_profile.php');
+
+    if (!res.ok) {
+      showToast(`Server error: ${res.status}`, 'error');
+      console.error('get_profile.php returned HTTP', res.status);
+      return;
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      showToast('Unexpected server response. Check PHP logs.', 'error');
+      console.error('JSON parse failed for get_profile.php:', parseErr);
+      return;
+    }
+
+    if (!data.success) {
+      showToast(data.message || 'Could not load profile.', 'error');
+      return;
+    }
 
     profileData = { ...profileData, ...data };
 
-    // Profile card always shows the user-level info (latest form data for grade/strand)
-    document.getElementById('displayName').textContent   = data.username  || '—';
-    document.getElementById('displayGrade').textContent  = data.grade     || '—';
-    document.getElementById('displayStrand').textContent = data.strand    || '—';
+    document.getElementById('displayName').textContent     = data.username || '—';
+    document.getElementById('displayGrade').textContent    = data.grade    || '—';
+    document.getElementById('displayStrand').textContent   = data.strand   || '—';
     document.getElementById('sidebarUsername').textContent = data.username || 'User';
 
     if (data.avatar_url) {
@@ -52,6 +69,7 @@ async function loadProfile() {
     }
   } catch (e) {
     showToast('Network error loading profile.', 'error');
+    console.error('loadProfile error:', e);
   }
 }
 
@@ -63,8 +81,23 @@ async function loadInterestsSkills() {
       ? 'api/get_interests_skills.php?sid=' + sid
       : 'api/get_interests_skills.php';
 
-    const res  = await fetch(url);
-    const data = await res.json();
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      console.error('get_interests_skills.php returned HTTP', res.status);
+      document.getElementById('interestList').innerHTML = '<li class="empty-note">Could not load interests.</li>';
+      document.getElementById('skillList').innerHTML    = '<li class="empty-note">Could not load skills.</li>';
+      return;
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      console.error('JSON parse failed for get_interests_skills.php:', parseErr);
+      return;
+    }
+
     if (!data.success) return;
 
     const interestList = document.getElementById('interestList');
@@ -93,6 +126,7 @@ async function loadInterestsSkills() {
       });
     }
   } catch (e) {
+    console.error('loadInterestsSkills error:', e);
     document.getElementById('interestList').innerHTML = '<li class="empty-note">Could not load interests.</li>';
     document.getElementById('skillList').innerHTML    = '<li class="empty-note">Could not load skills.</li>';
   }
@@ -102,8 +136,23 @@ async function loadInterestsSkills() {
 async function loadBookmarks() {
   const univList = document.getElementById('univList');
   try {
-    const res  = await fetch('api/get_bookmarks.php');
-    const data = await res.json();
+    const res = await fetch('api/get_bookmarks.php');
+
+    if (!res.ok) {
+      console.error('get_bookmarks.php returned HTTP', res.status);
+      univList.innerHTML = '<li class="empty-note">Could not load bookmarks.</li>';
+      return;
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      console.error('JSON parse failed for get_bookmarks.php:', parseErr);
+      univList.innerHTML = '<li class="empty-note">Could not load bookmarks.</li>';
+      return;
+    }
+
     if (!data.success) return;
 
     univList.innerHTML = '';
@@ -122,6 +171,7 @@ async function loadBookmarks() {
       univList.appendChild(li);
     });
   } catch (e) {
+    console.error('loadBookmarks error:', e);
     univList.innerHTML = '<li class="empty-note">Could not load bookmarks.</li>';
   }
 }
@@ -133,10 +183,6 @@ function setAvatarSrc(src) {
   mainImg.src            = src;
   mainImg.style.display  = 'block';
   mainIcon.style.display = 'none';
-
-  // NOTE: do NOT replace the sidebar logo — it's the SmartEdu brand logo, not the avatar.
-  // The sidebar in studprofile uses sidebarLogo (brand logo), not an avatar img.
-
   syncModalAvatar(src, true);
 }
 
@@ -144,8 +190,8 @@ function syncModalAvatar(src, show) {
   const modalImg  = document.getElementById('modalAvatarImg');
   const modalIcon = document.getElementById('modalAvatarIcon');
   if (show && src) {
-    modalImg.src           = src;
-    modalImg.style.display = 'block';
+    modalImg.src            = src;
+    modalImg.style.display  = 'block';
     modalIcon.style.display = 'none';
   } else {
     modalImg.style.display  = 'none';
@@ -162,8 +208,7 @@ function handleAvatarChange(e) {
 
   const reader = new FileReader();
   reader.onload = function(ev) {
-    const src = ev.target.result;
-    setAvatarSrc(src);
+    setAvatarSrc(ev.target.result);
   };
   reader.readAsDataURL(file);
   e.target.value = '';
@@ -176,15 +221,27 @@ async function uploadAvatar() {
   const formData = new FormData();
   formData.append('avatar', pendingAvatarFile);
 
-  const res  = await fetch('api/upload_avatar.php', { method: 'POST', body: formData });
-  const data = await res.json();
+  try {
+    const res = await fetch('api/upload_avatar.php', { method: 'POST', body: formData });
 
-  if (data.success) {
-    profileData.avatar_url = data.avatar_url;
-    pendingAvatarFile = null;
-    return true;
-  } else {
-    showToast(data.message || 'Avatar upload failed.', 'error');
+    if (!res.ok) {
+      showToast(`Avatar upload failed (HTTP ${res.status}).`, 'error');
+      console.error('upload_avatar.php returned HTTP', res.status);
+      return false;
+    }
+
+    const data = await res.json();
+    if (data.success) {
+      profileData.avatar_url = data.avatar_url;
+      pendingAvatarFile = null;
+      return true;
+    } else {
+      showToast(data.message || 'Avatar upload failed.', 'error');
+      return false;
+    }
+  } catch (e) {
+    console.error('uploadAvatar error:', e);
+    showToast('Network error uploading avatar.', 'error');
     return false;
   }
 }
@@ -286,13 +343,21 @@ async function saveProfile() {
         return;
       }
 
-      const res  = await fetch('api/update_username.php', {
+      const res = await fetch('api/update_username.php', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ username: newUsername }),
       });
-      const data = await res.json();
 
+      if (!res.ok) {
+        showToast(`Username update failed (HTTP ${res.status}).`, 'error');
+        console.error('update_username.php returned HTTP', res.status);
+        saveBtn.disabled    = false;
+        saveBtn.textContent = 'Save';
+        return;
+      }
+
+      const data = await res.json();
       if (!data.success) {
         showToast(data.message || 'Username update failed.', 'error');
         saveBtn.disabled    = false;
@@ -312,6 +377,7 @@ async function saveProfile() {
     closeEditModal();
 
   } catch (err) {
+    console.error('saveProfile error:', err);
     showToast('Network error. Please try again.', 'error');
   } finally {
     saveBtn.disabled    = false;
@@ -322,6 +388,6 @@ async function saveProfile() {
 /* ── Init ────────────────────────────────────────────────── */
 (async function init() {
   await loadProfile();
-  loadInterestsSkills();  // respects ?sid= automatically
+  loadInterestsSkills();
   loadBookmarks();
 })();
