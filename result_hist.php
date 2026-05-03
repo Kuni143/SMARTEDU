@@ -9,10 +9,6 @@ $username = 'Student';
 $takes    = [];
 $dbError  = null;
 
-// ── Track which take the user is currently viewing ────────────────────────
-// result_hist.php is a list page, so there's no single "active sid" here.
-// However when coming FROM dashb_user.php or result_univs.php via the sidebar,
-// we may receive a ?sid= — we store it so the sidebar links round-trip correctly.
 $activeSid = isset($_GET['sid']) ? (int)$_GET['sid'] : null;
 
 try {

@@ -10,7 +10,6 @@ html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; ba
 .sidebar-close { align-self: flex-end; background: none; border: none; font-size: 18px; color: #061685; cursor: pointer; padding: 2px 4px; line-height: 1; margin-bottom: 18px; }
 .sidebar-top { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 28px; }
 
-/* ── Sidebar avatar ── */
 .sidebar-avatar-wrap { width: 72px; height: 72px; border-radius: 50%; background: #dde2f0; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
 .sidebar-avatar-icon { width: 42px; height: 42px; fill: #b0b8d4; }
 .sidebar-avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: none; }
@@ -92,3 +91,42 @@ html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; ba
 .btn-confirm:hover { opacity: 0.85; }
 
 @media (max-width: 680px) { .detail-card { padding: 22px 18px; } .main { padding: 12px 14px 48px; } }
+
+/* ── Bookmark toast ── */
+.bookmark-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.bookmark-toast.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.bookmark-toast-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1.5px solid #061685;
+  border-radius: 999px;
+  padding: 10px 20px 10px 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.13);
+  white-space: nowrap;
+}
+.bookmark-toast-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+.bookmark-toast-msg {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+}

@@ -13,14 +13,14 @@ function togglePw(id, btn) {
 
 // Client-side empty-field check before submit
 document.querySelector('form').addEventListener('submit', function(e) {
-  var username  = document.getElementById('username').value.trim();
-  var password  = document.getElementById('password').value;
-  var errorRow  = document.getElementById('error-row');
-  var errorText = document.getElementById('error-text');
+  var identifier = document.getElementById('username').value.trim();
+  var password   = document.getElementById('password').value;
+  var errorRow   = document.getElementById('error-row');
+  var errorText  = document.getElementById('error-text');
 
-  if (!username || !password) {
+  if (!identifier || !password) {
     e.preventDefault();
-    errorText.textContent = 'Please enter your username and password.';
+    errorText.textContent = 'Please enter your username/email and password.';
     errorRow.classList.add('visible');
   }
 });
@@ -64,7 +64,6 @@ document.querySelector('form').addEventListener('submit', function(e) {
   var target = redirect.getAttribute('data-href');
   if (!target) return;
 
-  // Remove inline display:none and trigger the CSS animation via class
   toast.removeAttribute('style');
   toast.classList.add('show');
 

@@ -63,12 +63,12 @@ $loginSuccess   = false;
 $redirectTarget = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $username = trim($_POST['username'] ?? '');
-  $password = $_POST['password'] ?? '';
+  $identifier = trim($_POST['username'] ?? ''); // username or email
+  $password   = $_POST['password'] ?? '';
 
   // ── Blank fields ───────────────────────────────────
-  if (!$username || !$password) {
-    $error = 'Please enter your username and password.';
+  if (!$identifier || !$password) {
+    $error = 'Please enter your username/email and password.';
 
   // ── Locked out ────────────────────────────────────
   } elseif (isLockedOut()) {
@@ -79,29 +79,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
       $pdo = getDB();
 
-      // ── Check admins table first ───────────────────
+      // ── Check admins table (username only) ─────────
       $stmt = $pdo->prepare("SELECT id, password_hash FROM admins WHERE username = ? LIMIT 1");
-      $stmt->execute([$username]);
+      $stmt->execute([$identifier]);
       $admin = $stmt->fetch();
 
       if ($admin && password_verify($password, $admin['password_hash'])) {
         resetAttempts();
         $_SESSION['admin_id']   = $admin['id'];
-        $_SESSION['admin_name'] = $username;
+        $_SESSION['admin_name'] = $identifier;
         $loginSuccess   = true;
         $redirectTarget = 'dashb_admin.php';
       }
 
-      // ── Check users table ──────────────────────────
+      // ── Check users table by username OR email ─────
       if (!$loginSuccess) {
-        $stmt = $pdo->prepare("SELECT id, password_hash FROM users WHERE username = ? LIMIT 1");
-        $stmt->execute([$username]);
+        $stmt = $pdo->prepare("
+          SELECT id, username, password_hash
+          FROM users
+          WHERE username = ? OR email = ?
+          LIMIT 1
+        ");
+        $stmt->execute([$identifier, $identifier]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password_hash'])) {
           resetAttempts();
           $_SESSION['user_id']  = $user['id'];
-          $_SESSION['username'] = $username;
+          $_SESSION['username'] = $user['username'];
 
           // ── Check if user already completed the form ───
           $checkStmt = $pdo->prepare("
@@ -134,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $lockoutSeconds = LOCKOUT_SECONDS;
           $error = 'Too many failed attempts. Please try again in <span id="lockout-timer"></span>';
         } else {
-          $error = 'Incorrect username or password. ' . $remaining . ' attempt(s) remaining.';
+          $error = 'Incorrect username/email or password. ' . $remaining . ' attempt(s) remaining.';
         }
       }
 
@@ -154,7 +159,7 @@ $attempts_used = getAttempts();
 $locked        = isLockedOut();
 
 function h($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
-$old_username = h($_POST['username'] ?? '');
+$old_identifier = h($_POST['username'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -187,14 +192,14 @@ $old_username = h($_POST['username'] ?? '');
 
       <form method="POST" action="login.php" novalidate>
 
-        <!-- Username -->
+        <!-- Username or Email -->
         <div class="input-group">
           <input
             type="text"
             name="username"
             id="username"
-            placeholder="Username"
-            value="<?= $old_username ?>"
+            placeholder="Username or Email"
+            value="<?= $old_identifier ?>"
             <?= $locked ? 'disabled' : '' ?>
             autocomplete="username"
           />

@@ -1,8 +1,3 @@
-// ── JS/detail_univ.js ─────────────────────────────────────────────────────
-// Fetches university details from api/get_university_detail.php
-// and renders them into detail_univ.php.
-// ─────────────────────────────────────────────────────────────────────────
-
 (function () {
 
   // ── Sidebar ──────────────────────────────────────────────────────────────
@@ -26,10 +21,9 @@
     document.getElementById('logoutModal').classList.remove('show');
   }
 
-  // Expose to inline onclick handlers
-  window.toggleMenu      = toggleMenu;
-  window.closeMenu       = closeMenu;
-  window.openLogoutModal = openLogoutModal;
+  window.toggleMenu       = toggleMenu;
+  window.closeMenu        = closeMenu;
+  window.openLogoutModal  = openLogoutModal;
   window.closeLogoutModal = closeLogoutModal;
 
   document.getElementById('logoutModal').addEventListener('click', function (e) {
@@ -37,8 +31,6 @@
   });
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-
-  /** Escape HTML to prevent XSS */
   function esc(s) {
     return String(s || '')
       .replace(/&/g, '&amp;')
@@ -47,11 +39,6 @@
       .replace(/"/g, '&quot;');
   }
 
-  /**
-   * Convert a plain-text block (newline-separated lines) into
-   * an unordered list. Each non-empty line becomes a <li>.
-   * If only one line, returns a plain <p> instead.
-   */
   function textToList(text) {
     if (!text || !text.trim()) return '';
     var lines = text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
@@ -63,7 +50,6 @@
       + '</ul>';
   }
 
-  /** Show a section container and inject HTML into its content element */
   function showSection(sectionId, contentId, html) {
     if (!html) return;
     var sec = document.getElementById(sectionId);
@@ -90,10 +76,8 @@
 
   // ── Render ────────────────────────────────────────────────────────────────
   function renderUniversity(u) {
-    // Title
     document.getElementById('univName').textContent = u.name || 'Unknown University';
 
-    // Meta badge: type · location
     var meta = '';
     if (u.type || u.location) {
       meta = '<span class="school-type-badge">'
@@ -102,7 +86,6 @@
     }
     document.getElementById('univMeta').innerHTML = meta;
 
-    // Intro bullets — description split by newlines, or single bullet
     var introEl = document.getElementById('introBullets');
     if (u.description && u.description.trim()) {
       var lines = u.description.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
@@ -111,42 +94,35 @@
       introEl.innerHTML = '';
     }
 
-    // Courses offered
     if (u.courses && u.courses.length) {
       var coursesHtml = u.courses.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('');
       showSection('sectionCourses', 'coursesList', coursesHtml);
     }
 
-    // Campus branches
     if (u.campus_branches && u.campus_branches.trim()) {
       showSection('sectionBranches', 'branchesList', textToList(u.campus_branches));
     }
 
-    // Tuition & fees
     if (u.tuition_fees && u.tuition_fees.trim()) {
       showSection('sectionTuition', 'tuitionList', textToList(u.tuition_fees));
     }
 
-    // Entrance exam
     if (u.exam && u.exam.trim()) {
       showSection('sectionExam', 'examContent', textToList(u.exam));
     }
 
-    // Enrollment requirements
     if (u.enrollment_requirements && u.enrollment_requirements.trim()) {
       showSection('sectionEnrollment', 'enrollmentContent', textToList(u.enrollment_requirements));
     }
 
-    // Contact / links
     if (u.contact_links && u.contact_links.trim()) {
       showSection('sectionContact', 'contactContent', textToList(u.contact_links));
     }
 
-    // Admission requirements (right column)
     if (u.requirements && u.requirements.trim()) {
       var admBox = document.getElementById('admissionBox');
       var admEl  = document.getElementById('admissionContent');
-      admEl.innerHTML     = textToList(u.requirements);
+      admEl.innerHTML      = textToList(u.requirements);
       admBox.style.display = '';
     }
 
@@ -175,13 +151,85 @@
       });
   }
 
-  // ── Init ──────────────────────────────────────────────────────────────────
-  // UNIV_NAME is injected by detail_univ.php via a <script> block.
-  // Fallback: read from URL param if accessed directly.
   var nameToLoad = (typeof UNIV_NAME !== 'undefined' && UNIV_NAME)
     ? UNIV_NAME
     : (new URLSearchParams(window.location.search)).get('name') || '';
 
   loadUniversity(nameToLoad);
+
+  // ── Bookmark toast ────────────────────────────────────────────────────────
+  var toastTimer;
+
+  function showBookmarkToast(message, added) {
+    var toast  = document.getElementById('bookmarkToast');
+    var msgEl  = document.getElementById('bookmarkToastMsg');
+    var iconEl = document.getElementById('bookmarkToastIcon');
+    if (!toast || !msgEl || !iconEl) return;
+
+    clearTimeout(toastTimer);
+    msgEl.textContent = message;
+
+    if (added) {
+      // Checkmark icon for "Added"
+      iconEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;">'
+        + '<circle cx="12" cy="12" r="10" fill="#061685" stroke="none"/>'
+        + '<polyline points="8 12 11 15 16 9" stroke="#fff"/>'
+        + '</svg>';
+    } else {
+      // X icon for "Removed"
+      iconEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;">'
+        + '<circle cx="12" cy="12" r="10" fill="#061685" stroke="none"/>'
+        + '<line x1="8" y1="8" x2="16" y2="16" stroke="#fff"/>'
+        + '<line x1="16" y1="8" x2="8" y2="16" stroke="#fff"/>'
+        + '</svg>';
+    }
+
+    toast.classList.add('show');
+    toastTimer = setTimeout(function () {
+      toast.classList.remove('show');
+    }, 2800);
+  }
+
+  // ── Bookmark toggle ───────────────────────────────────────────────────────
+  (function () {
+    var btn = document.getElementById('bookmarkBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+      var universityId = parseInt(btn.getAttribute('data-id'), 10);
+      if (!universityId || universityId === 0) return;
+
+      btn.disabled = true;
+
+      var formData = new FormData();
+      formData.append('university_id', universityId);
+
+      fetch('api/toggle_bookmark.php', {
+        method: 'POST',
+        body:   formData
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.success) {
+          var isNowBookmarked = btn.classList.toggle('bookmarked');
+          showBookmarkToast(
+            isNowBookmarked
+              ? 'Added to your saved universities.'
+              : 'Removed from university bookmarks.',
+            isNowBookmarked
+          );
+        } else {
+          alert(data.message || 'Could not update bookmark. Please try again.');
+        }
+      })
+      .catch(function (err) {
+        console.error('Fetch error:', err);
+        alert('Network error. Please try again.');
+      })
+      .finally(function () {
+        btn.disabled = false;
+      });
+    });
+  })();
 
 })();

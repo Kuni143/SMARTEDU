@@ -11,7 +11,6 @@ if (!$studentId) {
     exit;
 }
 
-// Get username for sidebar
 $username = 'Student';
 try {
     $pdo  = getDB();
@@ -26,22 +25,19 @@ try {
     if ($row && $row['username']) $username = $row['username'];
 } catch (PDOException $e) {}
 
-// ── Capture return-navigation params ─────────────────────────────────────
 $returnSid    = isset($_GET['sid'])    ? (int)$_GET['sid']    : null;
 $returnCourse = isset($_GET['course']) ? trim($_GET['course']) : null;
 
-// Build the URL to go back to result_univs.php with preserved state
 $backUrl = 'result_univs.php';
 $backParams = [];
 if ($returnSid)    $backParams[] = 'sid='    . $returnSid;
 if ($returnCourse) $backParams[] = 'course=' . urlencode($returnCourse);
 if (!empty($backParams)) $backUrl .= '?' . implode('&', $backParams);
 
-// Get university name from URL
-$univName = trim($_GET['name'] ?? '');
+$univName   = trim($_GET['name'] ?? '');
 $university = null;
-$courses = [];
-$error = '';
+$courses    = [];
+$error      = '';
 
 if ($univName === '') {
     $error = 'No university specified.';
@@ -69,7 +65,6 @@ if ($univName === '') {
             $cStmt->execute([':id' => $university['id']]);
             $courses = $cStmt->fetchAll(PDO::FETCH_COLUMN);
 
-            // Check if already bookmarked
             $isBookmarked = false;
             try {
                 $userStmt = $pdo->prepare("SELECT user_id FROM students WHERE id = :sid LIMIT 1");
@@ -88,7 +83,6 @@ if ($univName === '') {
     }
 }
 
-// Helper: render a text field as list items
 function renderLines(string $text): string {
     $lines = array_filter(array_map('trim', explode("\n", $text)));
     $out = '';
@@ -110,10 +104,8 @@ function renderLines(string $text): string {
 </head>
 <body>
 
-<!-- Sidebar overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMenu()"></div>
 
-<!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <button class="sidebar-close" onclick="closeMenu()">&#x2715;</button>
   <div class="sidebar-top">
@@ -156,7 +148,6 @@ function renderLines(string $text): string {
   </div>
 </aside>
 
-<!-- Navbar -->
 <nav class="navbar">
   <a class="nav-logo" href="<?= htmlspecialchars($backUrl) ?>">
     <img src="pics/logo.png" alt="SmartEdu Logo"/>
@@ -167,7 +158,6 @@ function renderLines(string $text): string {
   </button>
 </nav>
 
-<!-- Main -->
 <main class="main">
 
 <?php if ($error): ?>
@@ -178,10 +168,8 @@ function renderLines(string $text): string {
 
 <?php else: ?>
 
-  <!-- Detail card -->
   <div class="detail-card">
 
-    <!-- Top row -->
     <div class="detail-top">
       <button class="back-btn" onclick="goBack()" aria-label="Go back">
         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
@@ -197,37 +185,33 @@ function renderLines(string $text): string {
       </button>
     </div>
 
-  <!-- Type · Location badge -->
   <?php
     $typeFullNames = [
-    'LUC'     => 'Local Universities and Colleges',
-    'OGS'     => 'Other Government Schools',
-    'SUC'     => 'State Universities and Colleges',
-    'Private' => 'Private Universities and Colleges',
+      'LUC'     => 'Local Universities and Colleges',
+      'OGS'     => 'Other Government Schools',
+      'SUC'     => 'State Universities and Colleges',
+      'Private' => 'Private Universities and Colleges',
     ];
     $typeDisplay = $typeFullNames[$university['type']] ?? $university['type'];
-    ?>
+  ?>
   <?php if ($university['type'] || $university['location']): ?>
     <div style="margin-bottom:12px;">
-    <span class="school-type-badge">
-    <?= htmlspecialchars($typeDisplay ?? '') ?>
-    <?= ($university['type'] && $university['location']) ? ' · ' : '' ?>
-    <?= htmlspecialchars($university['location'] ?? '') ?>
-    </span>
+      <span class="school-type-badge">
+        <?= htmlspecialchars($typeDisplay ?? '') ?>
+        <?= ($university['type'] && $university['location']) ? ' · ' : '' ?>
+        <?= htmlspecialchars($university['location'] ?? '') ?>
+      </span>
     </div>
   <?php endif; ?>
 
-    <!-- Intro bullets -->
     <?php if ($university['description']): ?>
     <ul class="detail-intro" id="introBullets">
       <?= renderLines($university['description']) ?>
     </ul>
     <?php endif; ?>
 
-    <!-- Two-column body -->
     <div class="detail-cols">
 
-      <!-- Left column -->
       <div>
 
         <?php if (!empty($courses)): ?>
@@ -278,7 +262,6 @@ function renderLines(string $text): string {
 
       </div>
 
-      <!-- Right column — Admission Requirements box -->
       <?php if ($university['requirements']): ?>
       <div class="admission-box">
         <p class="section-heading">Admission Requirements:</p>
@@ -286,8 +269,8 @@ function renderLines(string $text): string {
       </div>
       <?php endif; ?>
 
-    </div><!-- /detail-cols -->
-  </div><!-- /detail-card -->
+    </div>
+  </div>
 
 <?php endif; ?>
 
@@ -306,6 +289,14 @@ function renderLines(string $text): string {
       <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
       <button class="btn-confirm" onclick="window.location.href='logout.php'">Log Out</button>
     </div>
+  </div>
+</div>
+
+<!-- Bookmark toast -->
+<div class="bookmark-toast" id="bookmarkToast">
+  <div class="bookmark-toast-inner">
+    <span class="bookmark-toast-icon" id="bookmarkToastIcon"></span>
+    <span class="bookmark-toast-msg" id="bookmarkToastMsg"></span>
   </div>
 </div>
 
@@ -351,50 +342,11 @@ document.getElementById('logoutModal').addEventListener('click', function(e) {
   if (e.target === this) closeLogoutModal();
 });
 
-// ── Back button — always returns to result_univs.php with preserved state ─
 function goBack() {
   window.location.href = '<?= addslashes($backUrl) ?>';
 }
-
-// ── Bookmark toggle ──────────────────────────────────────────────────────
-(function () {
-  var btn = document.getElementById('bookmarkBtn');
-  if (!btn) return;
-
-  btn.addEventListener('click', function () {
-    var universityId = parseInt(btn.getAttribute('data-id'), 10);
-    if (!universityId || universityId === 0) {
-      alert('Button has no university ID.');
-      return;
-    }
-
-    btn.disabled = true;
-
-    var formData = new FormData();
-    formData.append('university_id', universityId);
-
-    fetch('api/toggle_bookmark.php', {
-      method: 'POST',
-      body:   formData
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      if (data.success) {
-        btn.classList.toggle('bookmarked');
-      } else {
-        alert(data.message || 'Could not update bookmark. Please try again.');
-      }
-    })
-    .catch(function (err) {
-      console.error('Fetch error:', err);
-      alert('Network error. Please try again.');
-    })
-    .finally(function () {
-      btn.disabled = false;
-    });
-  });
-})();
 </script>
 
+<script src="JS/detail_univ.js"></script>
 </body>
 </html>

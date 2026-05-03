@@ -1,8 +1,4 @@
 <?php
-// ── signup.php ────────────────────────────────────────
-// Handles both the signup form display (GET) and
-// form submission / account creation (POST).
-
 require_once __DIR__ . '/config/db.php';
 
 $errors   = [];
@@ -137,7 +133,9 @@ $old_email    = h($_POST['email']    ?? '');
             />
           </div>
           <?php if (isset($errors['username'])): ?>
-            <p class="error-msg visible"><?= h($errors['username']) ?></p>
+            <p class="error-msg visible" id="username-error"><?= h($errors['username']) ?></p>
+          <?php else: ?>
+            <p class="error-msg" id="username-error"></p>
           <?php endif; ?>
 
           <!-- Email -->
