@@ -202,7 +202,7 @@ if (isset($_GET['ajax'])) {
 <body>
 <div class="page-wrapper">
 
-  <a class="logo" href="landpage.html">
+  <a class="logo" href="landpage.php">
     <img src="pics/logo.png" alt="SmartEdu Logo" onerror="this.style.display='none'"/>
     <span class="logo-name">SmartEdu</span>
   </a>
