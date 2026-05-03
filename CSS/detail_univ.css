@@ -62,7 +62,16 @@ html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; ba
 .section-heading { font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 700; color: #061685; margin-bottom: 8px; }
 .section-list { list-style: disc; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
 .section-list li { font-family: 'Inter', sans-serif; font-size: 13px; color: #333; line-height: 1.6; }
-.admission-box { border: 1.5px solid #c0c8e8; border-radius: 14px; padding: 22px 24px; }
+
+/* ── Admission box ── */
+.admission-box {
+  border: 1.5px solid #c0c8e8;
+  border-radius: 14px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
 .admission-box .section-heading { font-size: 14px; margin-bottom: 6px; }
 .admission-sub { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #5a8a5a; margin-bottom: 14px; }
 .adm-step { margin-bottom: 18px; }
@@ -70,6 +79,18 @@ html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; ba
 .adm-step-list { list-style: disc; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
 .adm-step-list li { font-family: 'Inter', sans-serif; font-size: 12.5px; color: #333; line-height: 1.6; }
 .adm-step-list .sub-list { list-style: disc; padding-left: 16px; margin-top: 4px; }
+
+/* ── Merged sections inside admission box (when requirements is short) ── */
+.admission-merged-section {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e4e8f4;
+}
+.admission-merged-section .section-heading {
+  font-size: 13.5px;
+  margin-bottom: 6px;
+  color: #061685;
+}
 
 .bookmark-btn svg path { fill: none; stroke: #061685; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: fill 0.2s, stroke 0.2s; }
 .bookmark-btn.bookmarked svg path { fill: #061685; stroke: #061685; }

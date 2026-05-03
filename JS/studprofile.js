@@ -32,6 +32,29 @@ function showToast(msg, type = 'info') {
   el._timer = setTimeout(() => { el.classList.remove('toast--show'); }, 3200);
 }
 
+/* ── Sidebar avatar helper ──────────────────────────────── */
+function setSidebarAvatar(src) {
+  // The sidebar already has <img class="sidebar-logo"> (the SmartEdu logo).
+  // We REPLACE its src with the user's avatar when one exists,
+  // and restore the original logo src when there is none.
+  const sidebarLogo = document.getElementById('sidebarLogo');
+  if (!sidebarLogo) return;
+
+  if (src) {
+    // Make it look like a round avatar instead of a square logo
+    sidebarLogo.src = src;
+    sidebarLogo.style.borderRadius  = '50%';
+    sidebarLogo.style.objectFit     = 'cover';
+    sidebarLogo.style.border        = '2.5px solid #c5cae9';
+  } else {
+    // Restore original logo appearance
+    sidebarLogo.src = 'pics/logo.png';
+    sidebarLogo.style.borderRadius  = '';
+    sidebarLogo.style.objectFit     = '';
+    sidebarLogo.style.border        = '';
+  }
+}
+
 /* ── Load profile data on page start ───────────────────── */
 async function loadProfile() {
   try {
@@ -73,7 +96,7 @@ async function loadProfile() {
   }
 }
 
-/* ── Load interests & skills (respects ?sid= for historical takes) ── */
+/* ── Load interests & skills ────────────────────────────── */
 async function loadInterestsSkills() {
   try {
     const sid = getSidParam();
@@ -178,11 +201,17 @@ async function loadBookmarks() {
 
 /* ── Avatar helpers ─────────────────────────────────────── */
 function setAvatarSrc(src) {
+  // ── Main profile card ──
   const mainImg  = document.getElementById('avatarImg');
   const mainIcon = document.getElementById('avatarIcon');
   mainImg.src            = src;
   mainImg.style.display  = 'block';
   mainIcon.style.display = 'none';
+
+  // ── Sidebar logo → replaced with avatar ──
+  setSidebarAvatar(src);
+
+  // ── Modal preview ──
   syncModalAvatar(src, true);
 }
 
@@ -312,6 +341,7 @@ function closeEditModal() {
     const mainIcon = document.getElementById('avatarIcon');
     mainImg.style.display  = 'none';
     mainIcon.style.display = '';
+    setSidebarAvatar(null); // restore logo
   }
 }
 
@@ -371,6 +401,11 @@ async function saveProfile() {
 
       document.getElementById('displayName').textContent     = data.username;
       document.getElementById('sidebarUsername').textContent = data.username;
+    }
+
+    // Keep sidebar in sync with the final saved avatar
+    if (profileData.avatar_url) {
+      setSidebarAvatar(profileData.avatar_url);
     }
 
     showToast('Profile saved!', 'success');

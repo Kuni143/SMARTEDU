@@ -91,6 +91,14 @@ function renderLines(string $text): string {
     }
     return $out;
 }
+
+// ── Threshold: character count considered "short" ──
+// If requirements text is under this length, merge exam + enrollment into the box
+$SHORT_THRESHOLD = 300;
+$reqText  = $university['requirements']            ?? '';
+$examText = $university['exam']                    ?? '';
+$enrollText = $university['enrollment_requirements'] ?? '';
+$admissionIsShort = (strlen(trim($reqText)) < $SHORT_THRESHOLD);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -212,7 +220,15 @@ function renderLines(string $text): string {
 
     <div class="detail-cols">
 
+      <!-- ── Left column ── -->
       <div>
+
+        <?php if ($university['campus_branches']): ?>
+        <div class="detail-section">
+          <p class="section-heading">Campus Branches:</p>
+          <ul class="section-list"><?= renderLines($university['campus_branches']) ?></ul>
+        </div>
+        <?php endif; ?>
 
         <?php if (!empty($courses)): ?>
         <div class="detail-section">
@@ -225,13 +241,6 @@ function renderLines(string $text): string {
         </div>
         <?php endif; ?>
 
-        <?php if ($university['campus_branches']): ?>
-        <div class="detail-section">
-          <p class="section-heading">Campus Branches:</p>
-          <ul class="section-list"><?= renderLines($university['campus_branches']) ?></ul>
-        </div>
-        <?php endif; ?>
-
         <?php if ($university['tuition_fees']): ?>
         <div class="detail-section">
           <p class="section-heading">Tuition and Fees Info</p>
@@ -239,15 +248,20 @@ function renderLines(string $text): string {
         </div>
         <?php endif; ?>
 
-        <?php if ($university['exam']): ?>
-        <div class="detail-section">
+        <?php
+        // Only render exam + enrollment in left column when admission box is NOT short
+        // When it IS short, they appear inside the admission box on the right instead
+        ?>
+
+        <?php if ($university['exam'] && !$admissionIsShort): ?>
+        <div class="detail-section" id="examSection">
           <p class="section-heading">Entrance Exam Details:</p>
           <ul class="section-list"><?= renderLines($university['exam']) ?></ul>
         </div>
         <?php endif; ?>
 
-        <?php if ($university['enrollment_requirements']): ?>
-        <div class="detail-section">
+        <?php if ($university['enrollment_requirements'] && !$admissionIsShort): ?>
+        <div class="detail-section" id="enrollSection">
           <p class="section-heading">Enrollment Requirements</p>
           <ul class="section-list"><?= renderLines($university['enrollment_requirements']) ?></ul>
         </div>
@@ -262,10 +276,29 @@ function renderLines(string $text): string {
 
       </div>
 
-      <?php if ($university['requirements']): ?>
+      <!-- ── Right column: Admission box ── -->
+      <?php if ($university['requirements'] || ($admissionIsShort && ($examText || $enrollText))): ?>
       <div class="admission-box">
+
+        <?php if ($university['requirements']): ?>
         <p class="section-heading">Admission Requirements:</p>
         <ul class="section-list adm-step-list"><?= renderLines($university['requirements']) ?></ul>
+        <?php endif; ?>
+
+        <?php if ($admissionIsShort && $examText): ?>
+        <div class="admission-merged-section">
+          <p class="section-heading">Entrance Exam Details:</p>
+          <ul class="section-list adm-step-list"><?= renderLines($examText) ?></ul>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($admissionIsShort && $enrollText): ?>
+        <div class="admission-merged-section">
+          <p class="section-heading">Enrollment Requirements:</p>
+          <ul class="section-list adm-step-list"><?= renderLines($enrollText) ?></ul>
+        </div>
+        <?php endif; ?>
+
       </div>
       <?php endif; ?>
 
