@@ -1,9 +1,4 @@
 <?php
-// ── dashb_admin.php ───────────────────────────────────
-// Compatible with MariaDB 10.4+ (XAMPP default).
-// Uses a numbers table approach instead of WITH RECURSIVE
-// to avoid MariaDB named-parameter bugs inside CTEs.
-
 require_once __DIR__ . '/config/db.php';
 
 $allowedSentiments = [
@@ -16,10 +11,7 @@ $allowedRanges = [
   '41-60' => [41, 60],
 ];
 
-// ── Helper: fetch tally data (MariaDB-safe) ───────────
 function fetchTally(PDO $pdo, int $start, int $end, string $sentiment): array {
-  // Build the question-number rows inline using UNION ALL
-  // so we never rely on CTE named parameters in MariaDB.
   $unions = [];
   for ($i = $start; $i <= $end; $i++) {
     $unions[] = "SELECT $i AS n";
@@ -42,7 +34,6 @@ function fetchTally(PDO $pdo, int $start, int $end, string $sentiment): array {
   return $stmt->fetchAll();
 }
 
-// ── AJAX mode ─────────────────────────────────────────
 if (isset($_GET['ajax'])) {
   header('Content-Type: application/json');
 
@@ -76,8 +67,6 @@ if (isset($_GET['ajax'])) {
   exit;
 }
 
-// ── Page-load: initial data for range 1-20 ───────────
-// (matches the first active range button in the HTML)
 $initSentiment = 'Strongly Agree';
 $initRange     = '1-20';
 [$initStart, $initEnd] = $allowedRanges[$initRange];
@@ -128,6 +117,88 @@ $initDataJson   = json_encode($initData);
 </head>
 <body>
 
+<!-- ── Logout Confirmation Modal ── -->
+<div id="logout-overlay" style="
+  display:none;position:fixed;inset:0;
+  background:rgba(6,22,133,0.18);
+  z-index:9998;
+  align-items:center;justify-content:center;
+">
+  <div style="
+    background:#fff;border-radius:20px;
+    padding:32px 28px 24px;
+    width:100%;max-width:360px;
+    box-shadow:0 8px 40px rgba(6,22,133,0.16);
+    position:relative;
+    font-family:'Sora',sans-serif;
+  ">
+    <button onclick="closeLogoutModal()" style="
+      position:absolute;top:16px;right:18px;
+      background:none;border:none;cursor:pointer;
+      color:#8b9fd4;font-size:20px;line-height:1;
+    ">&#x2715;</button>
+
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;">
+      <span style="
+        width:38px;height:38px;border-radius:50%;
+        background:#dbe8fb;
+        display:flex;align-items:center;justify-content:center;
+        flex-shrink:0;
+      ">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="#4a72c4" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="8"/>
+          <line x1="12" y1="12" x2="12" y2="16"/>
+        </svg>
+      </span>
+      <span style="font-size:15px;font-weight:600;color:#1a2140;">
+        Are you sure you want to log out?
+      </span>
+    </div>
+
+    <div style="height:1px;background:#e8ecf5;margin-bottom:20px;"></div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:16px;">
+      <button onclick="closeLogoutModal()" style="
+        height:40px;padding:0 24px;border-radius:20px;
+        border:none;background:#dbe8fb;
+        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
+        color:#4a72c4;cursor:pointer;
+        transition:opacity 0.15s;
+      ">Cancel</button>
+      <button onclick="confirmLogout()" style="
+        height:40px;padding:0 24px;border-radius:20px;
+        border:none;background:none;
+        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
+        color:#061685;cursor:pointer;
+        transition:opacity 0.15s;
+      ">Log Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Logout Toast ── -->
+<div id="lo-toast" style="
+  position:fixed;top:24px;right:24px;z-index:9999;
+  display:flex;align-items:center;gap:12px;
+  background:#fff;border:2px solid #b23b3b;border-radius:999px;
+  padding:12px 20px 12px 14px;
+  font-family:'Sora',sans-serif;font-size:13.5px;font-weight:600;color:#2d4a30;
+  box-shadow:0 4px 20px rgba(0,0,0,0.10);
+  transform:translateY(-120px);opacity:0;
+  transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1),opacity 0.35s ease;
+  pointer-events:none;
+" aria-live="polite">
+  <span style="width:24px;height:24px;background:#b23b3b;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <!-- Replace your current SVG with this -->
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+  </span>
+  <span>Ending your session. Please wait..</span>
+  <button onclick="loCloseToast()" style="background:none;border:none;cursor:pointer;font-size:15px;color:#b23b3b;margin-left:4px;line-height:1;pointer-events:all;">&#x2715;</button>
+</div>
+
 <!-- ── Navbar ── -->
 <nav class="topnav">
   <a class="topnav-logo" href="dashb_admin.php">
@@ -138,7 +209,7 @@ $initDataJson   = json_encode($initData);
     <a href="dashb_admin.php" class="topnav-link active">Dashboard</a>
     <a href="admin_univs.php" class="topnav-link">University</a>
   </div>
-  <button class="topnav-logout" onclick="window.location.href='admin_login.php'">
+  <button class="topnav-logout" onclick="adminLogout()">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
       <polyline points="16 17 21 12 16 7"/>
@@ -150,12 +221,10 @@ $initDataJson   = json_encode($initData);
 
 <div class="page">
 
-  <!-- Welcome -->
   <div class="welcome">
     <h1>Welcome Back, Admin!</h1>
   </div>
 
-  <!-- Stat cards -->
   <div class="stats-row">
     <div class="stat-card">
       <div class="stat-icon blue">
@@ -201,7 +270,6 @@ $initDataJson   = json_encode($initData);
     </div>
   </div>
 
-  <!-- Chart card -->
   <div class="chart-card">
     <div class="chart-header">
       <span class="chart-title">Student Insights</span>
@@ -214,7 +282,6 @@ $initDataJson   = json_encode($initData);
           <?php endforeach; ?>
         </select>
         <div class="range-group">
-          <!-- Active matches $initRange = '1-20' -->
           <button class="range-btn active" onclick="setRange('1-20',this)">1–20</button>
           <button class="range-btn"        onclick="setRange('21-40',this)">21–40</button>
           <button class="range-btn"        onclick="setRange('41-60',this)">41–60</button>
@@ -241,12 +308,11 @@ $initDataJson   = json_encode($initData);
 </div>
 
 <script>
-// ── PHP-seeded initial data ───────────────────────────
+// ── Chart ─────────────────────────────────────────────
 var initLabels    = <?= $initLabelsJson ?>;
 var initData      = <?= $initDataJson ?>;
 var initSentiment = <?= json_encode($initSentiment) ?>;
 
-// Must match $initRange in PHP
 var currentRange     = '1-20';
 var currentSentiment = initSentiment;
 var isFetching       = false;
@@ -259,7 +325,6 @@ var colors = {
   'Strongly Disagree': { stroke:'#c06030', fill:'rgba(192,96,48,0.12)'   },
 };
 
-// ── Init chart ────────────────────────────────────────
 var ctx   = document.getElementById('insightsChart').getContext('2d');
 var c     = colors[currentSentiment];
 var chart = new Chart(ctx, {
@@ -316,7 +381,6 @@ var chart = new Chart(ctx, {
 
 checkEmpty(initData);
 
-// ── Helpers ───────────────────────────────────────────
 function checkEmpty(data) {
   var empty = data.every(function(v){ return v === 0; });
   document.getElementById('emptyState').classList.toggle('visible', empty);
@@ -329,7 +393,6 @@ function setLoading(on) {
     .forEach(function(b){ b.disabled = on; });
 }
 
-// ── AJAX fetch ────────────────────────────────────────
 function fetchChart() {
   if (isFetching) return;
   isFetching = true;
@@ -345,12 +408,10 @@ function fetchChart() {
     .then(function(r){ return r.json(); })
     .then(function(json) {
       if (json.error) throw new Error(json.error);
-
       var data   = json.data;
       var labels = json.labels;
       var maxVal = Math.max.apply(null, data.concat([10]));
       var c      = colors[currentSentiment];
-
       chart.data.labels                            = labels;
       chart.data.datasets[0].data                 = data;
       chart.data.datasets[0].label                = currentSentiment;
@@ -366,7 +427,6 @@ function fetchChart() {
     .finally(function(){ isFetching = false; setLoading(false); });
 }
 
-// ── Filter handlers ───────────────────────────────────
 function setRange(range, btn) {
   currentRange = range;
   document.querySelectorAll('.range-btn')
@@ -379,6 +439,39 @@ function changeSentiment(val) {
   currentSentiment = val;
   fetchChart();
 }
+
+// ── Logout modal ──────────────────────────────────────
+function adminLogout() {
+  var overlay = document.getElementById('logout-overlay');
+  overlay.style.display = 'flex';
+}
+function closeLogoutModal() {
+  document.getElementById('logout-overlay').style.display = 'none';
+}
+document.getElementById('logout-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogoutModal();
+});
+
+// ── Confirmed: toast then redirect ───────────────────
+var loTimer = null;
+function confirmLogout() {
+  closeLogoutModal();
+  var t = document.getElementById('lo-toast');
+  t.style.transform     = 'translateY(0)';
+  t.style.opacity       = '1';
+  t.style.pointerEvents = 'all';
+  loTimer = setTimeout(function() {
+    window.location.href = 'admin_logout.php';
+  }, 1800);
+}
+function loCloseToast() {
+  clearTimeout(loTimer);
+  var t = document.getElementById('lo-toast');
+  t.style.transform     = 'translateY(-120px)';
+  t.style.opacity       = '0';
+  t.style.pointerEvents = 'none';
+}
 </script>
+
 </body>
 </html>

@@ -231,11 +231,11 @@ function renderList() {
     };
     var left = '<div class="uni-row-left"><span>' + escHtml(u.name) + '</span>'
       + (u.type ? '<span class="type-badge">' + escHtml(TYPE_FULL[u.type] || u.type) + '</span>' : '') + '</div>';
-        row.innerHTML = left;
-        list.appendChild(row);
-        if (u.id == activeId) list.appendChild(buildDetail(u));
-      });
-    }
+    row.innerHTML = left;
+    list.appendChild(row);
+    if (u.id == activeId) list.appendChild(buildDetail(u));
+  });
+}
 
 // ── Toggle detail ─────────────────────────────────────
 function toggleDetail(id) {
@@ -250,7 +250,7 @@ function buildDetail(u) {
     'Caloocan','Muntinlupa','Pasig','Mandaluyong','San Juan','Pasay',
     'Marikina','Para\u00f1aque','Valenzuela','Malabon'];
 
-var TYPE_MAP = [
+  var TYPE_MAP = [
     { value: 'LUC',     label: 'Local Universities and Colleges' },
     { value: 'OGS',     label: 'Other Government Schools' },
     { value: 'SUC',     label: 'State Universities and Colleges' },
@@ -264,6 +264,7 @@ var TYPE_MAP = [
   var locOpts = LOCATIONS.map(function(l) {
     return '<option' + (l===u.location?' selected':'') + '>' + escHtml(l) + '</option>';
   }).join('');
+
   var courseTags = (u.courses||[]).map(function(c) {
     return '<span class="course-tag">' + escHtml(c) + '</span>';
   }).join('');
@@ -277,7 +278,14 @@ var TYPE_MAP = [
 
       <div class="detail-row">
         <span class="detail-label">University Name</span>
-        <span class="detail-value bold">${escHtml(u.name)}</span>
+        <input
+          type="text"
+          id="d-name"
+          class="detail-name-input"
+          value="${escHtml(u.name)}"
+          oninput="markDirty()"
+          placeholder="University name..."
+        />
       </div>
       <div class="detail-row">
         <span class="detail-label">Institution Type</span>
@@ -356,7 +364,7 @@ var TYPE_MAP = [
     <div class="detail-actions">
       <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
       <button class="btn-save" id="btn-save" onclick="saveUniversity()" disabled>Save Changes</button>
-      <button class="btn-delete" onclick="deleteUniversity()">Delete University</button>
+      <button class="btn-delete" onclick="openDeleteModal()">Delete University</button>
     </div>`;
   return card;
 }
@@ -372,8 +380,18 @@ function cancelEdit() { activeId=null; isDirty=false; renderList(); }
 function saveUniversity() {
   var u = universities.find(function(x){ return x.id==activeId; });
   if (!u) return;
+
+  var nameInput = document.getElementById('d-name');
+  var newName   = nameInput ? nameInput.value.trim() : u.name;
+  if (!newName) {
+    nameInput.focus();
+    showToast('error', 'University name cannot be empty.');
+    return;
+  }
+
   var payload = {
     id:                      u.id,
+    name:                    newName,
     type:                    document.getElementById('d-type').value,
     location:                document.getElementById('d-location').value,
     description:             document.getElementById('d-description').value,
@@ -392,7 +410,7 @@ function saveUniversity() {
   .then(function(r){ return r.json(); })
   .then(function(json) {
     if (!json.success) throw new Error(json.error);
-    // Update local state
+    u.name                    = payload.name;
     u.type                    = payload.type;
     u.location                = payload.location;
     u.description             = payload.description;
@@ -409,9 +427,20 @@ function saveUniversity() {
   .catch(function(err){ showToast('error','Save failed: '+err.message); });
 }
 
-// ── Delete ────────────────────────────────────────────
-function deleteUniversity() {
-  if (!confirm('Are you sure you want to delete this university?')) return;
+// ── Delete modal ──────────────────────────────────────
+function openDeleteModal() {
+  var u = universities.find(function(x){ return x.id==activeId; });
+  if (!u) return;
+  // Set the university name in the modal
+  var nameEl = document.getElementById('delete-modal-name');
+  if (nameEl) nameEl.textContent = u.name;
+  document.getElementById('delete-modal').style.display = 'flex';
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').style.display = 'none';
+}
+function confirmDelete() {
+  closeDeleteModal();
   fetch('admin_univs.php?action=delete', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({id: activeId})
@@ -420,8 +449,8 @@ function deleteUniversity() {
   .then(function(json) {
     if (!json.success) throw new Error(json.error);
     universities = universities.filter(function(u){ return u.id!=activeId; });
-    activeId=null;
-    showToast('success','University deleted.');
+    activeId = null;
+    showToast('success','University deleted successfully.');
     renderList();
   })
   .catch(function(err){ showToast('error','Delete failed: '+err.message); });
@@ -546,6 +575,7 @@ function closeToast(el) {
 // Close modals on overlay click
 document.getElementById('add-modal').addEventListener('click',function(e){ if(e.target===this) closeAddModal(); });
 document.getElementById('courses-modal').addEventListener('click',function(e){ if(e.target===this) closeCoursesModal(); });
+document.getElementById('delete-modal').addEventListener('click',function(e){ if(e.target===this) closeDeleteModal(); });
 
 // ── Init ──────────────────────────────────────────────
 updateTypeFilterLabel();

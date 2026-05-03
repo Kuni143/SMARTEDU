@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-/* ── DB config ── */
 $host   = 'localhost';
 $dbname = 'smartedu';
 $user   = 'root';
@@ -21,12 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } else {
 
-        /* ── Rate limiting via session ── */
         if (!isset($_SESSION['login_attempts'])) $_SESSION['login_attempts'] = 0;
         if (!isset($_SESSION['lockout_until']))  $_SESSION['lockout_until']  = 0;
 
         $maxAttempts = 3;
-        $lockoutSecs = 5 * 60; // 5 minutes
+        $lockoutSecs = 5 * 60;
 
         if (time() < $_SESSION['lockout_until']) {
             $remaining  = ceil(($_SESSION['lockout_until'] - time()) / 60);
@@ -34,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $locked     = true;
 
         } else {
-            /* ── Connect to DB ── */
             try {
                 $pdo = new PDO(
                     "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
@@ -47,15 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($admin && password_verify($password, $admin['password_hash'])) {
-                    /* ── Success ── */
                     $_SESSION['login_attempts'] = 0;
                     $_SESSION['lockout_until']  = 0;
                     $_SESSION['admin_id']       = $admin['id'];
                     $_SESSION['admin_username'] = $admin['username'];
                     $loginSuccess = true;
+                    /* ── NO header redirect here anymore ── */
 
                 } else {
-                    /* ── Failed attempt ── */
                     $_SESSION['login_attempts']++;
                     $used      = $_SESSION['login_attempts'];
                     $remaining = $maxAttempts - $used;
@@ -74,12 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-
-    /* Redirect on success — no HTML rendered */
-    if ($loginSuccess) {
-        header('Location: dashb_admin.php');
-        exit;
-    }
 }
 ?>
 <!DOCTYPE html>
@@ -95,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
 
-<!-- Toast -->
+<!-- ── Login Success Toast ── -->
 <div class="toast" id="toast">
   <div class="toast-icon">
     <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -103,25 +93,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </svg>
   </div>
   <div class="toast-body">
-    <p>Login successful.<br>Welcome back, Admin!</p>
+    <p>Login successful! Redirecting...</p>
   </div>
   <button class="toast-close" onclick="closeToast()">&#x2715;</button>
 </div>
 
 <div class="page-wrapper">
 
-  <!-- Logo -->
   <a class="logo" href="admin_login.php">
     <img src="pics/logo.png" alt="SmartEdu Logo" />
     <span class="logo-name">SmartEdu</span>
   </a>
 
-  <!-- Left illustration -->
   <div class="illustration">
     <img src="pics/login.png" alt="Login illustration" />
   </div>
 
-  <!-- Right card -->
   <div class="right-panel">
     <div class="card">
       <h1>Welcome Back<br>Admin!</h1>
@@ -155,7 +142,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </button>
         </div>
 
-        <!-- Error row — populated by PHP on page load or JS on empty check -->
         <div class="error-row<?= $loginError ? ' visible' : '' ?>" id="error-row">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
@@ -177,6 +163,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
 </div>
+
+<?php if ($loginSuccess): ?>
+<script>
+  /* Fire toast immediately, redirect after 1.8s */
+  window.addEventListener('DOMContentLoaded', function() {
+    showToast();
+    setTimeout(function() {
+      window.location.href = 'dashb_admin.php';
+    }, 1800);
+  });
+</script>
+<?php endif; ?>
 
 <script src="JS/admin_login.js"></script>
 
