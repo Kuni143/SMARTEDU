@@ -93,7 +93,7 @@ html, body {
   display: flex; align-items: center; gap: 10px;
   z-index: 100; text-decoration: none;
 }
-.nav-logo img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
+.nav-logo img { width: 52px; height: 52px; object-fit: cover; }
 .nav-logo span { font-size: 15px; font-weight: 600; color: #101d89; }
 .hamburger { display: flex; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; margin-left: auto; }
 .hamburger span { display: block; width: 28px; height: 3px; background: #101d89; border-radius: 2px; transition: opacity 0.2s; }
