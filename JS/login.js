@@ -11,7 +11,23 @@ function togglePw(id, btn) {
   svg.innerHTML = hidden ? eyeClosed : eyeOpen;
 }
 
-// Client-side empty-field check before submit
+// ── Clear fields on page load if server returned a credential error ──
+(function () {
+  var errorRow  = document.getElementById('error-row');
+  if (!errorRow) return;
+
+  var lockout   = parseInt(errorRow.getAttribute('data-lockout') || '0', 10);
+  var hasError  = errorRow.classList.contains('visible');
+
+  // Only clear on a credential/server error, not on lockout
+  // (lockout keeps fields disabled anyway, no need to clear)
+  if (hasError && lockout === 0) {
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+  }
+})();
+
+// ── Client-side empty-field check before submit ──
 document.querySelector('form').addEventListener('submit', function(e) {
   var identifier = document.getElementById('username').value.trim();
   var password   = document.getElementById('password').value;
@@ -20,12 +36,14 @@ document.querySelector('form').addEventListener('submit', function(e) {
 
   if (!identifier || !password) {
     e.preventDefault();
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
     errorText.textContent = 'Please enter your username/email and password.';
     errorRow.classList.add('visible');
   }
 });
 
-// Lockout countdown timer
+// ── Lockout countdown timer ──
 (function () {
   var errorRow = document.getElementById('error-row');
   if (!errorRow) return;
@@ -55,7 +73,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
   }, 1000);
 })();
 
-// Login success toast + redirect
+// ── Login success toast + redirect ──
 (function () {
   var toast    = document.getElementById('loginToast');
   var redirect = document.getElementById('loginRedirect');

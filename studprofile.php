@@ -197,8 +197,8 @@ try {
     </div>
     <div class="modal-divider"></div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
-      <button class="btn-confirm" onclick="window.location.href='logout.php'">Log Out</button>
+      <button class="btn-confirm" onclick="window.location.href='logout.php'">Yes</button>
+      <button class="btn-cancel" onclick="closeLogoutModal()">No</button>
     </div>
   </div>
 </div>

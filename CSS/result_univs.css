@@ -154,7 +154,7 @@ html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; ba
 .modal-text { font-family:'Inter',sans-serif; font-size:14px; color:#222; line-height:1.55; font-weight:500; }
 .modal-divider { height:1px; background:#e8ecf5; margin-bottom:16px; }
 .modal-actions { display:flex; justify-content:flex-end; gap:10px; }
-.btn-cancel { border-radius:20px; padding:8px 22px; font-family:'Sora',sans-serif; font-size:13px; font-weight:600; cursor:pointer; border:none; background:#8bb2fd; color:#fff; transition:opacity 0.2s; }
+.btn-cancel { border-radius:20px; padding:8px 22px; font-family:'Sora',sans-serif; font-size:13px; font-weight:600; cursor:pointer; border:none; background:#061685; color:#fff; transition:opacity 0.2s; }
 .btn-cancel:hover { opacity:0.85; }
 .btn-confirm { border-radius:20px; padding:8px 22px; font-family:'Sora',sans-serif; font-size:13px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#061685; }
 .btn-confirm:hover { text-decoration:underline; }

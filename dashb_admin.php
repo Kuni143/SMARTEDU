@@ -161,20 +161,21 @@ $initDataJson   = json_encode($initData);
     <div style="height:1px;background:#e8ecf5;margin-bottom:20px;"></div>
 
     <div style="display:flex;align-items:center;justify-content:flex-end;gap:16px;">
-      <button onclick="closeLogoutModal()" style="
-        height:40px;padding:0 24px;border-radius:20px;
-        border:none;background:#dbe8fb;
-        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
-        color:#4a72c4;cursor:pointer;
-        transition:opacity 0.15s;
-      ">Cancel</button>
+
       <button onclick="confirmLogout()" style="
         height:40px;padding:0 24px;border-radius:20px;
         border:none;background:none;
         font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
         color:#061685;cursor:pointer;
         transition:opacity 0.15s;
-      ">Log Out</button>
+      ">Yes</button>
+      <button onclick="closeLogoutModal()" style="
+        height:40px;padding:0 24px;border-radius:20px;
+        border:none;background:#dbe8fb;
+        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
+        color:#4a72c4;cursor:pointer;
+        transition:opacity 0.15s;
+      ">No</button>
     </div>
   </div>
 </div>

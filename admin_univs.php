@@ -194,20 +194,20 @@ if (isset($_GET['action'])) {
     <div style="height:1px;background:#e8ecf5;margin-bottom:20px;"></div>
 
     <div style="display:flex;align-items:center;justify-content:flex-end;gap:16px;">
-      <button onclick="closeLogoutModal()" style="
-        height:40px;padding:0 24px;border-radius:20px;
-        border:none;background:#dbe8fb;
-        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
-        color:#4a72c4;cursor:pointer;
-        transition:opacity 0.15s;
-      ">Cancel</button>
       <button onclick="confirmLogout()" style="
         height:40px;padding:0 24px;border-radius:20px;
         border:none;background:none;
         font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
         color:#061685;cursor:pointer;
         transition:opacity 0.15s;
-      ">Log Out</button>
+      ">Yes</button>
+      <button onclick="closeLogoutModal()" style="
+        height:40px;padding:0 24px;border-radius:20px;
+        border:none;background:#dbe8fb;
+        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
+        color:#4a72c4;cursor:pointer;
+        transition:opacity 0.15s;
+      ">No</button>
     </div>
   </div>
 </div>
@@ -255,7 +255,7 @@ if (isset($_GET['action'])) {
     </div>
 
     <p style="font-size:13.5px;color:#5a6a9a;margin-bottom:8px;line-height:1.6;">
-      Are you sure you want to delete
+      Are you sure you want to delete this school from the list?
     </p>
     <p id="delete-modal-name" style="
       font-size:14px;font-weight:700;color:#061685;

@@ -159,7 +159,6 @@ $attempts_used = getAttempts();
 $locked        = isLockedOut();
 
 function h($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
-$old_identifier = h($_POST['username'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -199,7 +198,7 @@ $old_identifier = h($_POST['username'] ?? '');
             name="username"
             id="username"
             placeholder="Username or Email"
-            value="<?= $old_identifier ?>"
+            value=""
             <?= $locked ? 'disabled' : '' ?>
             autocomplete="username"
           />
@@ -243,14 +242,7 @@ $old_identifier = h($_POST['username'] ?? '');
             <p id="error-text"></p>
           </div>
         <?php endif; ?>
-
-        <!-- Attempt counter hint -->
-        <?php if ($attempts_used > 0 && !$locked): ?>
-          <p class="attempts-row visible"><?= $attempts_used ?>/<?= MAX_ATTEMPTS ?> attempts used</p>
-        <?php else: ?>
-          <p class="attempts-row" id="attempts-row"></p>
-        <?php endif; ?>
-
+        
         <a href="forgetpass.php" class="forgot">Forgot Password?</a>
 
         <div class="divider">

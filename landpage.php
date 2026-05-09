@@ -35,16 +35,14 @@
       </p>
 
       <div class="button-row">
-        <a class="btn-primary" href="signup.php">Get my Recommendation →</a>
+        <a class="btn-primary" href="signup.php">Sign up to explore your best-fit schools →</a>
         <a class="btn-secondary" href="login.php">Log In →</a>
       </div>
     </div>
 
     <!-- RIGHT -->
     <div class="about-image">
-      <a href="admin_login.php">
         <img src="pics/abtpic.png" alt="Path Illustration">
-      </a>
     </div>
 
   </section>

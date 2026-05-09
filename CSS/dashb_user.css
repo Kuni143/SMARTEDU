@@ -92,11 +92,11 @@ html, body { width: 100%; height: 100%; font-family: 'Sora', sans-serif; backgro
 .modal-divider { height: 1px; background: #e8ecf5; margin-bottom: 16px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .btn-cancel, .btn-confirm { border-radius: 20px; padding: 8px 22px; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.2s; }
-.btn-cancel { background: #8bb2fd; color: #fff; }
+.btn-cancel { background: #061685; color: #fff; }
 .btn-cancel:hover { opacity: 0.85; }
 .btn-confirm { background: transparent; color: #061685; }
 .btn-confirm:hover { text-decoration: underline; }
-.btn-yes { background: #8bb2fd; color: #fff; }
+.btn-yes { background: #061685; color: #fff; }
 .btn-no  { background: transparent; color: #061685; }
 
 @media (max-width: 900px) { .main { grid-template-columns: 1fr; padding: 16px 20px 48px; } .retake-img { width: 110px; height: 90px; } }

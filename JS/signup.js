@@ -27,7 +27,84 @@ function checkPasswords() {
   }
 }
 
-// ── Live username availability check ──────────────────────────────────────────
+// ── Terms modal ───────────────────────────────────────────────────────────────
+var termsScrolled = false;   // tracks whether the user has reached the bottom
+
+function openTerms() {
+  var modal = document.getElementById('termsModal');
+  var body  = document.getElementById('termsModalBody');
+  var btn   = document.getElementById('btnIUnderstand');
+  var hint  = document.getElementById('termsScrollHint');
+
+  if (!modal) return;
+
+  // Reset scroll position every time modal is opened
+  if (body) body.scrollTop = 0;
+
+  // Reset button & hint state based on whether user has ever scrolled to bottom
+  // (we reset each open so they must re-read if they close & reopen)
+  termsScrolled = false;
+  if (btn)  { btn.disabled = true;  btn.classList.remove('enabled'); }
+  if (hint) { hint.classList.remove('hidden'); }
+
+  modal.classList.add('open');
+
+  // Attach scroll listener (remove any old one first to avoid duplicates)
+  if (body) {
+    body.removeEventListener('scroll', onTermsScroll);
+    body.addEventListener('scroll', onTermsScroll);
+    // Edge-case: content shorter than the container (nothing to scroll)
+    checkTermsBottom(body);
+  }
+}
+
+function onTermsScroll() {
+  checkTermsBottom(this);
+}
+
+function checkTermsBottom(body) {
+  // "Reached the end" = scrolled within 20px of the bottom
+  var nearBottom = body.scrollTop + body.clientHeight >= body.scrollHeight - 20;
+  if (nearBottom && !termsScrolled) {
+    termsScrolled = true;
+    var btn  = document.getElementById('btnIUnderstand');
+    var hint = document.getElementById('termsScrollHint');
+    if (btn)  { btn.disabled = false; btn.classList.add('enabled'); }
+    if (hint) { hint.classList.add('hidden'); }
+  }
+}
+
+/**
+ * Called when "I Understand" is clicked.
+ * Closes the modal and checks the Terms checkbox automatically.
+ */
+function acceptTerms() {
+  if (!termsScrolled) return;   // guard — shouldn't be reachable but just in case
+
+  // Auto-check the checkbox
+  var checkbox = document.getElementById('terms');
+  if (checkbox) {
+    checkbox.checked = true;
+    // Clear any visible terms error
+    var termsErr = document.getElementById('terms-error');
+    if (termsErr) { termsErr.classList.remove('visible'); termsErr.textContent = ''; }
+  }
+
+  closeTerms();
+}
+
+function closeTerms() {
+  var modal = document.getElementById('termsModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function closeTermsOutside(e) {
+  if (e.target === document.getElementById('termsModal')) {
+    closeTerms();
+  }
+}
+
+// ── Live username availability check ─────────────────────────────────────────
 (function () {
   var usernameInput = document.getElementById('username');
   var debounceTimer;
@@ -40,7 +117,6 @@ function checkPasswords() {
     var val   = usernameInput.value.trim();
     var errEl = document.getElementById('username-error');
 
-    // Clear state when field is empty or too short
     if (val.length < 3) {
       usernameInput.classList.remove('input-error');
       errEl.textContent = '';
