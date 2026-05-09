@@ -170,17 +170,19 @@ function strandBonus(string $studentStrand, string $courseStrand): float {
 // strand_kw  → keyword used for strandBonus lookup
 $COURSE_PROFILES = [
 
-    // ── STEM / Science ──────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════
+    // SCIENCE & HEALTH
+    // ════════════════════════════════════════════════════════════════════
     'BS Biology' => [
         'field'     => 'Science & Research',
-        'skills_q'  => [16, 20, 25, 27, 30],          // analytical, understand, computers, lead, research
-        'interest_q'=> [1, 2, 8, 9, 51, 57, 59],      // math, science, health, data, problem-solving, tech, learning
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 2, 8, 9, 51, 57, 59],
         'strand_kw' => 'Science',
     ],
     'BS Nursing' => [
         'field'     => 'Health & Medicine',
-        'skills_q'  => [17, 18, 23, 24, 28],           // communication, teamwork, decisions, organise, pressure
-        'interest_q'=> [4, 8, 15, 52, 55, 59],         // helping people, health, teaching, helping, stable, learning
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 8, 15, 52, 55, 59],
         'strand_kw' => 'Health',
     ],
     'BS Medical Technology' => [
@@ -195,11 +197,127 @@ $COURSE_PROFILES = [
         'interest_q'=> [1, 2, 8, 9, 55, 59],
         'strand_kw' => 'Health',
     ],
+    'BS Physical Therapy' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 8, 15, 52, 55, 59],
+        'strand_kw' => 'Health',
+    ],
+    'BS Radiologic Technology' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [2, 8, 9, 51, 55, 59],
+        'strand_kw' => 'Health',
+    ],
+    'BS Nutrition and Dietetics' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [16, 20, 25, 26, 27],
+        'interest_q'=> [2, 8, 9, 51, 55, 59],
+        'strand_kw' => 'Health',
+    ],
+    'BS Psychology' => [
+        'field'     => 'Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 27],
+        'interest_q'=> [4, 8, 12, 15, 52, 59],
+        'strand_kw' => 'Social',
+    ],
+    'BS Chemistry' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 2, 9, 51, 57, 59],
+        'strand_kw' => 'Science',
+    ],
+    'BS Biochemistry' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 2, 8, 9, 51, 57],
+        'strand_kw' => 'Science',
+    ],
+    'BS Applied Physics' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 2, 9, 10, 51, 57],
+        'strand_kw' => 'Science',
+    ],
+    'BS Physics' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 2, 9, 10, 51, 57],
+        'strand_kw' => 'Science',
+    ],
+    'BS Mathematics' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 9, 51, 57, 59],
+        'strand_kw' => 'Science',
+    ],
+    'BS Statistics' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 9, 51, 57, 59],
+        'strand_kw' => 'Science',
+    ],
+    'BS Astronomy' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 2, 9, 51, 57],
+        'strand_kw' => 'Science',
+    ],
+    'BS Molecular Biology and Biotechnology' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 2, 8, 9, 51, 57],
+        'strand_kw' => 'Science',
+    ],
+    'Doctor of Medicine' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [16, 17, 20, 23, 25],
+        'interest_q'=> [2, 8, 9, 51, 55, 59],
+        'strand_kw' => 'Medicine',
+    ],
+    'Doctor of Dental Medicine' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [17, 18, 20, 23, 25],
+        'interest_q'=> [2, 8, 9, 51, 55],
+        'strand_kw' => 'Medicine',
+    ],
+    'Doctor of Optometry' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [2, 8, 9, 51, 55],
+        'strand_kw' => 'Medicine',
+    ],
+    'Doctor of Veterinary Medicine' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [16, 17, 20, 23, 25],
+        'interest_q'=> [2, 8, 9, 51, 55],
+        'strand_kw' => 'Medicine',
+    ],
+    'BS Midwifery' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 8, 15, 52, 55],
+        'strand_kw' => 'Health',
+    ],
+    'BS-MD Integrated Program' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [16, 17, 20, 23, 25],
+        'interest_q'=> [2, 8, 9, 51, 55, 59],
+        'strand_kw' => 'Medicine',
+    ],
+    'BS Cosmetic Science' => [
+        'field'     => 'Health & Medicine',
+        'skills_q'  => [16, 20, 25, 26, 27],
+        'interest_q'=> [2, 8, 9, 51, 55],
+        'strand_kw' => 'Science',
+    ],
 
-    // ── Technology / IT ─────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════
+    // TECHNOLOGY & IT
+    // ════════════════════════════════════════════════════════════════════
     'BS Computer Science' => [
         'field'     => 'Technology & IT',
-        'skills_q'  => [16, 20, 21, 25, 27, 30],       // analytical, understand, computers, research
+        'skills_q'  => [16, 20, 21, 25, 27, 30],
         'interest_q'=> [1, 3, 9, 51, 57, 59],
         'strand_kw' => 'Technology',
     ],
@@ -209,20 +327,112 @@ $COURSE_PROFILES = [
         'interest_q'=> [3, 6, 9, 51, 57, 59],
         'strand_kw' => 'Technology',
     ],
-    'AB Communications' => [
-        'field'     => 'Communication & Media',
-        'skills_q'  => [17, 18, 22, 26, 27],
-        'interest_q'=> [7, 11, 15, 52, 54, 59],
-        'strand_kw' => 'Communication',
+    'BS Information Systems' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 21, 22, 25, 27],
+        'interest_q'=> [3, 6, 9, 13, 51, 57],
+        'strand_kw' => 'Technology',
     ],
-    'BA Communication' => [
-        'field'     => 'Communication & Media',
-        'skills_q'  => [17, 18, 22, 26, 27],
-        'interest_q'=> [7, 11, 15, 52, 54, 59],
-        'strand_kw' => 'Communication',
+    'BS Information Management' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 21, 22, 25, 27],
+        'interest_q'=> [3, 6, 9, 13, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Cybersecurity' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 9, 10, 51, 57, 59],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Artificial Intelligence' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 9, 10, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Data Science' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 3, 9, 51, 57, 59],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Blockchain Technology' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 9, 10, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Computer Science and Information Engineering' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 9, 51, 57, 59],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Computer Applications' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 21, 22, 25, 27],
+        'interest_q'=> [3, 6, 9, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Math with Computer' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 9, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Applied Mathematics Major in Data Science' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [1, 3, 9, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Entertainment and Multimedia Computing' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 21, 22, 25, 27],
+        'interest_q'=> [3, 6, 7, 51, 57, 59],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Entertainment & Multimedia Computing' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 21, 22, 25, 27],
+        'interest_q'=> [3, 6, 7, 51, 57, 59],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Game Development' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 21, 22, 25, 27],
+        'interest_q'=> [3, 6, 7, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Animation' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54, 57],
+        'strand_kw' => 'Design',
+    ],
+    'BS Multimedia Arts' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54, 57],
+        'strand_kw' => 'Design',
+    ],
+    'BS Data Science and Business Administration' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 3, 9, 13, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Business Analytics with AI' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 3, 9, 13, 51, 57],
+        'strand_kw' => 'Technology',
     ],
 
-    // ── Engineering ─────────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════
+    // ENGINEERING & TECHNOLOGY
+    // ════════════════════════════════════════════════════════════════════
     'BS Computer Engineering' => [
         'field'     => 'Engineering & Technology',
         'skills_q'  => [16, 20, 21, 25, 27],
@@ -233,6 +443,18 @@ $COURSE_PROFILES = [
         'field'     => 'Engineering & Technology',
         'skills_q'  => [16, 20, 21, 25, 27],
         'interest_q'=> [1, 2, 3, 9, 10, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Electronics & Communications Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 9, 10, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Electronics and Communications Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 9, 10, 51, 57],
         'strand_kw' => 'Engineering',
     ],
     'BS Civil Engineering' => [
@@ -259,6 +481,12 @@ $COURSE_PROFILES = [
         'interest_q'=> [1, 9, 10, 13, 51, 57],
         'strand_kw' => 'Engineering',
     ],
+    'BS Mechanical Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 10, 14, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
     'BS Mechanical Technology' => [
         'field'     => 'Engineering & Technology',
         'skills_q'  => [16, 20, 21, 25, 27],
@@ -283,16 +511,260 @@ $COURSE_PROFILES = [
         'interest_q'=> [10, 13, 14, 51, 57],
         'strand_kw' => 'Technology',
     ],
+    'BS Aeronautical Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 10, 14, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Aerospace Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 10, 14, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Construction Engineering and Management' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 24, 25],
+        'interest_q'=> [1, 10, 13, 14, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Environmental Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [2, 9, 10, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Robotics Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 10, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Mechatronics' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 10, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Geodetic Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 9, 10, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Materials Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 2, 9, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Metallurgical Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 2, 9, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Mining Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 2, 9, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Petroleum Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 2, 9, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Railway Engineering' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 10, 14, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Instrumentation & Control' => [
+        'field'     => 'Engineering & Technology',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 9, 10, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Environmental Science' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [2, 9, 10, 51, 57],
+        'strand_kw' => 'Science',
+    ],
+    'BS Food Technology' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 26, 27],
+        'interest_q'=> [2, 8, 9, 51, 55],
+        'strand_kw' => 'Science',
+    ],
+    'BS Animal Science' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 20, 25, 27, 30],
+        'interest_q'=> [2, 8, 9, 51, 57],
+        'strand_kw' => 'Science',
+    ],
+    'BS Geology' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [2, 9, 10, 51, 57],
+        'strand_kw' => 'Science',
+    ],
+    'BS Geography' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [2, 9, 10, 51, 57],
+        'strand_kw' => 'Science',
+    ],
 
-    // ── Architecture / Design ────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════
+    // ARCHITECTURE & DESIGN
+    // ════════════════════════════════════════════════════════════════════
     'BS Architecture' => [
         'field'     => 'Design & Architecture',
         'skills_q'  => [20, 22, 25, 26, 27],
         'interest_q'=> [6, 7, 10, 51, 54, 59],
         'strand_kw' => 'Architecture',
     ],
+    'BS Interior Design' => [
+        'field'     => 'Design & Architecture',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 10, 51, 54],
+        'strand_kw' => 'Design',
+    ],
+    'BS Landscape Architecture' => [
+        'field'     => 'Design & Architecture',
+        'skills_q'  => [20, 22, 25, 26, 27],
+        'interest_q'=> [6, 7, 10, 51, 54],
+        'strand_kw' => 'Architecture',
+    ],
+    'BS Industrial Design' => [
+        'field'     => 'Design & Architecture',
+        'skills_q'  => [20, 22, 25, 26, 27],
+        'interest_q'=> [6, 7, 10, 51, 54, 57],
+        'strand_kw' => 'Design',
+    ],
+    'Bachelor of Fine Arts – Painting' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54],
+        'strand_kw' => 'Fine Arts',
+    ],
+    'Bachelor of Fine Arts – Visual Communication' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54],
+        'strand_kw' => 'Fine Arts',
+    ],
+    'Bachelor of Fine Arts Major in Studio Arts' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54],
+        'strand_kw' => 'Fine Arts',
+    ],
+    'Bachelor of Multimedia Arts' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54, 57],
+        'strand_kw' => 'Design',
+    ],
+    'Bachelor in Multimedia Arts' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54, 57],
+        'strand_kw' => 'Design',
+    ],
+    'BA Multimedia Arts' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54, 57],
+        'strand_kw' => 'Design',
+    ],
+    'BA Multimedia Arts and Design' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54, 57],
+        'strand_kw' => 'Design',
+    ],
+    'BA Fashion Design and Technology' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54],
+        'strand_kw' => 'Design',
+    ],
+    'BA Fashion Design and Marketing' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [5, 6, 7, 11, 51, 54],
+        'strand_kw' => 'Design',
+    ],
+    'BA Fashion Design and Merchandising' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [5, 6, 7, 11, 51, 54],
+        'strand_kw' => 'Design',
+    ],
+    'BA Film and Visual Effects' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54, 57],
+        'strand_kw' => 'Media',
+    ],
+    'BA Digital Film' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54, 57],
+        'strand_kw' => 'Media',
+    ],
+    'BA Music Production' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54],
+        'strand_kw' => 'Arts',
+    ],
+    'BA Music Production and Sound Design' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54],
+        'strand_kw' => 'Arts',
+    ],
+    'BA Production Design' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 11, 51, 54],
+        'strand_kw' => 'Design',
+    ],
+    'BA Theater Arts' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 26, 27, 28, 29],
+        'interest_q'=> [7, 11, 15, 51, 54],
+        'strand_kw' => 'Arts',
+    ],
+    'Bachelor of Performing Arts Major in Dance' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 26, 27, 28, 29],
+        'interest_q'=> [7, 11, 15, 51, 54],
+        'strand_kw' => 'Arts',
+    ],
+    'BA Broadcast Media' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Media',
+    ],
+    'BA Broadcasting' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
 
-    // ── Business ────────────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════
+    // BUSINESS & FINANCE
+    // ════════════════════════════════════════════════════════════════════
     'BS Accountancy' => [
         'field'     => 'Business & Finance',
         'skills_q'  => [16, 19, 24, 25, 26],
@@ -323,8 +795,398 @@ $COURSE_PROFILES = [
         'interest_q'=> [5, 13, 51, 55, 58],
         'strand_kw' => 'Business',
     ],
+    'BS Management Accounting' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 19, 24, 25, 26],
+        'interest_q'=> [5, 9, 51, 53, 55, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Accounting Information System' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 19, 21, 24, 25],
+        'interest_q'=> [3, 5, 9, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Accounting Technology' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 19, 24, 25, 26],
+        'interest_q'=> [5, 9, 51, 53, 55],
+        'strand_kw' => 'Business',
+    ],
+    'BS Entrepreneurship' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 22, 23, 26],
+        'interest_q'=> [5, 13, 14, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Entrepreneurial Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 22, 23, 26],
+        'interest_q'=> [5, 13, 14, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Economics' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 18, 19, 24, 26],
+        'interest_q'=> [5, 9, 12, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Economics' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 18, 19, 25, 26],
+        'interest_q'=> [5, 9, 12, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Legal Management' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Law',
+    ],
+    'Legal Management' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Law',
+    ],
+    'Juris Doctor' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Law',
+    ],
+    'BS Internal Auditing' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 19, 24, 25, 26],
+        'interest_q'=> [5, 9, 51, 53, 55, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Real Estate Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 22, 24, 26],
+        'interest_q'=> [5, 10, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Marketing' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [5, 11, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Financial Management and Technology' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 18, 19, 21, 24],
+        'interest_q'=> [3, 5, 9, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS International Business' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 22, 23, 26],
+        'interest_q'=> [5, 12, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Customs Administration' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 23, 24, 26],
+        'interest_q'=> [5, 12, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Supply Chain Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 23, 24, 26],
+        'interest_q'=> [5, 10, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Human Resource Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 23, 24, 26],
+        'interest_q'=> [4, 13, 15, 51, 53, 55],
+        'strand_kw' => 'Business',
+    ],
+    'BS Human Resource and Organizational Development' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 23, 24, 26],
+        'interest_q'=> [4, 13, 15, 51, 53, 55],
+        'strand_kw' => 'Business',
+    ],
+    'BS Human Resources and Organizational Development' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 23, 24, 26],
+        'interest_q'=> [4, 13, 15, 51, 53, 55],
+        'strand_kw' => 'Business',
+    ],
+    'BS Social Innovation and Entrepreneurship' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 5, 13, 15, 51, 53],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Financial Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 19, 24, 25, 26],
+        'interest_q'=> [5, 9, 51, 53, 55, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Marketing Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [5, 11, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Human Resource Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 23, 24, 26],
+        'interest_q'=> [4, 13, 15, 51, 53, 55],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Operations Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 23, 24, 26],
+        'interest_q'=> [5, 10, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Management Information System' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 18, 19, 21, 24],
+        'interest_q'=> [3, 5, 9, 13, 51, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Business Economics' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 18, 19, 24, 26],
+        'interest_q'=> [5, 9, 12, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Supply Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 23, 24, 26],
+        'interest_q'=> [5, 10, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Building and Property Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 22, 24, 26],
+        'interest_q'=> [5, 10, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Technology Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 18, 19, 21, 24],
+        'interest_q'=> [3, 5, 9, 13, 51, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Technopreneurship' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 18, 19, 21, 24],
+        'interest_q'=> [3, 5, 9, 13, 51, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration Major in Sustainability' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 23, 24, 26],
+        'interest_q'=> [2, 5, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Business Administration with Specialization in Hospitality' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 23, 24, 26],
+        'interest_q'=> [5, 13, 15, 51, 53, 55],
+        'strand_kw' => 'Business',
+    ],
+    'BS Office Administration Major in Legal Transcription' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 24, 25, 26],
+        'interest_q'=> [5, 13, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Office Administration Major in Airline Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 23, 24, 26],
+        'interest_q'=> [5, 13, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BSBA' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 23, 24, 26],
+        'interest_q'=> [5, 13, 51, 53, 55, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BSBA (Management Analytics)' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 18, 19, 24, 26],
+        'interest_q'=> [5, 9, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BSBA (Marketing Finance, HR)' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 19, 23, 26],
+        'interest_q'=> [5, 11, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BSBA (Marketing Finance, HR, Operations)' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 19, 23, 26],
+        'interest_q'=> [5, 11, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BSBA Business Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 23, 24, 26],
+        'interest_q'=> [5, 13, 51, 53, 55, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BSBA Financial Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [16, 19, 24, 25, 26],
+        'interest_q'=> [5, 9, 51, 53, 55, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BSBA Marketing' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [5, 11, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BSBA Marketing Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [5, 11, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BSHM' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Disaster Risk Management' => [
+        'field'     => 'Public Service',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 12, 13, 15, 52, 56],
+        'strand_kw' => 'Public',
+    ],
+    'BS Mass Communication' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'BS Retail Technology and Consumer Science' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 21, 23, 26],
+        'interest_q'=> [5, 10, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Secretarial Education' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 22, 24, 26],
+        'interest_q'=> [5, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Cooperatives' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 23, 24, 26],
+        'interest_q'=> [4, 5, 13, 15, 51, 56],
+        'strand_kw' => 'Business',
+    ],
+    'BS Transportation Management' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [18, 19, 23, 24, 26],
+        'interest_q'=> [5, 10, 13, 51, 53, 56],
+        'strand_kw' => 'Business',
+    ],
 
-    // ── Social / Humanities ──────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════
+    // COMMUNICATION & MEDIA
+    // ════════════════════════════════════════════════════════════════════
+    'AB Communications' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'BA Communication' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'AB Communication' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'BA Communication Arts' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'BA Communication Research' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'BA Mass Communication' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'AB Mass Communication' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'BA Journalism' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 12, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'BA English Language Studies' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'AB English' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'Bachelor of Arts in English' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'BA Filipinology' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 15, 52, 54, 59],
+        'strand_kw' => 'Communication',
+    ],
+    'AB Integrated Marketing' => [
+        'field'     => 'Communication & Media',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [5, 7, 11, 13, 51, 54],
+        'strand_kw' => 'Communication',
+    ],
+    'BSIT (Regular & Business Analytics)' => [
+        'field'     => 'Technology & IT',
+        'skills_q'  => [16, 19, 21, 25, 27],
+        'interest_q'=> [3, 5, 9, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+
+    // ════════════════════════════════════════════════════════════════════
+    // SOCIAL SCIENCES & HUMANITIES
+    // ════════════════════════════════════════════════════════════════════
     'BA Political Science' => [
         'field'     => 'Law & Social Sciences',
         'skills_q'  => [17, 18, 22, 23, 26],
@@ -337,17 +1199,583 @@ $COURSE_PROFILES = [
         'interest_q'=> [12, 13, 15, 52, 56, 59],
         'strand_kw' => 'Political',
     ],
+    'AB Political Economy' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [9, 12, 13, 52, 56, 59],
+        'strand_kw' => 'Political',
+    ],
+    'BA Political Science Major in Local Government Administration' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Political',
+    ],
+    'BA Political Science Major in Paralegal Studies' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Political',
+    ],
+    'BA Political Science Major in Policy Management' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Political',
+    ],
     'BS Public Administration' => [
         'field'     => 'Public Service',
         'skills_q'  => [17, 18, 23, 26, 29],
         'interest_q'=> [12, 13, 15, 52, 56, 59],
         'strand_kw' => 'Public',
     ],
+    'Bachelor of Public Administration' => [
+        'field'     => 'Public Service',
+        'skills_q'  => [17, 18, 23, 26, 29],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Public',
+    ],
+    'AB Psychology' => [
+        'field'     => 'Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 27],
+        'interest_q'=> [4, 8, 12, 15, 52, 59],
+        'strand_kw' => 'Social',
+    ],
+    'AB Humanities' => [
+        'field'     => 'Social Sciences',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 12, 15, 52, 59],
+        'strand_kw' => 'Social',
+    ],
+    'AB Economics' => [
+        'field'     => 'Social Sciences',
+        'skills_q'  => [16, 18, 19, 25, 26],
+        'interest_q'=> [5, 9, 12, 51, 53, 56],
+        'strand_kw' => 'Social',
+    ],
+    'AB History' => [
+        'field'     => 'Social Sciences',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 12, 15, 52, 59],
+        'strand_kw' => 'Social',
+    ],
+    'AB Philosophy' => [
+        'field'     => 'Social Sciences',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 12, 15, 52, 59],
+        'strand_kw' => 'Social',
+    ],
+    'AB Behavioral Science' => [
+        'field'     => 'Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 27],
+        'interest_q'=> [4, 8, 12, 15, 52, 59],
+        'strand_kw' => 'Social',
+    ],
+    'BA International Studies' => [
+        'field'     => 'Social Sciences',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Social',
+    ],
+    'BA Diplomacy and International Affairs' => [
+        'field'     => 'Public Service',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Political',
+    ],
+    'BA Governance and Public Affairs' => [
+        'field'     => 'Public Service',
+        'skills_q'  => [17, 18, 23, 26, 29],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Public',
+    ],
+    'BS Social Work' => [
+        'field'     => 'Public Service',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 12, 13, 15, 52, 59],
+        'strand_kw' => 'Social',
+    ],
+    'BS Criminology' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [12, 13, 15, 52, 56, 59],
+        'strand_kw' => 'Law',
+    ],
+    'BS Forensic Science' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [16, 17, 20, 23, 25],
+        'interest_q'=> [2, 9, 12, 51, 56, 59],
+        'strand_kw' => 'Science',
+    ],
+    'BS Industrial Security Management' => [
+        'field'     => 'Law & Social Sciences',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [10, 12, 13, 52, 56, 59],
+        'strand_kw' => 'Law',
+    ],
+    'BA History' => [
+        'field'     => 'Social Sciences',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 11, 12, 15, 52, 59],
+        'strand_kw' => 'Social',
+    ],
+    'BA Performing Arts' => [
+        'field'     => 'Design & Arts',
+        'skills_q'  => [22, 26, 27, 28, 29],
+        'interest_q'=> [7, 11, 15, 51, 54],
+        'strand_kw' => 'Arts',
+    ],
+
+    // ════════════════════════════════════════════════════════════════════
+    // EDUCATION
+    // ════════════════════════════════════════════════════════════════════
     'BS Education' => [
         'field'     => 'Education',
         'skills_q'  => [17, 18, 23, 26, 27],
         'interest_q'=> [4, 7, 15, 52, 59],
         'strand_kw' => 'Education',
+    ],
+    'Bachelor of Elementary Education' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 23, 26, 27],
+        'interest_q'=> [4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'Bachelor in Elementary Education' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 23, 26, 27],
+        'interest_q'=> [4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'BEEd' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 23, 26, 27],
+        'interest_q'=> [4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'Bachelor of Secondary Education Major in English' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'Bachelor of Secondary Education Major in Mathematics' => [
+        'field'     => 'Education',
+        'skills_q'  => [16, 17, 18, 26, 27],
+        'interest_q'=> [1, 4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'Bachelor of Secondary Education Major in Social Studies' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 7, 12, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'Bachelor of Secondary Education in English Filipino, and Math' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'BSED' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'BSEd' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'BSED (English Math, Science, Social Studies, Filipino)' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'BS General Education' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [4, 7, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'Bachelor of Physical Education' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 7, 15, 52, 55, 59],
+        'strand_kw' => 'Education',
+    ],
+    'Bachelor of Library and Information Science' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 22, 26, 27],
+        'interest_q'=> [7, 9, 11, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+    'Bachelor of Arts in Ministry' => [
+        'field'     => 'Education',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 7, 12, 15, 52, 59],
+        'strand_kw' => 'Education',
+    ],
+
+    // ════════════════════════════════════════════════════════════════════
+    // HOSPITALITY & TOURISM
+    // ════════════════════════════════════════════════════════════════════
+    'BS Hospitality Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Hospitality & Tourism Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Tourism Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Tourism' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Hotel & Restaurant Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Hotel and Restaurant Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS International Hospitality Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 12, 13, 15, 51, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS International Tourism and Travel Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 12, 13, 15, 51, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Culinary Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 13, 14, 15, 51, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Culinary Arts Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 13, 14, 15, 51, 58],
+        'strand_kw' => 'Business',
+    ],
+    'BS Hospitality and Luxury Management' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [4, 12, 13, 15, 51, 58],
+        'strand_kw' => 'Business',
+    ],
+
+    // ════════════════════════════════════════════════════════════════════
+    // AVIATION & MARITIME
+    // ════════════════════════════════════════════════════════════════════
+    'BS Aircraft Maintenance Technology' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 14, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Avionics Technology' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 14, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Aviation Electronics Technology' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 14, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'Aviation Electronics Technology' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 14, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Air Transportation' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [10, 12, 13, 51, 57, 58],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Aviation Major in Flying' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [16, 20, 21, 24, 25],
+        'interest_q'=> [10, 14, 51, 57, 59],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Aviation Management' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [17, 18, 19, 23, 26],
+        'interest_q'=> [5, 10, 13, 51, 53, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Aviation Unmanned Aerial Systems' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 14, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Aviation Communication' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [17, 18, 21, 22, 26],
+        'interest_q'=> [3, 7, 10, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Aviation Logistics' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [18, 19, 23, 24, 26],
+        'interest_q'=> [5, 10, 13, 51, 53, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Aviation Safety and Security Management' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [17, 18, 19, 23, 24],
+        'interest_q'=> [10, 12, 13, 51, 56, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Aviation Tourism' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [17, 18, 22, 23, 26],
+        'interest_q'=> [10, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Marine Transportation' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [10, 13, 14, 51, 57, 59],
+        'strand_kw' => 'Technology',
+    ],
+    'BS Marine Engineering' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 10, 14, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+    'BS Naval Architecture and Marine Engineering' => [
+        'field'     => 'Aviation & Maritime',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 10, 14, 51, 57],
+        'strand_kw' => 'Engineering',
+    ],
+
+    // ════════════════════════════════════════════════════════════════════
+    // TECHNICAL-VOCATIONAL / TECHNOLOGY PROGRAMS
+    // ════════════════════════════════════════════════════════════════════
+    'BTVTE' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BTVTED (Animation Hardware, Graphics, Electronics, Welding)' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BTVTEd in Electrical Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 10, 51, 57],
+        'strand_kw' => 'Electrical',
+    ],
+    'BTVTEd in Electronics Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 6, 10, 51, 57],
+        'strand_kw' => 'Electronics',
+    ],
+    'BTVTEd in ICT' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 21, 22, 25, 27],
+        'interest_q'=> [3, 6, 9, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'Bachelor in Automotive Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [10, 14, 51, 57, 59],
+        'strand_kw' => 'Technical',
+    ],
+    'Bachelor of Engineering Technology in Electrical Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 10, 51, 57],
+        'strand_kw' => 'Electrical',
+    ],
+    'Bachelor of Engineering Technology in Electronics Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 6, 10, 51, 57],
+        'strand_kw' => 'Electronics',
+    ],
+    'Bachelor of Graphics Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [22, 25, 26, 27, 29],
+        'interest_q'=> [6, 7, 10, 51, 54, 57],
+        'strand_kw' => 'Design',
+    ],
+    'BET in Automotive Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Chemical Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [2, 9, 10, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Civil Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Computer Engineering Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'BET in Dies and Moulds Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Electrical Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 10, 51, 57],
+        'strand_kw' => 'Electrical',
+    ],
+    'BET in Electromechanical Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Electronics Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 6, 10, 51, 57],
+        'strand_kw' => 'Electronics',
+    ],
+    'BET in HVAC/R Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Instrumentation and Control Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [1, 3, 10, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Mechanical & Production Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Mechatronics Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 20, 21, 25, 27],
+        'interest_q'=> [3, 10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Non-Destructive Testing Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [2, 10, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'BET in Power Plant Engineering Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [1, 3, 10, 51, 57],
+        'strand_kw' => 'Electrical',
+    ],
+    'Diploma in Information Communication Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 21, 22, 25, 27],
+        'interest_q'=> [3, 6, 9, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'Diploma in Mechanical Engineering Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [10, 14, 51, 57],
+        'strand_kw' => 'Technical',
+    ],
+    'Diploma in Office Management Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [17, 18, 22, 24, 26],
+        'interest_q'=> [5, 13, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'Associate in Computer Technology' => [
+        'field'     => 'Technical-Vocational',
+        'skills_q'  => [16, 21, 22, 25, 27],
+        'interest_q'=> [3, 6, 9, 51, 57],
+        'strand_kw' => 'Technology',
+    ],
+    'Associate in Hotel and Restaurant Technology' => [
+        'field'     => 'Hospitality & Tourism',
+        'skills_q'  => [17, 18, 23, 24, 28],
+        'interest_q'=> [4, 13, 15, 51, 55, 58],
+        'strand_kw' => 'Business',
+    ],
+    'Associate in Human Resource Development' => [
+        'field'     => 'Business & Finance',
+        'skills_q'  => [17, 18, 23, 24, 26],
+        'interest_q'=> [4, 13, 15, 51, 53, 55],
+        'strand_kw' => 'Business',
+    ],
+
+    // ════════════════════════════════════════════════════════════════════
+    // AGRICULTURE & NATURAL RESOURCES
+    // ════════════════════════════════════════════════════════════════════
+    'BS Agriculture' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [2, 8, 9, 51, 57],
+        'strand_kw' => 'Science',
+    ],
+    'BA Agriculture' => [
+        'field'     => 'Science & Research',
+        'skills_q'  => [16, 19, 20, 25, 27],
+        'interest_q'=> [2, 8, 9, 51, 57],
+        'strand_kw' => 'Science',
     ],
 ];
 
