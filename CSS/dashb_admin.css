@@ -24,7 +24,7 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.75); border-radius: 999px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.95); }
-    * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.75) transparent; }
+    * { scrollbar-width: thin; scrollbar-color: #0f1f56 transparent; }
 
     /* ── Navbar (original dashb_admin.css styles) ── */
     .topnav {

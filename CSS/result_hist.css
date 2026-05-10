@@ -4,7 +4,7 @@ html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; ba
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.75); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.95); }
-* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.75) transparent; }
+* { scrollbar-width: thin; scrollbar-color: #0f1f56 transparent; }
 
 .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 300; }
 .sidebar-overlay.show { display: block; }

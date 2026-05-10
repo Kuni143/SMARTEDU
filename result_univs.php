@@ -12,7 +12,7 @@ if (!$userId) {
     exit;
 }
 
-// ── Resolve which student take to show (mirrors dashb_user.php logic) ─────
+// ── Resolve which student take to show ────────────────────────────────────
 $requestedSid = isset($_GET['sid']) ? (int)$_GET['sid'] : null;
 $studentId    = null;
 $dbError      = null;
@@ -23,7 +23,6 @@ $isHistoricalView = false;
 try {
     $pdo = getDB();
 
-    // 1. Verify requested sid belongs to this user
     if ($requestedSid) {
         $chk = $pdo->prepare("
             SELECT id FROM students
@@ -36,7 +35,6 @@ try {
         }
     }
 
-    // Fall back to latest take
     if (!$studentId) {
         $latest = $pdo->prepare("
             SELECT id FROM students
@@ -54,7 +52,6 @@ try {
         exit;
     }
 
-    // 2. Check if this is a historical view
     $latestCheck = $pdo->prepare("
         SELECT id FROM students
         WHERE user_id = :uid
@@ -67,7 +64,6 @@ try {
         $isHistoricalView = true;
     }
 
-    // 3. Fetch student info + username
     $stmt = $pdo->prepare("
         SELECT s.grade, s.strand, s.gpa, u.username
         FROM students s
@@ -81,7 +77,6 @@ try {
         $username = $studentRow['username'];
     }
 
-    // 4. Fetch top 5 course results for this specific take
     $stmt = $pdo->prepare("
         SELECT course_name, field_name, score, `rank`
         FROM student_results
@@ -107,7 +102,6 @@ if ($requestedCourse) {
     }
 }
 
-// JSON encode for JS
 $topCoursesJson = json_encode(array_map(fn($r) => [
     'rank'        => (int)$r['rank'],
     'course_name' => $r['course_name'],
@@ -194,9 +188,9 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
   <?php endif; ?>
 
   <?php if ($isHistoricalView): ?>
-  <div style="background:#fff8e1;border-radius:12px;padding:14px 20px;color:#856404;font-size:13px;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+  <div class="historical-banner">
     <span>📋 You are viewing universities for a <strong>past result</strong>. This is not your latest assessment.</span>
-    <a href="result_univs.php" style="color:#061685;font-weight:600;white-space:nowrap;text-decoration:none;">View Latest →</a>
+    <a href="result_univs.php">View Latest →</a>
   </div>
   <?php endif; ?>
 
@@ -207,7 +201,7 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
   </div>
   <?php else: ?>
 
-  <!-- Search + Filter row -->
+  <!-- Search + Filter row (full width, above both columns) -->
   <div class="search-row">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -287,53 +281,41 @@ if ($activeCourseJson === false) $activeCourseJson = '""';
         </div>
       </div>
     </div>
-  </div>
+  </div><!-- /.search-row -->
 
-  <!-- Tag row -->
-  <div class="tag-row" id="tagRow">
-    <span class="tag active-tag" id="activeFilterTag"><?= htmlspecialchars($activeCourse) ?></span>
-    <span class="tag search-tag" id="allSearchTag" onclick="clearSearch()" style="display:none;">
-      Clear search
-      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </span>
-  </div>
+  <!-- Two-column layout: left panel + right content -->
+  <div class="content-layout">
 
-  <!-- Grid -->
-  <div class="grid-wrapper">
-    <div class="school-grid" id="schoolGrid">
-      <?php for ($i = 0; $i < 8; $i++): ?>
-      <div class="school-card" style="gap:12px;">
-        <div class="skeleton" style="height:20px;width:80%;"></div>
-        <div class="skeleton" style="height:14px;width:40%;"></div>
-        <div class="skeleton" style="height:60px;"></div>
-        <div class="skeleton" style="height:30px;width:50%;align-self:flex-end;border-radius:20px;"></div>
+    <!-- Left: Top Course Matches Panel -->
+    <aside class="course-panel">
+      <div class="course-panel-inner">
+        <h2 class="course-panel-title">Your Top Course Matches</h2>
+        <p class="course-panel-sub">Select a course to filter universities.</p>
+        <ol id="top-courses-list" class="course-list"></ol>
       </div>
-      <?php endfor; ?>
-    </div>
-  </div>
+    </aside>
+
+    <!-- Right: Grid -->
+    <div class="results-col">
+
+      <!-- Grid -->
+      <div class="school-grid" id="schoolGrid">
+        <?php for ($i = 0; $i < 6; $i++): ?>
+        <div class="school-card" style="gap:12px;">
+          <div class="skeleton" style="height:20px;width:80%;"></div>
+          <div class="skeleton" style="height:14px;width:40%;"></div>
+          <div class="skeleton" style="height:60px;"></div>
+          <div class="skeleton" style="height:30px;width:50%;align-self:flex-end;border-radius:20px;"></div>
+        </div>
+        <?php endfor; ?>
+      </div>
+
+    </div><!-- /.results-col -->
+  </div><!-- /.content-layout -->
 
   <?php endif; ?>
 
 </main>
-
-<!-- Floating chat head -->
-<div class="chathead" id="chathead" onclick="toggleChatPopup()">
-  <img src="pics/popup.png" alt="Top Courses" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:24px;\'>🎓</span>';"/>
-</div>
-
-<div class="chat-popup" id="chatPopup">
-  <div class="chat-popup-header">
-    <button class="chat-popup-close" onclick="closeChatPopup()">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-  </div>
-  <div class="chat-popup-body">
-    <h3>Your Top Course Matches</h3>
-    <p>Select a course to filter universities that offer it.</p>
-    <ol id="top-courses-list"></ol>
-    <p class="redirecting-text" id="redirecting-text" style="display:none;">Filtering universities…</p>
-  </div>
-</div>
 
 <!-- Logout modal -->
 <div class="modal-overlay" id="logoutModal">
@@ -394,7 +376,7 @@ function fetchUniversitiesForCourse(courseName) {
 
   setTimeout(function () {
     grid.innerHTML = '';
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < 6; i++) {
       grid.innerHTML += '<div class="school-card" style="gap:12px;">'
         + '<div class="skeleton" style="height:20px;width:80%;"></div>'
         + '<div class="skeleton" style="height:14px;width:40%;"></div>'
@@ -470,7 +452,6 @@ function applyVisibility() {
   });
 }
 
-// ── Navigate to detail page — passes sid + active course for round-trip ──
 function goDetailsFromBtn(btn) {
   var name = decodeURIComponent(btn.getAttribute('data-name'));
   sessionStorage.setItem('lastActiveCourse', ACTIVE_COURSE);
@@ -482,17 +463,14 @@ function goDetailsFromBtn(btn) {
 
 function handleSearch() {
   searchQuery = document.getElementById('searchInput').value.trim();
-  var clearBtn  = document.getElementById('searchClearBtn');
-  var searchTag = document.getElementById('allSearchTag');
-  clearBtn.style.display  = searchQuery ? 'flex'        : 'none';
-  searchTag.style.display = searchQuery ? 'inline-flex' : 'none';
+  var clearBtn = document.getElementById('searchClearBtn');
+  clearBtn.style.display = searchQuery ? 'flex' : 'none';
   applyVisibility();
 }
 function clearSearch() {
   searchQuery = '';
-  document.getElementById('searchInput').value           = '';
+  document.getElementById('searchInput').value            = '';
   document.getElementById('searchClearBtn').style.display = 'none';
-  document.getElementById('allSearchTag').style.display   = 'none';
   applyVisibility();
 }
 
@@ -599,6 +577,7 @@ document.addEventListener('click', function (e) {
   if (locWrap  && !locWrap.contains(e.target))  cancelLocFilter();
 });
 
+// ── Build left course panel ───────────────────────────────────────────────
 function buildTopCoursesList() {
   var list = document.getElementById('top-courses-list');
   if (!list) return;
@@ -606,63 +585,42 @@ function buildTopCoursesList() {
 
   TOP_COURSES.forEach(function (c) {
     var isActive = (c.course_name === ACTIVE_COURSE);
-    var li  = document.createElement('li');
+    var li = document.createElement('li');
+    li.className = 'course-item' + (isActive ? ' course-item--active' : '');
+
     var btn = document.createElement('button');
-    btn.style.textDecoration = isActive ? 'none'  : 'underline';
-    btn.style.fontWeight     = isActive ? '800'   : '600';
-    btn.style.opacity        = isActive ? '1'     : '0.75';
-    btn.style.background     = 'none';
-    btn.style.border         = 'none';
-    btn.style.cursor         = 'pointer';
-    btn.style.fontFamily     = 'Inter, sans-serif';
-    btn.style.fontSize       = '13px';
-    btn.style.color          = '#061685';
-    btn.style.padding        = '0';
-    btn.style.textAlign      = 'left';
-    btn.style.lineHeight     = '1.4';
-    btn.textContent          = c.course_name;
+    btn.className = 'course-item-btn';
     btn.addEventListener('click', (function (name) {
       return function () { selectCourse(name); };
     })(c.course_name));
 
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'course-item-name';
+    nameSpan.textContent = c.course_name;
+
     var badge = document.createElement('span');
-    badge.className   = 'course-score-badge';
+    badge.className = 'course-score-badge';
     badge.textContent = c.score + '%';
+
+    var fieldSpan = document.createElement('span');
+    fieldSpan.className = 'course-item-field';
+    fieldSpan.textContent = c.field_name || '';
+
+    btn.appendChild(nameSpan);
     btn.appendChild(badge);
-
-    var fieldLabel = document.createElement('span');
-    fieldLabel.className   = 'course-field-label';
-    fieldLabel.textContent = c.field_name || '';
-
     li.appendChild(btn);
-    li.appendChild(fieldLabel);
+    li.appendChild(fieldSpan);
     list.appendChild(li);
   });
 }
 
-function toggleChatPopup() {
-  var popup = document.getElementById('chatPopup');
-  if (popup.classList.contains('open')) { closeChatPopup(); }
-  else { buildTopCoursesList(); popup.classList.add('open'); }
-}
-function closeChatPopup() {
-  document.getElementById('chatPopup').classList.remove('open');
-  document.getElementById('redirecting-text').style.display = 'none';
-}
-
 function selectCourse(course) {
   ACTIVE_COURSE = course;
-  sessionStorage.setItem('lastActiveCourse', ACTIVE_COURSE);
-  var tag = document.getElementById('activeFilterTag');
-  if (tag) {
-    tag.style.opacity = '0';
-    setTimeout(function () {
-      tag.textContent = course;
-      tag.classList.add('active-tag');
-      tag.style.opacity = '1';
-    }, 200);
-  }
-  closeChatPopup();
+  localStorage.setItem('lastActiveCourse_' + STUDENT_ID, ACTIVE_COURSE);
+
+  // Re-render course list to update active state
+  buildTopCoursesList();
+
   fetchUniversitiesForCourse(course);
 }
 
@@ -670,13 +628,10 @@ function toggleMenu() {
   var isOpening = !document.getElementById('sidebar').classList.contains('open');
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebarOverlay').classList.toggle('show');
-  document.getElementById('chathead').style.display = isOpening ? 'none' : 'flex';
-  document.getElementById('chatPopup').classList.remove('open');
 }
 function closeMenu() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebarOverlay').classList.remove('show');
-  document.getElementById('chathead').style.display = 'flex';
 }
 
 function openLogoutModal() {
@@ -699,23 +654,27 @@ function escHtml(s) {
 }
 
 // ── Initialise on page load ───────────────────────────────────────────────
-// Priority: ?course= URL param → sessionStorage → PHP default
 if (TOP_COURSES.length > 0) {
   var urlCourse  = (new URLSearchParams(window.location.search)).get('course');
   var validNames = TOP_COURSES.map(function(c) { return c.course_name; });
 
   if (urlCourse && validNames.includes(urlCourse)) {
+    // Explicit ?course= param — honour it and save it
     ACTIVE_COURSE = urlCourse;
-    sessionStorage.setItem('lastActiveCourse', ACTIVE_COURSE);
+    localStorage.setItem('lastActiveCourse_' + STUDENT_ID, ACTIVE_COURSE);
   } else {
-    var savedCourse = sessionStorage.getItem('lastActiveCourse');
+    var savedCourse = localStorage.getItem('lastActiveCourse_' + STUDENT_ID);
     if (savedCourse && validNames.includes(savedCourse)) {
+      // User previously picked a course — restore it
       ACTIVE_COURSE = savedCourse;
+    } else {
+      // No saved choice yet — default to #1 and save it
+      ACTIVE_COURSE = TOP_COURSES[0].course_name;
+      localStorage.setItem('lastActiveCourse_' + STUDENT_ID, ACTIVE_COURSE);
     }
   }
 
-  var tag = document.getElementById('activeFilterTag');
-  if (tag) tag.textContent = ACTIVE_COURSE;
+  buildTopCoursesList();
   fetchUniversitiesForCourse(ACTIVE_COURSE);
 }
 </script>
