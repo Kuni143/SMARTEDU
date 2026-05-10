@@ -26,6 +26,21 @@
     .welcome { margin-bottom:24px; }
     .welcome h1 { font-size:clamp(22px,3vw,32px); font-weight:800; color:#061685; }
 
+    /* ── School counter ── */
+    .school-counter {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #5a6a9a;
+      margin-top: 4px;
+    }
+    .school-counter span {
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: #061685;
+    }
+
     /* ── Top bar ── */
     .top-bar { display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
     .search-wrapper { position:relative; flex:1; min-width:200px; max-width:460px; }
@@ -141,7 +156,7 @@
 
     /* ── Toast ── */
     #toast-container { position:fixed; top:20px; right:24px; display:flex; flex-direction:column; gap:10px; z-index:9999; }
-    .toast { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:30px; border:2px solid; background:#fff; font-family:'Sora',sans-serif; font-size:14px; font-weight:600; min-width:220px; max-width:320px; animation:toast-in 0.3s ease; }
+    .toast { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:30px; border:2px solid; background:#fff; font-family:'Sora',sans-serif; font-size:13px; font-weight:600; min-width:220px; max-width:350px; animation:toast-in 0.3s ease; }
     @keyframes toast-in { from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);} }
     .toast.fade-out { animation:toast-out 0.35s ease forwards; }
     @keyframes toast-out { to{opacity:0;transform:translateX(40px);} }
@@ -164,3 +179,51 @@
 
     /* Scrollable location filter */
     .filter-options-scroll { max-height:220px; overflow-y:auto; }
+
+    /* ── Scroll up/down buttons ── */
+.scroll-btns {
+  position: fixed;
+  bottom: 32px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 200;
+  transition: opacity 0.3s ease;
+}
+
+.scroll-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #061685;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(6, 22, 133, 0.25);
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.scroll-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(6, 22, 133, 0.35);
+}
+
+.scroll-btn:disabled {
+  cursor: default;
+}
+
+.scroll-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: #fff;
+}
+
+@media (max-width: 480px) {
+  .scroll-btns { bottom: 20px; right: 16px; }
+  .scroll-btn  { width: 38px; height: 38px; }
+  .scroll-btn svg { width: 15px; height: 15px; }
+}

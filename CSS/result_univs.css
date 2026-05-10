@@ -40,7 +40,7 @@ html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; ba
 .nav-logo { position:fixed; top:24px; left:36px; display:flex; align-items:center; gap:10px; z-index:100; text-decoration:none; }
 .nav-logo img { width:52px; height:52px; object-fit:cover; }
 .nav-logo span { font-size:15px; font-weight:600; color:#101d89; }
-.hamburger { display:flex; flex-direction:column; gap:5px; background:none; border:none; cursor:pointer; padding:6px; margin-left:auto; }
+.hamburger { display: flex; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; margin-left: auto; margin-top: 22px; margin-right: 12px;}
 .hamburger span { display:block; width:28px; height:3px; background:#101d89; border-radius:2px; transition:opacity 0.2s; }
 .hamburger:hover span { opacity:0.7; }
 
@@ -56,7 +56,7 @@ html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; ba
 .content-layout { display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start; }
 
 /* ── Left course panel ── */
-.course-panel { position:sticky; top:155px; align-self:start; }
+.course-panel { position:sticky; top:174px; align-self:start; }
 .course-panel-inner { background:#fff; border-radius:18px; padding:24px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
 .course-panel-title { font-family:'Sora',sans-serif; font-size:18px; font-weight:800; color:#061685; line-height:1.25; margin-bottom:8px;}
 .course-panel-sub { font-family:'Inter',sans-serif; font-size:12px; color:#888; margin-bottom:18px; line-height:1.5;}
@@ -179,3 +179,29 @@ html, body { width: 100%; min-height: 100vh; font-family: 'Sora', sans-serif; ba
   .school-grid { grid-template-columns:repeat(2,1fr); }
 }
 @media (max-width:540px) { .school-grid { grid-template-columns:1fr; } .main { padding:12px 14px 40px; } }
+
+/* ── Navbar greeting ── */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.nav-greeting {
+  font-family: 'Sora', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #101d89;
+  white-space: nowrap;
+  margin-top: 24px;
+}
+
+@media (max-width: 480px) {
+  .nav-greeting {
+    font-size: 12px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

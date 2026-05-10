@@ -559,3 +559,95 @@ body.view-expanded .questions-box {
   .cs-line { min-width: 8px; }
   .card { max-height: none; }
 }
+
+/* ── Back to Dashboard button (returning users only) ── */
+.btn-back-dash {
+  height: 48px;
+  border-radius: 25px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  color: #ffffff;
+  font-family: 'Sora', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 28px;
+  transition: background 0.2s, opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+.btn-back-dash:hover {
+  background: rgba(255, 255, 255, 0.15);
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+/* ── Cancel retake confirmation toast ── */
+.cancel-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 9998;
+}
+
+.cancel-confirm-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 18px;
+  border-top: 4px solid #6a8ef0;
+  padding: 28px 28px 22px;
+  width: 320px;
+  box-shadow: 0 12px 48px rgba(6, 22, 133, 0.18);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cancel-confirm-msg {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #222;
+  line-height: 1.55;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.cancel-confirm-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e8ecf5;
+  padding-top: 16px;
+}
+
+.cancel-confirm-yes {
+  border-radius: 20px;
+  padding: 8px 22px;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #061685;
+  transition: opacity 0.2s;
+}
+.cancel-confirm-yes:hover { text-decoration: underline; }
+
+.cancel-confirm-no {
+  border-radius: 20px;
+  padding: 8px 22px;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: #061685;
+  color: #fff;
+  transition: opacity 0.2s;
+}
+.cancel-confirm-no:hover { opacity: 0.85; }

@@ -150,6 +150,53 @@ if (isset($_GET['action'])) {
 </head>
 <body>
 
+<!-- Scroll buttons -->
+<div class="scroll-btns" id="scrollBtns">
+  <button class="scroll-btn" id="scrollUpBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Scroll up">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"/>
+    </svg>
+  </button>
+  <button class="scroll-btn" id="scrollDownBtn" onclick="window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'})" title="Scroll down">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </button>
+</div>
+
+<script>
+  (function() {
+    var btns     = document.getElementById('scrollBtns');
+    var upBtn    = document.getElementById('scrollUpBtn');
+    var downBtn  = document.getElementById('scrollDownBtn');
+
+    function updateButtons() {
+      var scrollTop    = window.scrollY || document.documentElement.scrollTop;
+      var scrollHeight = document.documentElement.scrollHeight;
+      var clientHeight = document.documentElement.clientHeight;
+      var atTop        = scrollTop <= 10;
+      var atBottom     = scrollTop + clientHeight >= scrollHeight - 10;
+
+      if (scrollHeight <= clientHeight + 10) {
+        btns.style.opacity       = '0';
+        btns.style.pointerEvents = 'none';
+        return;
+      }
+
+      btns.style.opacity       = '1';
+      btns.style.pointerEvents = 'all';
+      upBtn.style.opacity      = atTop    ? '0.3' : '1';
+      upBtn.disabled           = atTop;
+      downBtn.style.opacity    = atBottom ? '0.3' : '1';
+      downBtn.disabled         = atBottom;
+    }
+
+    window.addEventListener('scroll', updateButtons, { passive: true });
+    window.addEventListener('resize', updateButtons);
+    updateButtons();
+  })();
+</script>
+
 <!-- ── Logout Confirmation Modal ── -->
 <div id="logout-overlay" style="
   display:none;position:fixed;inset:0;
@@ -329,7 +376,10 @@ if (isset($_GET['action'])) {
 </nav>
 
 <div class="page">
-  <div class="welcome"><h1>Manage Universities</h1></div>
+  <div class="welcome">
+    <h1>Manage Universities</h1>
+    <p class="school-counter" id="schoolCounter">Loading...</p>
+  </div>
 
   <div class="top-bar">
     <div class="search-wrapper">

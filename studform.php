@@ -26,7 +26,23 @@ try {
 
 // ── Logged-in user (optional) ──────────────────────────────────────────────
 $logged_in_user_id = $_SESSION['user_id'] ?? null;
+
+// ── Check if this is a returning user (has existing results) ───────────────
+$is_returning = false;
+if ($logged_in_user_id && $pdo) {
+    try {
+        $chk = $pdo->prepare("
+            SELECT s.id FROM students s
+            INNER JOIN student_results sr ON sr.student_id = s.id
+            WHERE s.user_id = :uid
+            LIMIT 1
+        ");
+        $chk->execute([':uid' => $logged_in_user_id]);
+        $is_returning = (bool) $chk->fetch();
+    } catch (PDOException $e) {}
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -127,6 +143,9 @@ $logged_in_user_id = $_SESSION['user_id'] ?? null;
         </div>
 
         <div class="btn-row">
+        <?php if ($is_returning): ?>
+        <button class="btn-back-dash" onclick="showCancelConfirm()">Back to Dashboard</button>
+        <?php endif; ?>
           <button class="btn-next" onclick="goNext()">Next</button>
         </div>
       </div>
@@ -233,5 +252,26 @@ $logged_in_user_id = $_SESSION['user_id'] ?? null;
     var PHP_USER_ID = <?= json_encode($logged_in_user_id) ?>;
   </script>
   <script src="JS/studform.js"></script>
+  
+  <!-- Cancel retake confirmation toast -->
+<div id="cancelConfirmToast" class="cancel-confirm-toast" style="display:none;">
+  <p class="cancel-confirm-msg">Skip the retake and go back?</p>
+  <div class="cancel-confirm-btns">
+    <button class="cancel-confirm-yes" onclick="window.location.href='dashb_user.php'">Yes, go back</button>
+    <button class="cancel-confirm-no" onclick="hideCancelConfirm()">No, continue</button>
+  </div>
+</div>
+<div id="cancelConfirmBackdrop" class="cancel-confirm-backdrop" style="display:none;" onclick="hideCancelConfirm()"></div>
+
+<script>
+function showCancelConfirm() {
+  document.getElementById('cancelConfirmToast').style.display = 'block';
+  document.getElementById('cancelConfirmBackdrop').style.display = 'block';
+}
+function hideCancelConfirm() {
+  document.getElementById('cancelConfirmToast').style.display = 'none';
+  document.getElementById('cancelConfirmBackdrop').style.display = 'none';
+}
+</script>
 </body>
 </html>

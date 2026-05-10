@@ -107,6 +107,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           resetAttempts();
           $_SESSION['user_id']  = $user['id'];
           $_SESSION['username'] = $user['username'];
+          $greetings = ['Hi', 'Hello', 'Hey', 'Welcome back', 'Good to see you'];
+          $_SESSION['greeting'] = $greetings[array_rand($greetings)];
 
           // ── Check if user already completed the form ───
           $checkStmt = $pdo->prepare("

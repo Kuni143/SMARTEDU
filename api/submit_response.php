@@ -1587,143 +1587,17 @@ $COURSE_PROFILES = [
     // ════════════════════════════════════════════════════════════════════
     // TECHNICAL-VOCATIONAL / TECHNOLOGY PROGRAMS
     // ════════════════════════════════════════════════════════════════════
-    'BTVTE' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [3, 10, 14, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BTVTED (Animation Hardware, Graphics, Electronics, Welding)' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [3, 10, 14, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BTVTEd in Electrical Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [1, 3, 10, 51, 57],
-        'strand_kw' => 'Electrical',
-    ],
-    'BTVTEd in Electronics Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [3, 6, 10, 51, 57],
-        'strand_kw' => 'Electronics',
-    ],
-    'BTVTEd in ICT' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 21, 22, 25, 27],
-        'interest_q'=> [3, 6, 9, 51, 57],
-        'strand_kw' => 'Technology',
-    ],
     'Bachelor in Automotive Technology' => [
         'field'     => 'Technical-Vocational',
         'skills_q'  => [16, 19, 20, 25, 27],
         'interest_q'=> [10, 14, 51, 57, 59],
         'strand_kw' => 'Technical',
     ],
-    'Bachelor of Engineering Technology in Electrical Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [1, 3, 10, 51, 57],
-        'strand_kw' => 'Electrical',
-    ],
-    'Bachelor of Engineering Technology in Electronics Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [3, 6, 10, 51, 57],
-        'strand_kw' => 'Electronics',
-    ],
     'Bachelor of Graphics Technology' => [
         'field'     => 'Technical-Vocational',
         'skills_q'  => [22, 25, 26, 27, 29],
         'interest_q'=> [6, 7, 10, 51, 54, 57],
         'strand_kw' => 'Design',
-    ],
-    'BET in Automotive Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 19, 20, 25, 27],
-        'interest_q'=> [10, 14, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Chemical Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 19, 20, 25, 27],
-        'interest_q'=> [2, 9, 10, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Civil Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 19, 20, 25, 27],
-        'interest_q'=> [1, 10, 14, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Computer Engineering Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [3, 10, 51, 57],
-        'strand_kw' => 'Technology',
-    ],
-    'BET in Dies and Moulds Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 19, 20, 25, 27],
-        'interest_q'=> [10, 14, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Electrical Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [1, 3, 10, 51, 57],
-        'strand_kw' => 'Electrical',
-    ],
-    'BET in Electromechanical Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [3, 10, 14, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Electronics Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [3, 6, 10, 51, 57],
-        'strand_kw' => 'Electronics',
-    ],
-    'BET in HVAC/R Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 19, 20, 25, 27],
-        'interest_q'=> [10, 14, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Instrumentation and Control Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [1, 3, 10, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Mechanical & Production Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 19, 20, 25, 27],
-        'interest_q'=> [10, 14, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Mechatronics Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 20, 21, 25, 27],
-        'interest_q'=> [3, 10, 14, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Non-Destructive Testing Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 19, 20, 25, 27],
-        'interest_q'=> [2, 10, 51, 57],
-        'strand_kw' => 'Technical',
-    ],
-    'BET in Power Plant Engineering Technology' => [
-        'field'     => 'Technical-Vocational',
-        'skills_q'  => [16, 19, 20, 25, 27],
-        'interest_q'=> [1, 3, 10, 51, 57],
-        'strand_kw' => 'Electrical',
     ],
     'Diploma in Information Communication Technology' => [
         'field'     => 'Technical-Vocational',

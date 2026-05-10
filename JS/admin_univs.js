@@ -29,6 +29,26 @@ function loadUniversities() {
     });
 }
 
+// ── School counter ────────────────────────────────────
+function updateCounter() {
+  var counter = document.getElementById('schoolCounter');
+  if (!counter) return;
+  var total    = universities.length;
+  var search   = document.getElementById('searchInput').value.toLowerCase();
+  var filtered = universities.filter(function(u) {
+    var matchSearch = !search || u.name.toLowerCase().includes(search);
+    var matchType   = selectedTypes.includes('All') || selectedTypes.some(function(s) { return s === u.type; });
+    var matchLoc    = selectedLocs.includes('All')  || selectedLocs.some(function(l) { return l === u.location; });
+    return matchSearch && matchType && matchLoc;
+  }).length;
+
+  if (filtered === total) {
+    counter.innerHTML = 'Total: <span>' + total + '</span> ' + (total === 1 ? 'school' : 'schools');
+  } else {
+    counter.innerHTML = 'Showing <span>' + filtered + '</span> of <span>' + total + '</span> ' + (total === 1 ? 'school' : 'schools');
+  }
+}
+
 // ── Institution Type Filter ───────────────────────────
 function toggleTypeFilterDropdown() {
   if (locFilterOpen) cancelLocFilter();
@@ -216,6 +236,7 @@ function renderList() {
 
   if (!filtered.length) {
     list.innerHTML = '<div class="empty-state">No universities found.</div>';
+    updateCounter();
     return;
   }
 
@@ -235,6 +256,8 @@ function renderList() {
     list.appendChild(row);
     if (u.id == activeId) list.appendChild(buildDetail(u));
   });
+
+  updateCounter();
 }
 
 // ── Toggle detail ─────────────────────────────────────
@@ -431,7 +454,6 @@ function saveUniversity() {
 function openDeleteModal() {
   var u = universities.find(function(x){ return x.id==activeId; });
   if (!u) return;
-  // Set the university name in the modal
   var nameEl = document.getElementById('delete-modal-name');
   if (nameEl) nameEl.textContent = u.name;
   document.getElementById('delete-modal').style.display = 'flex';
@@ -450,7 +472,7 @@ function confirmDelete() {
     if (!json.success) throw new Error(json.error);
     universities = universities.filter(function(u){ return u.id!=activeId; });
     activeId = null;
-    showToast('success','University deleted successfully.');
+    showToast('success','Successfully removed from the list.');
     renderList();
   })
   .catch(function(err){ showToast('error','Delete failed: '+err.message); });

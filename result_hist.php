@@ -143,9 +143,14 @@ try {
     <img src="pics/logo.png" alt="SmartEdu Logo"/>
     <span>SmartEdu</span>
   </a>
-  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
+  <div class="navbar-right">
+    <span class="nav-greeting">
+      <?= htmlspecialchars(($_SESSION['greeting'] ?? 'Hi') . ', ' . $username . '!') ?>
+    </span>
+    <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
 </nav>
 
 <!-- Main -->
@@ -232,7 +237,7 @@ try {
     </div>
     <div class="modal-divider"></div>
     <div class="modal-actions">
-      <button class="btn-confirm" onclick="window.location.href='logout.php'">Yes</button>
+      <button class="btn-confirm" onclick="doLogout()">Yes</button>
       <button class="btn-cancel" onclick="closeLogoutModal()">No</button>
     </div>
   </div>
@@ -277,6 +282,27 @@ function closeLogoutModal() {
 document.getElementById('logoutModal').addEventListener('click', function(e) {
   if (e.target === this) closeLogoutModal();
 });
+
+function doLogout() {
+  closeLogoutModal();
+
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:20px;right:24px;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:30px;border:2px solid #e24b4a;background:#fff;font-family:Sora,sans-serif;font-size:14px;font-weight:600;color:#a32d2d;min-width:220px;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,0.1);z-index:9999;animation:toast-in 0.3s ease;';
+  toast.innerHTML =
+    '<div style="width:26px;height:26px;border-radius:50%;background:#fdecea;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+    + '<svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10" fill="#e24b4a" stroke="none"/><line x1="12" y1="8" x2="12" y2="14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="17" r="1.2" fill="#fff"/></svg>'
+    + '</div>'
+    + '<span>Logging out…</span>';
+
+  var style = document.createElement('style');
+  style.textContent = '@keyframes toast-in { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }';
+  document.head.appendChild(style);
+  document.body.appendChild(toast);
+
+  setTimeout(function() {
+    window.location.href = 'logout.php';
+  }, 1500);
+}
 </script>
 </body>
 </html>
