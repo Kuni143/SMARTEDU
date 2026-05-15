@@ -1,18 +1,26 @@
 // ── State ─────────────────────────────────────────────
-var universities = [];
-var activeId     = null;
-var isDirty      = false;
-var tempCourses  = [];
+var universities  = [];
+var activeId      = null;
+var isDirty       = false;
+var tempCourses   = [];
+var pendingNavId  = null;
+var dupCheckTimer = null;
+var addNameBlocked = false;
 
-// Institution Type filter state
+// Filter state
 var selectedTypes  = ['All'];
 var pendingTypes   = ['All'];
 var typeFilterOpen = false;
+var selectedLocs   = ['All'];
+var pendingLocs    = ['All'];
+var locFilterOpen  = false;
 
-// Location filter state
-var selectedLocs  = ['All'];
-var pendingLocs   = ['All'];
-var locFilterOpen = false;
+var TYPE_FULL = {
+  'LUC':     'Local Universities and Colleges',
+  'OGS':     'Other Government Schools',
+  'SUC':     'State Universities and Colleges',
+  'Private': 'Private Universities and Colleges'
+};
 
 // ── Load from PHP API ─────────────────────────────────
 function loadUniversities() {
@@ -37,11 +45,10 @@ function updateCounter() {
   var search   = document.getElementById('searchInput').value.toLowerCase();
   var filtered = universities.filter(function(u) {
     var matchSearch = !search || u.name.toLowerCase().includes(search);
-    var matchType   = selectedTypes.includes('All') || selectedTypes.some(function(s) { return s === u.type; });
-    var matchLoc    = selectedLocs.includes('All')  || selectedLocs.some(function(l) { return l === u.location; });
+    var matchType   = selectedTypes.includes('All') || selectedTypes.some(function(s){ return s === u.type; });
+    var matchLoc    = selectedLocs.includes('All')  || selectedLocs.some(function(l){ return l === u.location; });
     return matchSearch && matchType && matchLoc;
   }).length;
-
   if (filtered === total) {
     counter.innerHTML = 'Total: <span>' + total + '</span> ' + (total === 1 ? 'school' : 'schools');
   } else {
@@ -49,85 +56,55 @@ function updateCounter() {
   }
 }
 
-// ── Institution Type Filter ───────────────────────────
+// ── Type Filter ───────────────────────────────────────
 function toggleTypeFilterDropdown() {
   if (locFilterOpen) cancelLocFilter();
   typeFilterOpen = !typeFilterOpen;
   var dd = document.getElementById('type-filter-dropdown');
   var ch = document.getElementById('type-filter-chevron');
-  if (typeFilterOpen) {
-    pendingTypes = selectedTypes.slice();
-    syncTypeCheckboxes();
-    dd.style.display = 'block';
-    ch.classList.add('open');
-  } else {
-    dd.style.display = 'none';
-    ch.classList.remove('open');
-  }
+  if (typeFilterOpen) { pendingTypes = selectedTypes.slice(); syncTypeCheckboxes(); dd.style.display = 'block'; ch.classList.add('open'); }
+  else { dd.style.display = 'none'; ch.classList.remove('open'); }
 }
-
 function syncTypeCheckboxes() {
-  document.querySelectorAll('#type-filter-options input[type="checkbox"]').forEach(function(cb) {
-    cb.checked = pendingTypes.includes(cb.value);
-  });
+  document.querySelectorAll('#type-filter-options input[type="checkbox"]').forEach(function(cb){ cb.checked = pendingTypes.includes(cb.value); });
   updateTypeFilterLabel();
 }
-
 function handleTypeCheck(cb) {
   if (cb.value === 'All') {
     pendingTypes = cb.checked ? ['All'] : [];
-    document.querySelectorAll('#type-filter-options input[type="checkbox"]').forEach(function(b) {
-      b.checked = (b.value === 'All' && cb.checked);
-    });
+    document.querySelectorAll('#type-filter-options input[type="checkbox"]').forEach(function(b){ b.checked = (b.value === 'All' && cb.checked); });
   } else {
     var allBox = document.querySelector('#type-filter-options input[value="All"]');
     if (allBox) allBox.checked = false;
-    pendingTypes = pendingTypes.filter(function(t) { return t !== 'All'; });
-    if (cb.checked) {
-      if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value);
-    } else {
-      pendingTypes = pendingTypes.filter(function(t) { return t !== cb.value; });
-    }
+    pendingTypes = pendingTypes.filter(function(t){ return t !== 'All'; });
+    if (cb.checked) { if (!pendingTypes.includes(cb.value)) pendingTypes.push(cb.value); }
+    else { pendingTypes = pendingTypes.filter(function(t){ return t !== cb.value; }); }
   }
   updateTypeFilterLabel();
 }
-
-function selectAllTypes() {
-  pendingTypes = ['All'];
-  syncTypeCheckboxes();
-}
-
+function selectAllTypes() { pendingTypes = ['All']; syncTypeCheckboxes(); }
 function clearTypes() {
   pendingTypes = [];
-  document.querySelectorAll('#type-filter-options input[type="checkbox"]').forEach(function(b) { b.checked = false; });
+  document.querySelectorAll('#type-filter-options input[type="checkbox"]').forEach(function(b){ b.checked = false; });
   updateTypeFilterLabel();
 }
-
 function applyTypeFilter() {
   selectedTypes = pendingTypes.length ? pendingTypes.slice() : ['All'];
   typeFilterOpen = false;
   document.getElementById('type-filter-dropdown').style.display = 'none';
   document.getElementById('type-filter-chevron').classList.remove('open');
-  updateTypeFilterLabel();
-  renderList();
+  updateTypeFilterLabel(); renderList();
 }
-
 function cancelTypeFilter() {
-  pendingTypes = selectedTypes.slice();
-  typeFilterOpen = false;
+  pendingTypes = selectedTypes.slice(); typeFilterOpen = false;
   document.getElementById('type-filter-dropdown').style.display = 'none';
   document.getElementById('type-filter-chevron').classList.remove('open');
 }
-
 function updateTypeFilterLabel() {
   var lbl = document.getElementById('type-filter-label');
-  if (!pendingTypes.length || pendingTypes.includes('All')) {
-    lbl.textContent = 'All';
-  } else if (pendingTypes.length === 1) {
-    lbl.textContent = pendingTypes[0];
-  } else {
-    lbl.textContent = pendingTypes.join(', ');
-  }
+  if (!pendingTypes.length || pendingTypes.includes('All')) lbl.textContent = 'All';
+  else if (pendingTypes.length === 1) lbl.textContent = pendingTypes[0];
+  else lbl.textContent = pendingTypes.join(', ');
 }
 
 // ── Location Filter ───────────────────────────────────
@@ -136,89 +113,54 @@ function toggleLocFilterDropdown() {
   locFilterOpen = !locFilterOpen;
   var dd = document.getElementById('loc-filter-dropdown');
   var ch = document.getElementById('loc-filter-chevron');
-  if (locFilterOpen) {
-    pendingLocs = selectedLocs.slice();
-    syncLocCheckboxes();
-    dd.style.display = 'block';
-    ch.classList.add('open');
-  } else {
-    dd.style.display = 'none';
-    ch.classList.remove('open');
-  }
+  if (locFilterOpen) { pendingLocs = selectedLocs.slice(); syncLocCheckboxes(); dd.style.display = 'block'; ch.classList.add('open'); }
+  else { dd.style.display = 'none'; ch.classList.remove('open'); }
 }
-
 function syncLocCheckboxes() {
-  document.querySelectorAll('#loc-filter-options input[type="checkbox"]').forEach(function(cb) {
-    cb.checked = pendingLocs.includes(cb.value);
-  });
+  document.querySelectorAll('#loc-filter-options input[type="checkbox"]').forEach(function(cb){ cb.checked = pendingLocs.includes(cb.value); });
   updateLocFilterLabel();
 }
-
 function handleLocCheck(cb) {
   if (cb.value === 'All') {
     pendingLocs = cb.checked ? ['All'] : [];
-    document.querySelectorAll('#loc-filter-options input[type="checkbox"]').forEach(function(b) {
-      b.checked = (b.value === 'All' && cb.checked);
-    });
+    document.querySelectorAll('#loc-filter-options input[type="checkbox"]').forEach(function(b){ b.checked = (b.value === 'All' && cb.checked); });
   } else {
     var allBox = document.querySelector('#loc-filter-options input[value="All"]');
     if (allBox) allBox.checked = false;
-    pendingLocs = pendingLocs.filter(function(l) { return l !== 'All'; });
-    if (cb.checked) {
-      if (!pendingLocs.includes(cb.value)) pendingLocs.push(cb.value);
-    } else {
-      pendingLocs = pendingLocs.filter(function(l) { return l !== cb.value; });
-    }
+    pendingLocs = pendingLocs.filter(function(l){ return l !== 'All'; });
+    if (cb.checked) { if (!pendingLocs.includes(cb.value)) pendingLocs.push(cb.value); }
+    else { pendingLocs = pendingLocs.filter(function(l){ return l !== cb.value; }); }
   }
   updateLocFilterLabel();
 }
-
-function selectAllLocs() {
-  pendingLocs = ['All'];
-  syncLocCheckboxes();
-}
-
+function selectAllLocs() { pendingLocs = ['All']; syncLocCheckboxes(); }
 function clearLocs() {
   pendingLocs = [];
-  document.querySelectorAll('#loc-filter-options input[type="checkbox"]').forEach(function(b) { b.checked = false; });
+  document.querySelectorAll('#loc-filter-options input[type="checkbox"]').forEach(function(b){ b.checked = false; });
   updateLocFilterLabel();
 }
-
 function applyLocFilter() {
   selectedLocs = pendingLocs.length ? pendingLocs.slice() : ['All'];
   locFilterOpen = false;
   document.getElementById('loc-filter-dropdown').style.display = 'none';
   document.getElementById('loc-filter-chevron').classList.remove('open');
-  updateLocFilterLabel();
-  renderList();
+  updateLocFilterLabel(); renderList();
 }
-
 function cancelLocFilter() {
-  pendingLocs = selectedLocs.slice();
-  locFilterOpen = false;
+  pendingLocs = selectedLocs.slice(); locFilterOpen = false;
   document.getElementById('loc-filter-dropdown').style.display = 'none';
   document.getElementById('loc-filter-chevron').classList.remove('open');
 }
-
 function updateLocFilterLabel() {
   var lbl = document.getElementById('loc-filter-label');
-  if (!pendingLocs.length || pendingLocs.includes('All')) {
-    lbl.textContent = 'All';
-  } else if (pendingLocs.length === 1) {
-    lbl.textContent = pendingLocs[0];
-  } else {
-    lbl.textContent = pendingLocs.length + ' selected';
-  }
+  if (!pendingLocs.length || pendingLocs.includes('All')) lbl.textContent = 'All';
+  else if (pendingLocs.length === 1) lbl.textContent = pendingLocs[0];
+  else lbl.textContent = pendingLocs.length + ' selected';
 }
 
-// Close both dropdowns when clicking outside
 document.addEventListener('click', function(e) {
-  if (typeFilterOpen && !document.getElementById('type-filter-wrapper').contains(e.target)) {
-    cancelTypeFilter();
-  }
-  if (locFilterOpen && !document.getElementById('loc-filter-wrapper').contains(e.target)) {
-    cancelLocFilter();
-  }
+  if (typeFilterOpen && !document.getElementById('type-filter-wrapper').contains(e.target)) cancelTypeFilter();
+  if (locFilterOpen  && !document.getElementById('loc-filter-wrapper').contains(e.target))  cancelLocFilter();
 });
 
 // ── Render list ───────────────────────────────────────
@@ -229,36 +171,45 @@ function renderList() {
 
   var filtered = universities.filter(function(u) {
     var matchSearch = !search || u.name.toLowerCase().includes(search);
-    var matchType   = selectedTypes.includes('All') || selectedTypes.some(function(s) { return s === u.type; });
-    var matchLoc    = selectedLocs.includes('All')  || selectedLocs.some(function(l) { return l === u.location; });
+    var matchType   = selectedTypes.includes('All') || selectedTypes.some(function(s){ return s === u.type; });
+    var matchLoc    = selectedLocs.includes('All')  || selectedLocs.some(function(l){ return l === u.location; });
     return matchSearch && matchType && matchLoc;
   });
 
   if (!filtered.length) {
     list.innerHTML = '<div class="empty-state">No universities found.</div>';
-    updateCounter();
-    return;
+    updateCounter(); return;
   }
 
   filtered.forEach(function(u) {
     var row = document.createElement('div');
     row.className = 'uni-row' + (u.id == activeId ? ' active' : '');
-    row.onclick   = function(){ toggleDetail(u.id); };
-    var TYPE_FULL = {
-      'LUC':     'Local Universities and Colleges',
-      'OGS':     'Other Government Schools',
-      'SUC':     'State Universities and Colleges',
-      'Private': 'Private Universities and Colleges'
-    };
-    var left = '<div class="uni-row-left"><span>' + escHtml(u.name) + '</span>'
-      + (u.type ? '<span class="type-badge">' + escHtml(TYPE_FULL[u.type] || u.type) + '</span>' : '') + '</div>';
-    row.innerHTML = left;
+    row.onclick = function(){ tryToggleDetail(u.id); };
+
+    row.innerHTML = '<div class="uni-row-left">'
+      + '<span>' + escHtml(u.name) + '</span>'
+      + (u.type ? '<span class="type-badge">' + escHtml(TYPE_FULL[u.type] || u.type) + '</span>' : '')
+      + '</div>';
     list.appendChild(row);
     if (u.id == activeId) list.appendChild(buildDetail(u));
   });
 
   updateCounter();
 }
+
+// ── Unsaved Changes Guard ─────────────────────────────
+function tryToggleDetail(id) {
+  if (isDirty && id != activeId) {
+    pendingNavId = id;
+    openUnsavedModal();
+  } else {
+    toggleDetail(id);
+  }
+}
+function openUnsavedModal()  { document.getElementById('unsaved-modal').style.display = 'flex'; }
+function closeUnsavedModal() { document.getElementById('unsaved-modal').style.display = 'none'; pendingNavId = null; }
+function discardAndLeave()   { closeUnsavedModal(); isDirty = false; toggleDetail(pendingNavId); }
+function saveAndLeave()      { closeUnsavedModal(); saveUniversity(function(){ isDirty = false; toggleDetail(pendingNavId); }); }
 
 // ── Toggle detail ─────────────────────────────────────
 function toggleDetail(id) {
@@ -272,123 +223,91 @@ function buildDetail(u) {
   var LOCATIONS = ['Quezon City','Manila','Makati','Pateros','Taguig','Las Pi\u00f1as',
     'Caloocan','Muntinlupa','Pasig','Mandaluyong','San Juan','Pasay',
     'Marikina','Para\u00f1aque','Valenzuela','Malabon'];
-
   var TYPE_MAP = [
-    { value: 'LUC',     label: 'Local Universities and Colleges' },
-    { value: 'OGS',     label: 'Other Government Schools' },
-    { value: 'SUC',     label: 'State Universities and Colleges' },
-    { value: 'Private', label: 'Private Universities and Colleges' },
+    {value:'LUC',label:'Local Universities and Colleges'},
+    {value:'OGS',label:'Other Government Schools'},
+    {value:'SUC',label:'State Universities and Colleges'},
+    {value:'Private',label:'Private Universities and Colleges'},
   ];
-  var typeOpts = TYPE_MAP.map(function(t) {
-    return '<option value="' + t.value + '"' + (t.value === u.type ? ' selected' : '') + '>'
-      + t.label + '</option>';
+  var typeOpts = TYPE_MAP.map(function(t){
+    return '<option value="'+t.value+'"'+(t.value===u.type?' selected':'')+'>'+t.label+'</option>';
   }).join('');
-
-  var locOpts = LOCATIONS.map(function(l) {
-    return '<option' + (l===u.location?' selected':'') + '>' + escHtml(l) + '</option>';
+  var locOpts = LOCATIONS.map(function(l){
+    return '<option'+(l===u.location?' selected':'')+'>'+escHtml(l)+'</option>';
   }).join('');
-
-  var courseTags = (u.courses||[]).map(function(c) {
-    return '<span class="course-tag">' + escHtml(c) + '</span>';
+  var courseTags = (u.courses||[]).map(function(c){
+    return '<span class="course-tag">'+escHtml(c)+'</span>';
   }).join('');
 
   var card = document.createElement('div');
   card.className = 'detail-card';
-  card.innerHTML = `
-    <!-- ── Section 1: Basic Info ── -->
-    <div class="detail-section">
-      <div class="detail-section-title">Basic Information</div>
+  card.innerHTML =
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Basic Information</div>' +
+      '<div class="detail-row">' +
+        '<span class="detail-label">University Name</span>' +
+        '<div style="flex:1;display:flex;flex-direction:column;gap:4px;">' +
+          '<input type="text" id="d-name" class="detail-name-input" value="'+escHtml(u.name)+'" oninput="markDirty();onDetailNameInput()" placeholder="University name..."/>' +
+          '<div id="d-dup-feedback" style="display:none;"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="detail-row"><span class="detail-label">Institution Type</span>' +
+        '<div class="select-wrapper"><select id="d-type" onchange="markDirty()"><option value="">— Select —</option>'+typeOpts+'</select>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>' +
+      '</div>' +
+      '<div class="detail-row"><span class="detail-label">Location</span>' +
+        '<div class="select-wrapper"><select id="d-location" onchange="markDirty()"><option value="">— Select —</option>'+locOpts+'</select>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>' +
+      '</div>' +
+      '<div class="detail-row align-top"><span class="detail-label">Description</span>' +
+        '<textarea id="d-description" rows="3" oninput="markDirty()" placeholder="Short description of the university...">'+escHtml(u.description||'')+'</textarea>' +
+      '</div>' +
+      '<div class="detail-row align-top"><span class="detail-label">Campus Branches</span>' +
+        '<textarea id="d-campus-branches" rows="3" oninput="markDirty()" placeholder="List campus branches or satellite offices...">'+escHtml(u.campus_branches||'')+'</textarea>' +
+      '</div>' +
+    '</div>' +
 
-      <div class="detail-row">
-        <span class="detail-label">University Name</span>
-        <input
-          type="text"
-          id="d-name"
-          class="detail-name-input"
-          value="${escHtml(u.name)}"
-          oninput="markDirty()"
-          placeholder="University name..."
-        />
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Institution Type</span>
-        <div class="select-wrapper">
-          <select id="d-type" onchange="markDirty()"><option value="">— Select —</option>${typeOpts}</select>
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Location</span>
-        <div class="select-wrapper">
-          <select id="d-location" onchange="markDirty()"><option value="">— Select —</option>${locOpts}</select>
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-      </div>
-      <div class="detail-row align-top">
-        <span class="detail-label">Description</span>
-        <textarea id="d-description" rows="3" oninput="markDirty()" placeholder="Short description of the university...">${escHtml(u.description||'')}</textarea>
-      </div>
-      <div class="detail-row align-top">
-        <span class="detail-label">Campus Branches</span>
-        <textarea id="d-campus-branches" rows="3" oninput="markDirty()" placeholder="List campus branches or satellite offices...">${escHtml(u.campus_branches||'')}</textarea>
-      </div>
-    </div>
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Programs Offered</div>' +
+      '<div class="detail-row align-top"><span class="detail-label">Courses Offered</span>' +
+        '<div class="courses-area">' +
+          '<div class="courses-tags" id="d-courses">'+(courseTags||'<span class="courses-empty">No courses added yet.</span>')+'</div>' +
+          '<button class="btn-icon" onclick="openCoursesModal()" title="Edit courses">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="detail-row align-top"><span class="detail-label">Tuition &amp; Fees Info</span>' +
+        '<textarea id="d-tuition-fees" rows="3" oninput="markDirty()" placeholder="Estimated tuition ranges, payment schemes, scholarships...">'+escHtml(u.tuition_fees||'')+'</textarea>' +
+      '</div>' +
+    '</div>' +
 
-    <!-- ── Section 2: Courses ── -->
-    <div class="detail-section">
-      <div class="detail-section-title">Programs Offered</div>
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Admissions</div>' +
+      '<div class="detail-row align-top"><span class="detail-label">Entrance Exam</span>' +
+        '<textarea id="d-exam" rows="4" oninput="markDirty()" placeholder="Exam schedule, registration steps, coverage...">'+escHtml(u.exam||'')+'</textarea>' +
+      '</div>' +
+      '<div class="detail-row align-top"><span class="detail-label">Admission Requirements</span>' +
+        '<textarea id="d-requirements" rows="4" oninput="markDirty()" placeholder="Documents required to apply and qualify...">'+escHtml(u.requirements||'')+'</textarea>' +
+      '</div>' +
+      '<div class="detail-row align-top"><span class="detail-label">Enrollment Requirements</span>' +
+        '<textarea id="d-enrollment-requirements" rows="4" oninput="markDirty()" placeholder="Documents and steps required upon enrollment...">'+escHtml(u.enrollment_requirements||'')+'</textarea>' +
+      '</div>' +
+    '</div>' +
 
-      <div class="detail-row align-top">
-        <span class="detail-label">Courses Offered</span>
-        <div class="courses-area">
-          <div class="courses-tags" id="d-courses">${courseTags || '<span class="courses-empty">No courses added yet.</span>'}</div>
-          <button class="btn-icon" onclick="openCoursesModal()" title="Edit courses">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="detail-row align-top">
-        <span class="detail-label">Tuition &amp; Fees Info</span>
-        <textarea id="d-tuition-fees" rows="3" oninput="markDirty()" placeholder="Estimated tuition ranges, payment schemes, scholarships...">${escHtml(u.tuition_fees||'')}</textarea>
-      </div>
-    </div>
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Contact &amp; Links</div>' +
+      '<div class="detail-row align-top"><span class="detail-label">Official Links</span>' +
+        '<textarea id="d-contact-links" rows="3" oninput="markDirty()" placeholder="Website, admissions portal, Facebook page, email...">'+escHtml(u.contact_links||'')+'</textarea>' +
+      '</div>' +
+    '</div>' +
 
-    <!-- ── Section 3: Admissions ── -->
-    <div class="detail-section">
-      <div class="detail-section-title">Admissions</div>
+    '<div class="detail-actions">' +
+      '<button class="btn-cancel" onclick="cancelEdit()">Cancel</button>' +
+      '<button class="btn-save" id="btn-save" onclick="saveUniversity(null)" disabled>Save Changes</button>' +
+      '<button class="btn-delete" onclick="openDeleteModal()">Delete University</button>' +
+    '</div>';
 
-      <div class="detail-row align-top">
-        <span class="detail-label">Entrance Exam</span>
-        <textarea id="d-exam" rows="4" oninput="markDirty()" placeholder="Exam schedule, registration steps, coverage...">${escHtml(u.exam||'')}</textarea>
-      </div>
-      <div class="detail-row align-top">
-        <span class="detail-label">Admission Requirements</span>
-        <textarea id="d-requirements" rows="4" oninput="markDirty()" placeholder="Documents required to apply and qualify...">${escHtml(u.requirements||'')}</textarea>
-      </div>
-      <div class="detail-row align-top">
-        <span class="detail-label">Enrollment Requirements</span>
-        <textarea id="d-enrollment-requirements" rows="4" oninput="markDirty()" placeholder="Documents and steps required upon enrollment...">${escHtml(u.enrollment_requirements||'')}</textarea>
-      </div>
-    </div>
-
-    <!-- ── Section 4: Contact ── -->
-    <div class="detail-section">
-      <div class="detail-section-title">Contact &amp; Links</div>
-
-      <div class="detail-row align-top">
-        <span class="detail-label">Official Links</span>
-        <textarea id="d-contact-links" rows="3" oninput="markDirty()" placeholder="Website, admissions portal, Facebook page, email...">${escHtml(u.contact_links||'')}</textarea>
-      </div>
-    </div>
-
-    <div class="detail-actions">
-      <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
-      <button class="btn-save" id="btn-save" onclick="saveUniversity()" disabled>Save Changes</button>
-      <button class="btn-delete" onclick="openDeleteModal()">Delete University</button>
-    </div>`;
   return card;
 }
 
@@ -399,16 +318,53 @@ function markDirty() {
 }
 function cancelEdit() { activeId=null; isDirty=false; renderList(); }
 
+// ── Duplicate check — detail card (name edit) ─────────
+var detailDupTimer = null;
+function onDetailNameInput() {
+  clearTimeout(detailDupTimer);
+  var input    = document.getElementById('d-name');
+  var feedback = document.getElementById('d-dup-feedback');
+  if (!input || !feedback) return;
+  var val = input.value.trim();
+  if (!val) { feedback.style.display='none'; return; }
+
+  detailDupTimer = setTimeout(function() {
+    fetch('admin_univs.php?action=check_duplicate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name: val, exclude_id: activeId})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(json) {
+      if (!json.success) return;
+      feedback.style.display = 'block';
+      if (json.exact) {
+        feedback.innerHTML = renderDupFeedback('error',
+          'This name already exists in the system as: <strong>'+escHtml(json.match.name)+'</strong>'
+          +(json.match.location ? ' ('+escHtml(json.match.location)+')' : ''));
+        var btn = document.getElementById('btn-save');
+        if (btn) btn.disabled = true;
+      } else if (json.similar && json.similar.length) {
+        var names = json.similar.map(function(s){ return escHtml(s.name)+' — '+escHtml(s.location); }).join('<br>');
+        feedback.innerHTML = renderDupFeedback('warning', 'Similar universities found:<br>'+names);
+      } else {
+        feedback.style.display = 'none';
+      }
+    })
+    .catch(function(){});
+  }, 600);
+}
+
 // ── Save ──────────────────────────────────────────────
-function saveUniversity() {
+function saveUniversity(callback) {
   var u = universities.find(function(x){ return x.id==activeId; });
   if (!u) return;
-
   var nameInput = document.getElementById('d-name');
   var newName   = nameInput ? nameInput.value.trim() : u.name;
-  if (!newName) {
-    nameInput.focus();
-    showToast('error', 'University name cannot be empty.');
+  if (!newName) { nameInput && nameInput.focus(); showToast('error','University name cannot be empty.'); return; }
+
+  var feedback = document.getElementById('d-dup-feedback');
+  if (feedback && feedback.querySelector('.dup-feedback-error')) {
+    showToast('error','Cannot save: another university with this name already exists.');
     return;
   }
 
@@ -426,6 +382,7 @@ function saveUniversity() {
     contact_links:           document.getElementById('d-contact-links').value,
     courses:                 u.courses || [],
   };
+
   fetch('admin_univs.php?action=save', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify(payload)
@@ -433,24 +390,24 @@ function saveUniversity() {
   .then(function(r){ return r.json(); })
   .then(function(json) {
     if (!json.success) throw new Error(json.error);
-    u.name                    = payload.name;
-    u.type                    = payload.type;
-    u.location                = payload.location;
-    u.description             = payload.description;
-    u.campus_branches         = payload.campus_branches;
-    u.tuition_fees            = payload.tuition_fees;
-    u.exam                    = payload.exam;
-    u.requirements            = payload.requirements;
-    u.enrollment_requirements = payload.enrollment_requirements;
-    u.contact_links           = payload.contact_links;
+    Object.assign(u, {
+      name: payload.name, type: payload.type, location: payload.location,
+      description: payload.description, campus_branches: payload.campus_branches,
+      tuition_fees: payload.tuition_fees, exam: payload.exam,
+      requirements: payload.requirements,
+      enrollment_requirements: payload.enrollment_requirements,
+      contact_links: payload.contact_links,
+      last_updated: new Date().toISOString()
+    });
     isDirty = false;
     showToast('success','University saved successfully.');
-    renderList();
+    if (typeof callback === 'function') callback();
+    else renderList();
   })
   .catch(function(err){ showToast('error','Save failed: '+err.message); });
 }
 
-// ── Delete modal ──────────────────────────────────────
+// ── Delete ────────────────────────────────────────────
 function openDeleteModal() {
   var u = universities.find(function(x){ return x.id==activeId; });
   if (!u) return;
@@ -458,9 +415,7 @@ function openDeleteModal() {
   if (nameEl) nameEl.textContent = u.name;
   document.getElementById('delete-modal').style.display = 'flex';
 }
-function closeDeleteModal() {
-  document.getElementById('delete-modal').style.display = 'none';
-}
+function closeDeleteModal() { document.getElementById('delete-modal').style.display = 'none'; }
 function confirmDelete() {
   closeDeleteModal();
   fetch('admin_univs.php?action=delete', {
@@ -480,47 +435,139 @@ function confirmDelete() {
 
 // ── Add modal ─────────────────────────────────────────
 function openAddModal() {
-  document.getElementById('m-name').value='';
-  document.getElementById('m-type').selectedIndex=0;
-  document.getElementById('m-location').selectedIndex=0;
-  document.getElementById('m-description').value='';
+  document.getElementById('m-name').value = '';
+  document.getElementById('m-type').selectedIndex = 0;
+  document.getElementById('m-location').selectedIndex = 0;
+  document.getElementById('m-description').value = '';
   ['m-name-err','m-type-err','m-loc-err'].forEach(function(id){
     document.getElementById(id).classList.remove('visible');
   });
-  document.getElementById('add-modal').style.display='flex';
+  var fb = document.getElementById('m-dup-feedback');
+  if (fb) { fb.style.display='none'; fb.innerHTML=''; }
+  addNameBlocked = false;
+  var btn = document.getElementById('btn-add-submit');
+  if (btn) btn.disabled = false;
+  document.getElementById('add-modal').style.display = 'flex';
 }
-function closeAddModal() { document.getElementById('add-modal').style.display='none'; }
-function addUniversity() {
-  var name = document.getElementById('m-name').value.trim();
-  var type = document.getElementById('m-type').value;
-  var loc  = document.getElementById('m-location').value;
-  var desc = document.getElementById('m-description').value.trim();
-  var valid=true;
-  ['m-name-err','m-type-err','m-loc-err'].forEach(function(id){
-    document.getElementById(id).classList.remove('visible');
-  });
-  if (!name){ document.getElementById('m-name-err').classList.add('visible'); valid=false; }
-  if (!type){ document.getElementById('m-type-err').classList.add('visible'); valid=false; }
-  if (!loc) { document.getElementById('m-loc-err').classList.add('visible');  valid=false; }
-  if (!valid) return;
+function closeAddModal() { document.getElementById('add-modal').style.display = 'none'; }
 
+// ── Duplicate check — add modal ───────────────────────
+function onAddNameInput() {
+  clearTimeout(dupCheckTimer);
+  var input    = document.getElementById('m-name');
+  var feedback = document.getElementById('m-dup-feedback');
+  var btn      = document.getElementById('btn-add-submit');
+  if (!input || !feedback) return;
+  var val = input.value.trim();
+
+  if (!val) {
+    feedback.style.display='none'; feedback.innerHTML='';
+    addNameBlocked = false;
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  dupCheckTimer = setTimeout(function() {
+    fetch('admin_univs.php?action=check_duplicate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name: val, exclude_id: 0})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(json) {
+      if (!json.success) return;
+      feedback.style.display = 'block';
+      if (json.exact) {
+        addNameBlocked = true;
+        if (btn) btn.disabled = true;
+        feedback.innerHTML = renderDupFeedback('error',
+          '<strong>'+escHtml(json.match.name)+'</strong> already exists in the system'
+          +(json.match.location ? ' ('+escHtml(json.match.location)+')' : '')
+          +'. Please search for it in the list instead.');
+      } else if (json.similar && json.similar.length) {
+        addNameBlocked = false;
+        if (btn) btn.disabled = false;
+        var items = json.similar.map(function(s){
+          return '<div class="dup-similar-item"><strong>'+escHtml(s.name)+'</strong>'
+            +(s.location ? ' &mdash; '+escHtml(s.location) : '')
+            +(s.type ? ' <span class="type-badge">'+escHtml(TYPE_FULL[s.type]||s.type)+'</span>' : '')
+            +'</div>';
+        }).join('');
+        feedback.innerHTML = renderDupFeedback('warning',
+          'Similar universities already exist. Are you sure this is a different school?<br>'+items);
+      } else {
+        addNameBlocked = false;
+        if (btn) btn.disabled = false;
+        feedback.style.display='none'; feedback.innerHTML='';
+      }
+    })
+    .catch(function(){});
+  }, 600);
+}
+
+// ── Pending payload for similar-confirmed add ─────────
+var pendingAddPayload = null;
+function confirmSimilarAdd() {
+  closeSimilarModal();
+  if (pendingAddPayload) { doAddUniversity(pendingAddPayload); pendingAddPayload = null; }
+}
+function closeSimilarModal() {
+  document.getElementById('similar-modal').style.display = 'none';
+  pendingAddPayload = null;
+}
+
+function addUniversity() {
+  var name  = document.getElementById('m-name').value.trim();
+  var type  = document.getElementById('m-type').value;
+  var loc   = document.getElementById('m-location').value;
+  var desc  = document.getElementById('m-description').value.trim();
+  var valid = true;
+  ['m-name-err','m-type-err','m-loc-err'].forEach(function(id){ document.getElementById(id).classList.remove('visible'); });
+  if (!name) { document.getElementById('m-name-err').classList.add('visible'); valid=false; }
+  if (!type) { document.getElementById('m-type-err').classList.add('visible'); valid=false; }
+  if (!loc)  { document.getElementById('m-loc-err').classList.add('visible');  valid=false; }
+  if (!valid || addNameBlocked) return;
+
+  // If there's a soft warning, show confirmation modal
+  var feedback = document.getElementById('m-dup-feedback');
+  if (feedback && feedback.querySelector('.dup-feedback-warning')) {
+    var similarList = document.getElementById('similar-list');
+    if (similarList) similarList.innerHTML = feedback.querySelector('.dup-feedback-warning').innerHTML;
+    pendingAddPayload = {name:name, type:type, location:loc, description:desc};
+    document.getElementById('similar-modal').style.display = 'flex';
+    return;
+  }
+
+  doAddUniversity({name:name, type:type, location:loc, description:desc});
+}
+
+function doAddUniversity(payload) {
   fetch('admin_univs.php?action=add', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({name,type,location:loc,description:desc})
+    body: JSON.stringify(payload)
   })
   .then(function(r){ return r.json(); })
   .then(function(json) {
     if (!json.success) throw new Error(json.error);
     universities.push({
-      id:json.id, name, type, location:loc, description:desc,
-      campus_branches:'', tuition_fees:'',
-      courses:[], exam:'', requirements:'',
-      enrollment_requirements:'', contact_links:''
+      id:json.id, name:payload.name, type:payload.type,
+      location:payload.location, description:payload.description,
+      campus_branches:'', tuition_fees:'', courses:[],
+      exam:'', requirements:'', enrollment_requirements:'',
+      contact_links:'', last_updated:null
     });
-    activeId=json.id;
+    activeId = json.id;
     closeAddModal();
-    showToast('success','University added successfully.');
+    showToast('success','University added! Fill in the details below.');
     renderList();
+
+    // Scroll the newly opened detail card into view
+    setTimeout(function() {
+      var rows = document.querySelectorAll('.uni-row.active');
+      var target = rows.length ? rows[rows.length - 1] : null;
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 80);
   })
   .catch(function(err){ showToast('error','Add failed: '+err.message); });
 }
@@ -531,17 +578,17 @@ function openCoursesModal() {
   if (!u) return;
   tempCourses = (u.courses||[]).slice();
   renderCourseTagsEdit();
-  document.getElementById('course-input').value='';
-  document.getElementById('courses-modal').style.display='flex';
+  document.getElementById('course-input').value = '';
+  document.getElementById('courses-modal').style.display = 'flex';
 }
-function closeCoursesModal() { document.getElementById('courses-modal').style.display='none'; }
+function closeCoursesModal() { document.getElementById('courses-modal').style.display = 'none'; }
 function renderCourseTagsEdit() {
   var area = document.getElementById('courses-tags-edit');
-  area.innerHTML='';
+  area.innerHTML = '';
   tempCourses.forEach(function(c,i) {
     var tag = document.createElement('div');
-    tag.className='course-tag-edit';
-    tag.innerHTML=escHtml(c)+'<button onclick="removeTempCourse('+i+')" title="Remove">×</button>';
+    tag.className = 'course-tag-edit';
+    tag.innerHTML = escHtml(c)+'<button onclick="removeTempCourse('+i+')" title="Remove">×</button>';
     area.appendChild(tag);
   });
 }
@@ -551,22 +598,29 @@ function handleCourseInput(e) {
     e.preventDefault();
     var val = document.getElementById('course-input').value.replace(',','').trim();
     if (val && !tempCourses.includes(val)) { tempCourses.push(val); renderCourseTagsEdit(); }
-    document.getElementById('course-input').value='';
+    document.getElementById('course-input').value = '';
   }
 }
 function saveCoursesModal() {
   var val = document.getElementById('course-input').value.replace(',','').trim();
   if (val && !tempCourses.includes(val)) tempCourses.push(val);
   var u = universities.find(function(x){ return x.id==activeId; });
-  if (u) u.courses=tempCourses.slice();
-  closeCoursesModal();
-  markDirty();
-  var container=document.getElementById('d-courses');
+  if (u) u.courses = tempCourses.slice();
+  closeCoursesModal(); markDirty();
+  var container = document.getElementById('d-courses');
   if (container) {
     container.innerHTML = tempCourses.length
       ? tempCourses.map(function(c){ return '<span class="course-tag">'+escHtml(c)+'</span>'; }).join('')
       : '<span class="courses-empty">No courses added yet.</span>';
   }
+}
+
+// ── Duplicate feedback renderer ───────────────────────
+function renderDupFeedback(type, message) {
+  var icon = type === 'error'
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  return '<div class="dup-feedback-'+type+'">'+icon+'<span>'+message+'</span></div>';
 }
 
 // ── Helpers ───────────────────────────────────────────
@@ -576,28 +630,32 @@ function escHtml(s) {
 
 // ── Toast ─────────────────────────────────────────────
 var TOAST_ICONS = {
-  success:'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
-  error:  '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+  success: '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+  error:   '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
 };
 function showToast(type, message) {
-  var c=document.getElementById('toast-container');
-  var t=document.createElement('div');
-  t.className='toast toast-'+type;
-  t.innerHTML='<div class="toast-icon">'+TOAST_ICONS[type]+'</div><span class="toast-msg">'+message+'</span>'
-    +'<button class="toast-close" onclick="closeToast(this.parentElement)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  var c = document.getElementById('toast-container');
+  var t = document.createElement('div');
+  t.className = 'toast toast-'+type;
+  t.innerHTML = '<div class="toast-icon">'+TOAST_ICONS[type]+'</div>'
+    +'<span class="toast-msg">'+message+'</span>'
+    +'<button class="toast-close" onclick="closeToast(this.parentElement)">'
+    +'<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
   c.appendChild(t);
-  setTimeout(function(){ closeToast(t); },3500);
+  setTimeout(function(){ closeToast(t); }, 3500);
 }
 function closeToast(el) {
   if (!el||el.classList.contains('fade-out')) return;
   el.classList.add('fade-out');
-  setTimeout(function(){ el.remove(); },350);
+  setTimeout(function(){ el.remove(); }, 350);
 }
 
-// Close modals on overlay click
-document.getElementById('add-modal').addEventListener('click',function(e){ if(e.target===this) closeAddModal(); });
-document.getElementById('courses-modal').addEventListener('click',function(e){ if(e.target===this) closeCoursesModal(); });
-document.getElementById('delete-modal').addEventListener('click',function(e){ if(e.target===this) closeDeleteModal(); });
+// ── Modal overlay close handlers ──────────────────────
+document.getElementById('add-modal').addEventListener('click',     function(e){ if(e.target===this) closeAddModal(); });
+document.getElementById('courses-modal').addEventListener('click', function(e){ if(e.target===this) closeCoursesModal(); });
+document.getElementById('delete-modal').addEventListener('click',  function(e){ if(e.target===this) closeDeleteModal(); });
+document.getElementById('unsaved-modal').addEventListener('click', function(e){ if(e.target===this) closeUnsavedModal(); });
+document.getElementById('similar-modal').addEventListener('click', function(e){ if(e.target===this) closeSimilarModal(); });
 
 // ── Init ──────────────────────────────────────────────
 updateTypeFilterLabel();

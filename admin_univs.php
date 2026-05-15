@@ -8,12 +8,14 @@ if (isset($_GET['action'])) {
   try {
     $pdo = getDB();
 
+    // ── LIST ──────────────────────────────────────────────
     if ($action === 'list') {
       $rows = $pdo->query("
         SELECT u.id, u.name, u.type, u.location, u.description,
                u.campus_branches, u.tuition_fees,
                u.exam, u.requirements,
                u.enrollment_requirements, u.contact_links,
+               u.last_updated,
                GROUP_CONCAT(c.course_name ORDER BY c.course_name SEPARATOR '||') AS courses
         FROM universities u
         LEFT JOIN university_courses c ON c.university_id = u.id
@@ -28,11 +30,71 @@ if (isset($_GET['action'])) {
       exit;
     }
 
+    // ── CHECK DUPLICATE ───────────────────────────────────
+    if ($action === 'check_duplicate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      $body      = json_decode(file_get_contents('php://input'), true);
+      $name      = trim($body['name']       ?? '');
+      $excludeId = (int) ($body['exclude_id'] ?? 0);
+
+      if (!$name) {
+        echo json_encode(['success' => true, 'exact' => false, 'similar' => []]);
+        exit;
+      }
+
+      // Layer 1 & 2: Exact / case-insensitive match
+      $stmtExact = $pdo->prepare("
+        SELECT id, name, type, location
+        FROM universities
+        WHERE LOWER(name) = LOWER(:name)
+        " . ($excludeId ? "AND id != :exclude_id" : "") . "
+        LIMIT 1
+      ");
+      $params = [':name' => $name];
+      if ($excludeId) $params[':exclude_id'] = $excludeId;
+      $stmtExact->execute($params);
+      $exactMatch = $stmtExact->fetch();
+
+      if ($exactMatch) {
+        echo json_encode(['success' => true, 'exact' => true, 'match' => $exactMatch, 'similar' => []]);
+        exit;
+      }
+
+      // Layer 3: Fuzzy / similar name match using SOUNDEX + LIKE
+      $nameParts  = explode(' ', strtolower(trim($name)));
+      $firstWord  = $nameParts[0] ?? '';
+      $searchLike = '%' . implode('%', array_filter($nameParts, function($p){ return strlen($p) > 3; })) . '%';
+
+      $stmtSimilar = $pdo->prepare("
+        SELECT id, name, type, location
+        FROM universities
+        WHERE (
+          SOUNDEX(name) = SOUNDEX(:name)
+          OR LOWER(name) LIKE :like1
+          OR LOWER(name) LIKE :like2
+          OR LOWER(:name) LIKE CONCAT('%', LOWER(SUBSTRING(name,1,10)), '%')
+        )
+        " . ($excludeId ? "AND id != :exclude_id2" : "") . "
+        LIMIT 5
+      ");
+      $simParams = [
+        ':name'  => $name,
+        ':like1' => '%' . strtolower($firstWord) . '%',
+        ':like2' => $searchLike,
+      ];
+      if ($excludeId) $simParams[':exclude_id2'] = $excludeId;
+      $stmtSimilar->execute($simParams);
+      $similar = $stmtSimilar->fetchAll();
+
+      echo json_encode(['success' => true, 'exact' => false, 'similar' => $similar]);
+      exit;
+    }
+
+    // ── ADD ───────────────────────────────────────────────
     if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
       $body = json_decode(file_get_contents('php://input'), true);
       $name = trim($body['name'] ?? '');
-      $type = $body['type']     ?? null;
-      $loc  = $body['location'] ?? null;
+      $type = $body['type']       ?? null;
+      $loc  = $body['location']   ?? null;
       $desc = trim($body['description'] ?? '');
 
       if (!$name || !$type || !$loc) {
@@ -40,9 +102,17 @@ if (isset($_GET['action'])) {
         exit;
       }
 
+      // Final exact duplicate guard on server side
+      $chk = $pdo->prepare("SELECT id FROM universities WHERE LOWER(name) = LOWER(:name) LIMIT 1");
+      $chk->execute([':name' => $name]);
+      if ($chk->fetch()) {
+        echo json_encode(['success' => false, 'error' => 'A university with this name already exists.']);
+        exit;
+      }
+
       $stmt = $pdo->prepare("
-        INSERT INTO universities (name, type, location, description)
-        VALUES (:name, :type, :location, :description)
+        INSERT INTO universities (name, type, location, description, last_updated)
+        VALUES (:name, :type, :location, :description, NOW())
       ");
       $stmt->execute([':name'=>$name,':type'=>$type,':location'=>$loc,':description'=>$desc]);
       $id = (int) $pdo->lastInsertId();
@@ -50,6 +120,7 @@ if (isset($_GET['action'])) {
       exit;
     }
 
+    // ── SAVE ──────────────────────────────────────────────
     if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
       $body    = json_decode(file_get_contents('php://input'), true);
       $id      = (int) ($body['id'] ?? 0);
@@ -59,6 +130,14 @@ if (isset($_GET['action'])) {
       if (!$id)   { echo json_encode(['success'=>false,'error'=>'Missing id.']);   exit; }
       if (!$name) { echo json_encode(['success'=>false,'error'=>'Name is required.']); exit; }
 
+      // Check duplicate on rename (exclude self)
+      $chk = $pdo->prepare("SELECT id FROM universities WHERE LOWER(name) = LOWER(:name) AND id != :id LIMIT 1");
+      $chk->execute([':name' => $name, ':id' => $id]);
+      if ($chk->fetch()) {
+        echo json_encode(['success' => false, 'error' => 'Another university with this name already exists.']);
+        exit;
+      }
+
       $pdo->prepare("
         UPDATE universities
         SET name=:name, type=:type, location=:location, description=:description,
@@ -66,7 +145,8 @@ if (isset($_GET['action'])) {
             tuition_fees=:tuition_fees,
             exam=:exam, requirements=:requirements,
             enrollment_requirements=:enrollment_requirements,
-            contact_links=:contact_links
+            contact_links=:contact_links,
+            last_updated=NOW()
         WHERE id=:id
       ")->execute([
         ':name'                    => $name,
@@ -95,6 +175,7 @@ if (isset($_GET['action'])) {
       exit;
     }
 
+    // ── DELETE ────────────────────────────────────────────
     if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
       $body = json_decode(file_get_contents('php://input'), true);
       $id   = (int) ($body['id'] ?? 0);
@@ -122,31 +203,6 @@ if (isset($_GET['action'])) {
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
   <link rel="icon" type="image/png" href="pics/logo.png"/>
   <link rel="stylesheet" href="CSS/admin_univs.css"/>
-  <style>
-    /* ── Editable name input in detail card ── */
-    .detail-name-input {
-      width: 100%;
-      border: 1.5px solid #d0d8ee;
-      border-radius: 22px;
-      outline: none;
-      padding: 0 16px;
-      height: 44px;
-      font-family: 'Sora', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: #061685;
-      background: #fff;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .detail-name-input:focus {
-      border-color: #061685;
-      box-shadow: 0 0 0 3px rgba(6,22,133,0.10);
-    }
-    .detail-name-input::placeholder {
-      color: rgba(6,22,133,0.35);
-      font-weight: 400;
-    }
-  </style>
 </head>
 <body>
 
@@ -169,28 +225,19 @@ if (isset($_GET['action'])) {
     var btns     = document.getElementById('scrollBtns');
     var upBtn    = document.getElementById('scrollUpBtn');
     var downBtn  = document.getElementById('scrollDownBtn');
-
     function updateButtons() {
       var scrollTop    = window.scrollY || document.documentElement.scrollTop;
       var scrollHeight = document.documentElement.scrollHeight;
       var clientHeight = document.documentElement.clientHeight;
       var atTop        = scrollTop <= 10;
       var atBottom     = scrollTop + clientHeight >= scrollHeight - 10;
-
       if (scrollHeight <= clientHeight + 10) {
-        btns.style.opacity       = '0';
-        btns.style.pointerEvents = 'none';
-        return;
+        btns.style.opacity = '0'; btns.style.pointerEvents = 'none'; return;
       }
-
-      btns.style.opacity       = '1';
-      btns.style.pointerEvents = 'all';
-      upBtn.style.opacity      = atTop    ? '0.3' : '1';
-      upBtn.disabled           = atTop;
-      downBtn.style.opacity    = atBottom ? '0.3' : '1';
-      downBtn.disabled         = atBottom;
+      btns.style.opacity = '1'; btns.style.pointerEvents = 'all';
+      upBtn.style.opacity   = atTop    ? '0.3' : '1'; upBtn.disabled   = atTop;
+      downBtn.style.opacity = atBottom ? '0.3' : '1'; downBtn.disabled = atBottom;
     }
-
     window.addEventListener('scroll', updateButtons, { passive: true });
     window.addEventListener('resize', updateButtons);
     updateButtons();
@@ -198,162 +245,107 @@ if (isset($_GET['action'])) {
 </script>
 
 <!-- ── Logout Confirmation Modal ── -->
-<div id="logout-overlay" style="
-  display:none;position:fixed;inset:0;
-  background:rgba(6,22,133,0.18);
-  z-index:9998;
-  align-items:center;justify-content:center;
-">
-  <div style="
-    background:#fff;border-radius:20px;
-    padding:32px 28px 24px;
-    width:100%;max-width:360px;
-    box-shadow:0 8px 40px rgba(6,22,133,0.16);
-    position:relative;
-    font-family:'Sora',sans-serif;
-  ">
-    <button onclick="closeLogoutModal()" style="
-      position:absolute;top:16px;right:18px;
-      background:none;border:none;cursor:pointer;
-      color:#8b9fd4;font-size:20px;line-height:1;
-    ">&#x2715;</button>
-
+<div id="logout-overlay" style="display:none;position:fixed;inset:0;background:rgba(6,22,133,0.18);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:20px;padding:32px 28px 24px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(6,22,133,0.16);position:relative;font-family:'Sora',sans-serif;">
+    <button onclick="closeLogoutModal()" style="position:absolute;top:16px;right:18px;background:none;border:none;cursor:pointer;color:#8b9fd4;font-size:20px;line-height:1;">&#x2715;</button>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;">
-      <span style="
-        width:38px;height:38px;border-radius:50%;
-        background:#dbe8fb;
-        display:flex;align-items:center;justify-content:center;
-        flex-shrink:0;
-      ">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="#4a72c4" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="8"/>
-          <line x1="12" y1="12" x2="12" y2="16"/>
-        </svg>
+      <span style="width:38px;height:38px;border-radius:50%;background:#dbe8fb;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a72c4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
       </span>
-      <span style="font-size:15px;font-weight:600;color:#1a2140;">
-        Are you sure you want to log out?
-      </span>
+      <span style="font-size:15px;font-weight:600;color:#1a2140;">Are you sure you want to log out?</span>
     </div>
-
     <div style="height:1px;background:#e8ecf5;margin-bottom:20px;"></div>
-
     <div style="display:flex;align-items:center;justify-content:flex-end;gap:16px;">
-      <button onclick="confirmLogout()" style="
-        height:40px;padding:0 24px;border-radius:20px;
-        border:none;background:none;
-        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
-        color:#061685;cursor:pointer;
-        transition:opacity 0.15s;
-      ">Yes</button>
-      <button onclick="closeLogoutModal()" style="
-        height:40px;padding:0 24px;border-radius:20px;
-        border:none;background:#dbe8fb;
-        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
-        color:#4a72c4;cursor:pointer;
-        transition:opacity 0.15s;
-      ">No</button>
+      <button onclick="confirmLogout()" style="height:40px;padding:0 24px;border-radius:20px;border:none;background:none;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:#061685;cursor:pointer;">Yes</button>
+      <button onclick="closeLogoutModal()" style="height:40px;padding:0 24px;border-radius:20px;border:none;background:#dbe8fb;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:#4a72c4;cursor:pointer;">No</button>
     </div>
   </div>
 </div>
 
 <!-- ── Delete University Confirmation Modal ── -->
-<div id="delete-modal" style="
-  display:none;position:fixed;inset:0;
-  background:rgba(6,22,133,0.18);
-  z-index:9998;
-  align-items:center;justify-content:center;
-">
-  <div style="
-    background:#fff;border-radius:20px;
-    padding:32px 28px 24px;
-    width:100%;max-width:380px;
-    box-shadow:0 8px 40px rgba(6,22,133,0.16);
-    position:relative;
-    font-family:'Sora',sans-serif;
-  ">
-    <button onclick="closeDeleteModal()" style="
-      position:absolute;top:16px;right:18px;
-      background:none;border:none;cursor:pointer;
-      color:#8b9fd4;font-size:20px;line-height:1;
-    ">&#x2715;</button>
-
+<div id="delete-modal" style="display:none;position:fixed;inset:0;background:rgba(6,22,133,0.18);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:20px;padding:32px 28px 24px;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(6,22,133,0.16);position:relative;font-family:'Sora',sans-serif;">
+    <button onclick="closeDeleteModal()" style="position:absolute;top:16px;right:18px;background:none;border:none;cursor:pointer;color:#8b9fd4;font-size:20px;line-height:1;">&#x2715;</button>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
-      <span style="
-        width:38px;height:38px;border-radius:50%;
-        background:#fdecea;
-        display:flex;align-items:center;justify-content:center;
-        flex-shrink:0;
-      ">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="#e24b4a" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          <path d="M10 11v6"/><path d="M14 11v6"/>
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      <span style="width:38px;height:38px;border-radius:50%;background:#fdecea;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e24b4a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
         </svg>
       </span>
-      <span style="font-size:15px;font-weight:600;color:#1a2140;">
-        Delete University
-      </span>
+      <span style="font-size:15px;font-weight:600;color:#1a2140;">Delete University</span>
     </div>
-
-    <p style="font-size:13.5px;color:#5a6a9a;margin-bottom:8px;line-height:1.6;">
-      Are you sure you want to delete this school from the list?
-    </p>
-    <p id="delete-modal-name" style="
-      font-size:14px;font-weight:700;color:#061685;
-      margin-bottom:24px;line-height:1.4;
-      background:#e8ecf5;border-radius:10px;
-      padding:8px 14px;
-    "></p>
-
-    <p style="font-size:12px;color:#e24b4a;margin-bottom:20px;">
-      This action cannot be undone. All data for this university will be permanently removed.
-    </p>
-
+    <p style="font-size:13.5px;color:#5a6a9a;margin-bottom:8px;line-height:1.6;">Are you sure you want to delete this school from the list?</p>
+    <p id="delete-modal-name" style="font-size:14px;font-weight:700;color:#061685;margin-bottom:24px;line-height:1.4;background:#e8ecf5;border-radius:10px;padding:8px 14px;"></p>
+    <p style="font-size:12px;color:#e24b4a;margin-bottom:20px;">This action cannot be undone. All data for this university will be permanently removed.</p>
     <div style="height:1px;background:#e8ecf5;margin-bottom:20px;"></div>
-
     <div style="display:flex;align-items:center;justify-content:flex-end;gap:16px;">
-      <button onclick="closeDeleteModal()" style="
-        height:40px;padding:0 24px;border-radius:20px;
-        border:none;background:#e8ecf5;
-        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
-        color:#061685;cursor:pointer;
-        transition:opacity 0.15s;
-      ">Cancel</button>
-      <button onclick="confirmDelete()" style="
-        height:40px;padding:0 24px;border-radius:20px;
-        border:none;background:#e24b4a;
-        font-family:'Sora',sans-serif;font-size:14px;font-weight:600;
-        color:#fff;cursor:pointer;
-        transition:opacity 0.15s;
-      ">Delete</button>
+      <button onclick="closeDeleteModal()" style="height:40px;padding:0 24px;border-radius:20px;border:none;background:#e8ecf5;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:#061685;cursor:pointer;">Cancel</button>
+      <button onclick="confirmDelete()" style="height:40px;padding:0 24px;border-radius:20px;border:none;background:#e24b4a;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:#fff;cursor:pointer;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Unsaved Changes Modal ── -->
+<div id="unsaved-modal" style="display:none;position:fixed;inset:0;background:rgba(6,22,133,0.18);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:20px;padding:32px 28px 24px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(6,22,133,0.16);position:relative;font-family:'Sora',sans-serif;">
+    <button onclick="closeUnsavedModal()" style="position:absolute;top:16px;right:18px;background:none;border:none;cursor:pointer;color:#8b9fd4;font-size:20px;line-height:1;">&#x2715;</button>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+      <span style="width:38px;height:38px;border-radius:50%;background:#fff8e1;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </span>
+      <span style="font-size:15px;font-weight:700;color:#1a2140;">Unsaved Changes</span>
+    </div>
+    <p style="font-size:13.5px;color:#5a6a9a;margin-bottom:24px;line-height:1.6;">
+      You have unsaved changes on this university. What would you like to do before leaving?
+    </p>
+    <div style="height:1px;background:#e8ecf5;margin-bottom:20px;"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button onclick="saveAndLeave()" style="height:44px;border-radius:22px;border:none;background:#061685;font-family:'Sora',sans-serif;font-size:14px;font-weight:700;color:#fff;cursor:pointer;transition:opacity 0.15s;">
+        Save &amp; Leave
+      </button>
+      <button onclick="discardAndLeave()" style="height:44px;border-radius:22px;border:1.5px solid #ffaaaa;background:transparent;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:#c0392b;cursor:pointer;transition:background 0.15s;">
+        Discard Changes &amp; Leave
+      </button>
+      <button onclick="closeUnsavedModal()" style="height:44px;border-radius:22px;border:1.5px solid #d0d8ee;background:transparent;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:#5a6a9a;cursor:pointer;transition:background 0.15s;">
+        Stay on This Page
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Similar Universities Warning Modal ── -->
+<div id="similar-modal" style="display:none;position:fixed;inset:0;background:rgba(6,22,133,0.18);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:20px;padding:32px 28px 24px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(6,22,133,0.16);position:relative;font-family:'Sora',sans-serif;">
+    <button onclick="closeSimilarModal()" style="position:absolute;top:16px;right:18px;background:none;border:none;cursor:pointer;color:#8b9fd4;font-size:20px;line-height:1;">&#x2715;</button>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+      <span style="width:38px;height:38px;border-radius:50%;background:#fff8e1;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </span>
+      <span style="font-size:15px;font-weight:700;color:#1a2140;">Similar Universities Found</span>
+    </div>
+    <p style="font-size:13.5px;color:#5a6a9a;margin-bottom:12px;line-height:1.6;">
+      The following universities with similar names already exist in the system. Are you sure this is a different school?
+    </p>
+    <div id="similar-list" style="margin-bottom:20px;display:flex;flex-direction:column;gap:8px;"></div>
+    <div style="height:1px;background:#e8ecf5;margin-bottom:20px;"></div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;">
+      <button onclick="closeSimilarModal()" style="height:40px;padding:0 22px;border-radius:20px;border:1.5px solid #d0d8ee;background:transparent;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:#5a6a9a;cursor:pointer;">Cancel</button>
+      <button onclick="confirmSimilarAdd()" style="height:40px;padding:0 22px;border-radius:20px;border:none;background:#061685;font-family:'Sora',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;">Yes, It's Different</button>
     </div>
   </div>
 </div>
 
 <!-- ── Logout Toast ── -->
-<div id="lo-toast" style="
-  position:fixed;top:24px;right:24px;z-index:9999;
-  display:flex;align-items:center;gap:12px;
-  background:#fff;border:2px solid #b23b3b;border-radius:999px;
-  padding:12px 20px 12px 14px;
-  font-family:'Sora',sans-serif;font-size:13.5px;font-weight:600;color:#2d4a30;
-  box-shadow:0 4px 20px rgba(0,0,0,0.10);
-  transform:translateY(-120px);opacity:0;
-  transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1),opacity 0.35s ease;
-  pointer-events:none;
-" aria-live="polite">
+<div id="lo-toast" style="position:fixed;top:24px;right:24px;z-index:9999;display:flex;align-items:center;gap:12px;background:#fff;border:2px solid #b23b3b;border-radius:999px;padding:12px 20px 12px 14px;font-family:'Sora',sans-serif;font-size:13.5px;font-weight:600;color:#2d4a30;box-shadow:0 4px 20px rgba(0,0,0,0.10);transform:translateY(-120px);opacity:0;transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1),opacity 0.35s ease;pointer-events:none;" aria-live="polite">
   <span style="width:24px;height:24px;background:#b23b3b;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-      <polyline points="16 17 21 12 16 7"/>
-      <line x1="21" y1="12" x2="9" y2="12"/>
-    </svg>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
   </span>
   <span>Ending your session. Please wait..</span>
   <button onclick="loCloseToast()" style="background:none;border:none;cursor:pointer;font-size:15px;color:#b23b3b;margin-left:4px;line-height:1;pointer-events:all;">&#x2715;</button>
@@ -463,7 +455,8 @@ if (isset($_GET['action'])) {
     <h2>Add University</h2>
     <div class="modal-field">
       <label>University Name <span class="req">*</span></label>
-      <input type="text" id="m-name" placeholder="e.g. De La Salle University"/>
+      <input type="text" id="m-name" placeholder="e.g. De La Salle University" oninput="onAddNameInput()"/>
+      <div id="m-dup-feedback" style="margin-top:6px;display:none;"></div>
       <p class="m-error" id="m-name-err">Please enter a university name.</p>
     </div>
     <div class="modal-field">
@@ -502,7 +495,7 @@ if (isset($_GET['action'])) {
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
-      <button class="btn-save" onclick="addUniversity()">Add University</button>
+      <button class="btn-save" id="btn-add-submit" onclick="addUniversity()">Add University</button>
     </div>
   </div>
 </div>
@@ -527,33 +520,21 @@ if (isset($_GET['action'])) {
 
 <script>
 // ── Logout modal ──────────────────────────────────────
-function adminLogout() {
-  document.getElementById('logout-overlay').style.display = 'flex';
-}
-function closeLogoutModal() {
-  document.getElementById('logout-overlay').style.display = 'none';
-}
-document.getElementById('logout-overlay').addEventListener('click', function(e) {
-  if (e.target === this) closeLogoutModal();
-});
+function adminLogout() { document.getElementById('logout-overlay').style.display = 'flex'; }
+function closeLogoutModal() { document.getElementById('logout-overlay').style.display = 'none'; }
+document.getElementById('logout-overlay').addEventListener('click', function(e) { if (e.target===this) closeLogoutModal(); });
 
 var loTimer = null;
 function confirmLogout() {
   closeLogoutModal();
   var t = document.getElementById('lo-toast');
-  t.style.transform     = 'translateY(0)';
-  t.style.opacity       = '1';
-  t.style.pointerEvents = 'all';
-  loTimer = setTimeout(function() {
-    window.location.href = 'admin_logout.php';
-  }, 1800);
+  t.style.transform = 'translateY(0)'; t.style.opacity = '1'; t.style.pointerEvents = 'all';
+  loTimer = setTimeout(function() { window.location.href = 'admin_logout.php'; }, 1800);
 }
 function loCloseToast() {
   clearTimeout(loTimer);
   var t = document.getElementById('lo-toast');
-  t.style.transform     = 'translateY(-120px)';
-  t.style.opacity       = '0';
-  t.style.pointerEvents = 'none';
+  t.style.transform = 'translateY(-120px)'; t.style.opacity = '0'; t.style.pointerEvents = 'none';
 }
 </script>
 <script src="JS/admin_univs.js"></script>
